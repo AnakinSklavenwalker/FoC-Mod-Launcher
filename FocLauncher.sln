@@ -42,6 +42,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FocLauncher.Tests", "test\F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FocLauncher.BaseControls", "src\FocLauncher.BaseControls\FocLauncher.BaseControls.csproj", "{C63E6A07-4F18-4EDF-988E-45EE120B014F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplePipeline", "src\SimplePipeline\SimplePipeline.csproj", "{FC3B1A80-76FC-46E3-B59D-62BCB460DEC7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,6 +98,10 @@ Global
 		{C63E6A07-4F18-4EDF-988E-45EE120B014F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C63E6A07-4F18-4EDF-988E-45EE120B014F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C63E6A07-4F18-4EDF-988E-45EE120B014F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC3B1A80-76FC-46E3-B59D-62BCB460DEC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC3B1A80-76FC-46E3-B59D-62BCB460DEC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC3B1A80-76FC-46E3-B59D-62BCB460DEC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC3B1A80-76FC-46E3-B59D-62BCB460DEC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -115,6 +121,7 @@ Global
 		{882B627B-6182-4AAB-8FB3-FF2C0882617F} = {D216FEEB-E4E4-46FF-95F6-588992E550CD}
 		{B4025596-DA6E-4A67-85AE-38287144ECB0} = {2EE08842-A66D-4D75-8964-4405CF88CF18}
 		{C63E6A07-4F18-4EDF-988E-45EE120B014F} = {8F2264D6-12F2-47DA-8C17-25D430DA43B2}
+		{FC3B1A80-76FC-46E3-B59D-62BCB460DEC7} = {65A0B4B2-985A-4B05-8A2E-266B5A4F33E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {031206AD-43AB-4EF2-B59D-2DFCD7ACA476}

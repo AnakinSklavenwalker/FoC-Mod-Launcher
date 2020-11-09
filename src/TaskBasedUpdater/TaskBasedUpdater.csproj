@@ -140,5 +140,11 @@
       <Version>4.7.5</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimplePipeline\SimplePipeline.csproj">
+      <Project>{fc3b1a80-76fc-46e3-b59d-62bcb460dec7}</Project>
+      <Name>SimplePipeline</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
