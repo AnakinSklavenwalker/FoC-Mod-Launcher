@@ -9,7 +9,7 @@ namespace SimplePipeline
 
         private readonly ManualResetEvent _handle;
 
-        protected SynchronizedPipelineTask()
+        protected SynchronizedPipelineTask(IServiceProvider serviceProvider) : base(serviceProvider)
         {
             _handle = new ManualResetEvent(false);
         }
@@ -37,7 +37,7 @@ namespace SimplePipeline
             base.Dispose(disposing);
         }
 
-        protected sealed override void ExecuteTask(CancellationToken token)
+        protected sealed override void RunCore(CancellationToken token)
         {
             try
             {

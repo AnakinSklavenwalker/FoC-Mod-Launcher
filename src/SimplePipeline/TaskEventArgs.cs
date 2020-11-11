@@ -2,7 +2,7 @@
 
 namespace SimplePipeline
 {
-    internal class TaskEventArgs : EventArgs
+    public class TaskEventArgs : EventArgs
     {
         private bool _cancel;
 

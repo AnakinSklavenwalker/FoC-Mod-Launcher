@@ -7,7 +7,7 @@ using Validation;
 
 namespace SimplePipeline
 {
-    internal abstract class PipelineTask : IPipelineTask
+    public abstract class PipelineTask : IPipelineTask
     {
         internal bool IsDisposed { get; private set; }
 
@@ -40,7 +40,7 @@ namespace SimplePipeline
             Logger?.LogTrace($"BEGIN: {this}");
             try
             {
-                ExecuteTask(token);
+                RunCore(token);
                 Logger?.LogTrace($"END: {this}");
             }
             catch (OperationCanceledException ex)
@@ -77,7 +77,7 @@ namespace SimplePipeline
             return GetType().Name;
         }
 
-        protected abstract void ExecuteTask(CancellationToken token);
+        protected abstract void RunCore(CancellationToken token);
 
         protected virtual void Dispose(bool disposing)
         {

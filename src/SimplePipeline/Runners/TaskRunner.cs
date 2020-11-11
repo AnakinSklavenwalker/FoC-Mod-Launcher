@@ -8,14 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace SimplePipeline.Runners
 {
-    internal class TaskRunner : IEnumerable<IPipelineTask>
+    public class TaskRunner : IEnumerable<IPipelineTask>
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        private readonly List<IPipelineTask> _tasks;
-
         public event EventHandler<TaskEventArgs>? Error;
 
+        private readonly IServiceProvider _serviceProvider;
+        private readonly List<IPipelineTask> _tasks;
+        
         protected ConcurrentQueue<IPipelineTask> TaskQueue { get; }
 
         protected ILogger? Logger { get; private set; }

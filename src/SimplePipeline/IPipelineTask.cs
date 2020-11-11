@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace SimplePipeline
 {
-    internal interface IPipelineTask : IDisposable
+    public interface IPipelineTask : IDisposable
     {
         Exception? Error { get; }
 

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SimplePipeline.Runners
 {
-    internal class AsyncTaskRunner : TaskRunner
+    public class AsyncTaskRunner : TaskRunner
     {
         private readonly ConcurrentBag<Exception> _exceptions;
         private readonly Task[] _tasks;
