@@ -14,6 +14,6 @@ namespace TaskBasedUpdater.Download
         IEnumerable<string> AllEngines { get; }
 
         Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IComponent? component = null, bool verify = false);
+            CancellationToken cancellationToken, IUpdateItem? updateItem = null, bool verify = false);
     }
 }

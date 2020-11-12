@@ -2,7 +2,7 @@
 
 namespace SimplePipeline
 {
-    internal interface IOperation
+    public interface IOperation
     {
         bool Plan();
 

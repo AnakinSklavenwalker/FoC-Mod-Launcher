@@ -6,14 +6,6 @@ using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater.FileSystem
 {
-
-    public enum ValidationResult
-    {
-        Success,
-        ValidationContextError,
-        HashMismatch,
-    }
-
     internal class HashVerifier
     {
         public static ValidationResult Verify(Stream stream, ValidationContext validationContext)

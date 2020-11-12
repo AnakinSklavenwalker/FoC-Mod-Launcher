@@ -12,6 +12,6 @@ namespace TaskBasedUpdater.Download
         bool IsSupported(DownloadSource source);
 
         DownloadSummary Download(Uri uri, Stream outputStream, ProgressUpdateCallback progress, 
-            CancellationToken cancellationToken, IComponent? component);
+            CancellationToken cancellationToken, IUpdateItem? updateItem);
     }
 }

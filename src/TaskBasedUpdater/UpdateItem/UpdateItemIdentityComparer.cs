@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 namespace TaskBasedUpdater.Component
 {
-    public class ComponentIdentityComparer : IEqualityComparer<IComponent>, IComparer<IComponent>
+    public class UpdateItemIdentityComparer : IEqualityComparer<IUpdateItem>, IComparer<IUpdateItem>
     {
-        public static readonly ComponentIdentityComparer Default = new ComponentIdentityComparer();
-        public static readonly ComponentIdentityComparer VersionIndependent = new ComponentIdentityComparer(true);
+        public static readonly UpdateItemIdentityComparer Default = new UpdateItemIdentityComparer();
+        public static readonly UpdateItemIdentityComparer VersionIndependent = new UpdateItemIdentityComparer(true);
 
         private readonly bool _excludeVersion;
         private readonly StringComparison _comparisonType;
         private readonly StringComparer _comparer;
 
-        public ComponentIdentityComparer(bool excludeVersion = false, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+        public UpdateItemIdentityComparer(bool excludeVersion = false, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
         {
             _excludeVersion = excludeVersion;
             _comparisonType = comparisonType;
@@ -36,12 +36,12 @@ namespace TaskBasedUpdater.Component
             }
         }
 
-        public bool Equals(IComponent x, IComponent y)
+        public bool Equals(IUpdateItem x, IUpdateItem y)
         {
             return Compare(x, y) == 0;
         }
 
-        public int GetHashCode(IComponent? obj)
+        public int GetHashCode(IUpdateItem? obj)
         {
             var num = 0;
             if (obj?.Name != null)
@@ -51,7 +51,7 @@ namespace TaskBasedUpdater.Component
             return num;
         }
 
-        public int Compare(IComponent? x, IComponent? y)
+        public int Compare(IUpdateItem? x, IUpdateItem? y)
         {
             if (x == y)
                 return 0;

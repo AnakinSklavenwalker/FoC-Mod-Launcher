@@ -56,7 +56,7 @@ namespace TaskBasedUpdater.Download
         }
 
         public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken,
-            IComponent? component = default, bool verify = false)
+            IUpdateItem? updateItem = default, bool verify = false)
         {
             Logger.Trace($"Download requested: {uri.AbsoluteUri}");
             if (outputStream == null)
@@ -83,7 +83,7 @@ namespace TaskBasedUpdater.Download
             {
                 var engines = GetSuitableEngines(_defaultEngines, uri);
                 return Task.Factory.StartNew(() => DownloadWithRetry(engines, uri, outputStream, progress,
-                        cancellationToken, component, verify), cancellationToken,
+                        cancellationToken, updateItem, verify), cancellationToken,
                     TaskCreationOptions.LongRunning, TaskScheduler.Default);
             }
             catch (Exception ex)
@@ -93,7 +93,9 @@ namespace TaskBasedUpdater.Download
             }
         }
 
-        private DownloadSummary DownloadWithRetry(IDownloadEngine[] engines, Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken, IComponent? component = null, bool verify = false)
+        private DownloadSummary DownloadWithRetry(IDownloadEngine[] engines, Uri uri, Stream outputStream,
+            ProgressUpdateCallback progress, CancellationToken cancellationToken, IUpdateItem? updateItem = null,
+            bool verify = false)
         {
             var failureList = new List<DownloadFailureInformation>();
             foreach (var engine in engines)
@@ -103,11 +105,13 @@ namespace TaskBasedUpdater.Download
                 try
                 {
                     Logger.Trace($"Attempting download '{uri.AbsoluteUri}' using engine '{engine.Name}'");
-                    var engineSummary = engine.Download(uri, outputStream, status =>
+                    var engineSummary = engine.Download(uri, outputStream,
+                        status =>
                         {
-                            progress?.Invoke(new ProgressUpdateStatus(engine.Name, status.BytesRead, status.TotalBytes, status.BitRate));
+                            progress?.Invoke(new ProgressUpdateStatus(engine.Name, status.BytesRead, status.TotalBytes,
+                                status.BitRate));
                         }, cancellationToken,
-                        component);
+                        updateItem);
                     if (outputStream.Length == 0 && !UpdateConfiguration.Instance.AllowEmptyFileDownload)
                     {
                         var exception = new UpdaterException($"Empty file downloaded on '{uri}'.");
@@ -117,20 +121,21 @@ namespace TaskBasedUpdater.Download
 
                     if (verify && outputStream.Length != 0)
                     {
-                        if (component is null)
+                        if (updateItem is null)
                         {
                             if (UpdateConfiguration.Instance.ValidationPolicy == ValidationPolicy.Enforce)
-                                throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext, 
+                                throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
                                     "Unable to get necessary validation data because download context is null.");
                         }
                         else
                         {
-                            var componentValidationContext = component.OriginInfo?.ValidationContext;
+                            var componentValidationContext = updateItem.OriginInfo?.ValidationContext;
                             var valid = componentValidationContext?.Verify();
 
-                            if ((!valid.HasValue || !valid.Value) && UpdateConfiguration.Instance.ValidationPolicy == ValidationPolicy.Enforce)
+                            if ((!valid.HasValue || !valid.Value) && UpdateConfiguration.Instance.ValidationPolicy ==
+                                ValidationPolicy.Enforce)
                                 throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
-                                    $"Component '{component.Name}' is missing or has an invalid ValidationInfo");
+                                    $"Component '{updateItem.Name}' is missing or has an invalid ValidationInfo");
 
                             if (valid.HasValue && valid.Value)
                             {
@@ -145,7 +150,8 @@ namespace TaskBasedUpdater.Download
                                 }
                             }
                             else
-                                Logger.Trace($"Skipping validation because validation context of Component {component.Name} is not valid.");
+                                Logger.Trace(
+                                    $"Skipping validation because validation context of Component {updateItem.Name} is not valid.");
                         }
                     }
 
@@ -176,6 +182,7 @@ namespace TaskBasedUpdater.Download
                     Thread.Sleep(millisecondsTimeout);
                 }
             }
+
             return null;
         }
 

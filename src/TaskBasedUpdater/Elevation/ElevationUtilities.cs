@@ -6,12 +6,12 @@ namespace TaskBasedUpdater.Elevation
 {
     public static class ElevationUtilities
     {
-        public static IEnumerable<IComponent> AggregateComponents(this ElevationRequireException exception)
+        public static IEnumerable<IUpdateItem> AggregateComponents(this ElevationRequireException exception)
         {
             if (exception == null)
                 throw new ArgumentNullException(nameof(exception));
             foreach (var requestData in exception.Requests)
-                yield return requestData.Component;
+                yield return requestData.UpdateItem;
         }
     }
 }

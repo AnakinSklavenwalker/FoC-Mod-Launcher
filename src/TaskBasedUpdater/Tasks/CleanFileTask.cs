@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Threading;
+using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
 
 namespace TaskBasedUpdater.Tasks
 {
-    internal class CleanFileTask : SynchronizedUpdaterTask
+    internal class CleanFileTask : SynchronizedPipelineTask, IUpdaterTask
     {
         internal string File { get; set; }
 
-        public CleanFileTask(IComponent component, string filePath)
+        public IUpdateItem UpdateItem { get; }
+
+        public CleanFileTask(IServiceProvider serviceProvider, IUpdateItem updateItem, string filePath) 
+            : base(serviceProvider)
         {
-            Component = component;
+            UpdateItem = updateItem;
             File = filePath;
         }
 

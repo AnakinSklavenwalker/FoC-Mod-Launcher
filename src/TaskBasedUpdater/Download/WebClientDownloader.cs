@@ -26,7 +26,7 @@ namespace TaskBasedUpdater.Download
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IComponent? component)
+            CancellationToken cancellationToken, IUpdateItem? updateItem)
         {
             var summary = new DownloadSummary();
 

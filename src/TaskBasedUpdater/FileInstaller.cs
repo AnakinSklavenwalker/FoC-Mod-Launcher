@@ -25,7 +25,7 @@ namespace TaskBasedUpdater
 
         protected internal IEnumerable<string> LockedFiles => _lockedFiles;
 
-        protected IComponent CurrentComponent { get; private set; }
+        protected IUpdateItem UpdateItem { get; private set; }
 
 
         public static FileInstaller Instance => _fileInstaller ??= new FileInstaller();
@@ -37,33 +37,33 @@ namespace TaskBasedUpdater
             _lockedFiles = new List<string>();
         }
 
-        public InstallResult Remove(IComponent component, CancellationToken token, bool isPresent = false)
+        public InstallResult Remove(IUpdateItem updateItem, CancellationToken token, bool isPresent = false)
         {
             Token = token;
-            var location = component.Destination;
-            return PlanAndApplyExecuteAction(location, component, isPresent, null);
+            var location = updateItem.Destination;
+            return PlanAndApplyExecuteAction(location, updateItem, isPresent, null);
         }
 
-        public InstallResult Install(IComponent component, CancellationToken token, string localPath, bool isPresent)
+        public InstallResult Install(IUpdateItem updateItem, CancellationToken token, string localPath, bool isPresent)
         {
             Token = token;
-            var location = component.Destination;
-            return PlanAndApplyExecuteAction(location, component, isPresent, localPath);
+            var location = updateItem.Destination;
+            return PlanAndApplyExecuteAction(location, updateItem, isPresent, localPath);
         }
 
-        protected InstallResult InstallCore(string localPath, string installDir, IComponent component = null)
+        protected InstallResult InstallCore(string localPath, string installDir, IUpdateItem updateItem = null)
         {
-            return DoAction(() => InstallCoreInternal(localPath, installDir, component));
+            return DoAction(() => InstallCoreInternal(localPath, installDir, updateItem));
         }
 
-        protected InstallResult UninstallCore(string installDir, IComponent component)
+        protected InstallResult UninstallCore(string installDir, IUpdateItem updateItem)
         {
-            return DoAction(() => UninstallCoreInternal(installDir, component));
+            return DoAction(() => UninstallCoreInternal(installDir, updateItem));
         }
 
-        protected InstallResult InstallCoreInternal(string localPath, string installDir, IComponent component)
+        protected InstallResult InstallCoreInternal(string localPath, string installDir, IUpdateItem updateItem)
         {
-            var file = component.GetFilePath();
+            var file = updateItem.GetFilePath();
             if (localPath.Equals(file))
             {
                 Logger.Warn("Install: Local path and destination path are equal.");
@@ -79,20 +79,20 @@ namespace TaskBasedUpdater
             if (restartPending)
                 return InstallResult.SuccessRestartRequired;
 
-            component.CurrentState = CurrentState.Installed;
+            updateItem.CurrentState = CurrentState.Installed;
             return InstallResult.Success;
         }
         
-        internal InstallResult UninstallCoreInternal(string installDir, IComponent component)
+        internal InstallResult UninstallCoreInternal(string installDir, IUpdateItem updateItem)
         {
-            if (!FileSystemExtensions.ContainsPath(installDir, component.Destination))
+            if (!FileSystemExtensions.ContainsPath(installDir, updateItem.Destination))
             {
                 Logger.Warn("Different paths for component and method input");
                 return InstallResult.Failure;
             }
 
             var restartPending = false;
-            var file = component.GetFilePath();
+            var file = updateItem.GetFilePath();
             var deleteResult = DeleteFile(file, out var restartRequired);
             restartPending |= restartRequired;
             if (!deleteResult && !restartRequired)
@@ -101,7 +101,7 @@ namespace TaskBasedUpdater
             if (restartPending)
                 return InstallResult.SuccessRestartRequired;
 
-            component.CurrentState = CurrentState.Removed;
+            updateItem.CurrentState = CurrentState.Removed;
             return InstallResult.Success;
         }
 
@@ -164,12 +164,12 @@ namespace TaskBasedUpdater
             return deleteSuccess;
         }
 
-        protected void PrintReturnCode(InstallResult result, IComponent package, ComponentAction executeAction)
+        protected void PrintReturnCode(InstallResult result, IUpdateItem updateItem, UpdateAction executeAction)
         {
             if (result.IsFailure())
             {
-                var installResultDetails = GetInstallResultDetails(result, package, executeAction.ToString().ToLowerInvariant());
-                LogFailure(package, executeAction, installResultDetails);
+                var installResultDetails = GetInstallResultDetails(result, updateItem, executeAction.ToString().ToLowerInvariant());
+                LogFailure(updateItem, executeAction, installResultDetails);
             }
             else
             {
@@ -178,15 +178,15 @@ namespace TaskBasedUpdater
             }
         }
 
-        protected string GetInstallResultDetails(InstallResult installResult, IComponent? component, string action)
+        protected string GetInstallResultDetails(InstallResult installResult, IUpdateItem? updateItem, string action)
         {
             var stringBuilder = new StringBuilder();
             if (stringBuilder.Length > 0) stringBuilder.Append(", ");
             stringBuilder.Append("Result: ");
             stringBuilder.Append(installResult);
-            if (component != null)
+            if (updateItem != null)
             {
-                var failureSignature = component.GetFailureSignature(action, installResult.ToString());
+                var failureSignature = updateItem.GetFailureSignature(action, installResult.ToString());
                 stringBuilder.Append(", Signature: ");
                 stringBuilder.Append(failureSignature);
             }
@@ -196,7 +196,7 @@ namespace TaskBasedUpdater
         private InstallResult InstallHelper(InstallData installData)
         {
             InstallResult installResult;
-            var component = installData.Component;
+            var component = installData.UpdateItem;
 
             try
             {
@@ -211,26 +211,26 @@ namespace TaskBasedUpdater
             }
             catch (UnauthorizedAccessException e)
             {
-                Elevator.Instance.RequestElevation(e, CurrentComponent);
+                Elevator.Instance.RequestElevation(e, UpdateItem);
                 return InstallResult.Failure;
             }
             catch (Exception ex)
             {
-                LogFailure(component, ComponentAction.Update, ex.Message);
+                LogFailure(component, UpdateAction.Update, ex.Message);
                 return InstallResult.FailureException;
             }
-            PrintReturnCode(installResult, component, ComponentAction.Update);
+            PrintReturnCode(installResult, component, UpdateAction.Update);
             return installResult;
         }
 
         private InstallResult UninstallHelper(InstallData uninstallData)
         {
             InstallResult result;
-            var component = uninstallData.Component;
+            var component = uninstallData.UpdateItem;
 
             try
             {
-                if (uninstallData.Component == null && uninstallData.LocalPath == null)
+                if (uninstallData.UpdateItem == null && uninstallData.LocalPath == null)
                     result = InstallResult.Failure;
                 else
                     result = UninstallCore(uninstallData.InstallDir, component);
@@ -242,10 +242,10 @@ namespace TaskBasedUpdater
             }
             catch (Exception e)
             {
-                LogFailure(component, ComponentAction.Delete, e.ToString());
+                LogFailure(component, UpdateAction.Delete, e.ToString());
                 return InstallResult.FailureException;
             }
-            PrintReturnCode(result, component, ComponentAction.Delete);
+            PrintReturnCode(result, component, UpdateAction.Delete);
             return result;
         }
 
@@ -264,18 +264,18 @@ namespace TaskBasedUpdater
             return installResult;
         }
 
-        private InstallResult PlanAndApplyExecuteAction(string location, IComponent component, bool isPresent, string localPath)
+        private InstallResult PlanAndApplyExecuteAction(string location, IUpdateItem updateItem, bool isPresent, string localPath)
         {
-            var requestedAction = component.RequiredAction;
+            var requestedAction = updateItem.RequiredAction;
 
             Func<InstallData, InstallResult> action = null;
             switch (requestedAction)
             {
-                case ComponentAction.Update:
-                    if (component.CurrentState == CurrentState.Downloaded)
+                case UpdateAction.Update:
+                    if (updateItem.CurrentState == CurrentState.Downloaded)
                         action = InstallHelper;
                     break;
-                case ComponentAction.Delete:
+                case UpdateAction.Delete:
                     if (isPresent)
                         action = UninstallHelper;
                     break;
@@ -285,12 +285,12 @@ namespace TaskBasedUpdater
                 return InstallResult.Success;
             try
             {
-                CurrentComponent = component;
-                return action(new InstallData(component, location, localPath));
+                UpdateItem = updateItem;
+                return action(new InstallData(updateItem, location, localPath));
             }
             finally
             {
-                CurrentComponent = null;
+                UpdateItem = null;
             }
         }
         
@@ -311,10 +311,10 @@ namespace TaskBasedUpdater
             this._lockedFiles.Clear();
         }
 
-        private static void LogFailure(IComponent package, ComponentAction executeAction, string details)
+        private static void LogFailure(IUpdateItem updateItem, UpdateAction executeAction, string details)
         {
-            Logger.Error(package != null
-                ? $"Package '{package.Name}' failed to {executeAction.ToString().ToLowerInvariant()}. {details}"
+            Logger.Error(updateItem != null
+                ? $"Package '{updateItem.Name}' failed to {executeAction.ToString().ToLowerInvariant()}. {details}"
                 : $"Failed to {executeAction.ToString().ToLowerInvariant()}. {details}");
         }
 
@@ -325,13 +325,13 @@ namespace TaskBasedUpdater
 
             internal string? LocalPath { get; }
 
-            internal IComponent Component { get; }
+            internal IUpdateItem UpdateItem { get; }
 
-            internal InstallData(IComponent component, string installDir, string localPath)
+            internal InstallData(IUpdateItem updateItem, string installDir, string localPath)
             {
                 InstallDir = installDir;
                 LocalPath = localPath;
-                Component = component;
+                UpdateItem = updateItem;
             }
         }
     }

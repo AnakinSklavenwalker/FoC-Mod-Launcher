@@ -29,9 +29,9 @@ namespace TaskBasedUpdater.Download
         }
 
         public DownloadSummary Download(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IComponent? component)
+            CancellationToken cancellationToken, IUpdateItem? updateItem)
         {
-            return DownloadWithBitRate(uri, outputStream, progress, cancellationToken, component);
+            return DownloadWithBitRate(uri, outputStream, progress, cancellationToken, updateItem);
         }
 
         public void Dispose()
@@ -40,13 +40,13 @@ namespace TaskBasedUpdater.Download
         }
 
         protected abstract DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IComponent? component);
+            CancellationToken cancellationToken, IUpdateItem? updateItem);
 
         protected virtual void DisposeResources()
         {
         }
 
-        private DownloadSummary DownloadWithBitRate(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken, IComponent? component)
+        private DownloadSummary DownloadWithBitRate(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken, IUpdateItem? updateItem)
         {
             var now = DateTime.Now;
             var lastProgressUpdate = now;
@@ -60,7 +60,7 @@ namespace TaskBasedUpdater.Download
                     progress(new ProgressUpdateStatus(p.BytesRead, p.TotalBytes, bitRate));
                     lastProgressUpdate = now2;
                 };
-            var downloadSummary = DownloadCore(uri, outputStream, wrappedProgress, cancellationToken, component);
+            var downloadSummary = DownloadCore(uri, outputStream, wrappedProgress, cancellationToken, updateItem);
             downloadSummary.DownloadTime = DateTime.Now - now;
             downloadSummary.BitRate = 8.0 * downloadSummary.DownloadedSize / downloadSummary.DownloadTime.TotalSeconds;
             return downloadSummary;

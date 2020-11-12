@@ -2,13 +2,13 @@
 
 namespace TaskBasedUpdater.Component
 {
-    public class Component : IComponent
+    public class UpdateItem : IUpdateItem
     {
         public string Destination { get; set; }
 
         public string Name { get; set; }
 
-        public ComponentAction RequiredAction { get; set; }
+        public UpdateAction RequiredAction { get; set; }
 
         public CurrentState CurrentState { get; set; }
 
@@ -23,9 +23,9 @@ namespace TaskBasedUpdater.Component
             return !string.IsNullOrEmpty(Name) ? $"{Name},destination='{Destination}'" : base.ToString();
         }
 
-        public bool Equals(IComponent other)
+        public bool Equals(IUpdateItem other)
         {
-            return ComponentIdentityComparer.Default.Equals(this, other);
+            return UpdateItemIdentityComparer.Default.Equals(this, other);
         }
     }
 }

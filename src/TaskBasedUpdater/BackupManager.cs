@@ -10,14 +10,14 @@ using TaskBasedUpdater.FileSystem;
 
 namespace TaskBasedUpdater
 {
-    public class BackupManager : IEnumerable<KeyValuePair<IComponent, string?>>
+    public class BackupManager : IEnumerable<KeyValuePair<IUpdateItem, string?>>
     {
         //private const string NonExistentSource = "SOURCE_ORIGINALLY_MISSING";
 
         private static BackupManager? _instance;
 
         private readonly object _syncObject = new object();
-        private readonly Dictionary<IComponent, string?> _backupLookup = new Dictionary<IComponent, string?>();
+        private readonly Dictionary<IUpdateItem, string?> _backupLookup = new Dictionary<IUpdateItem, string?>();
 
         public static BackupManager Instance => _instance ??= new BackupManager();
 
@@ -25,18 +25,18 @@ namespace TaskBasedUpdater
         {
         }
 
-        public void CreateBackup(IComponent component)
+        public void CreateBackup(IUpdateItem updateItem)
         {
-            ValidateComponent(component);
-            var backupPath = GetBackupPath(component);
+            ValidateComponent(updateItem);
+            var backupPath = GetBackupPath(updateItem);
             ValidateHasAccess(backupPath);
-            if (_backupLookup.ContainsKey(component))
+            if (_backupLookup.ContainsKey(updateItem))
                 return;
             string? backupFilePath;
-            var componentFilePath = component.GetFilePath();
+            var componentFilePath = updateItem.GetFilePath();
             if (File.Exists(componentFilePath))
             {
-                backupFilePath = CreateBackupFilePath(component, backupPath);
+                backupFilePath = CreateBackupFilePath(updateItem, backupPath);
                 FileSystemExtensions.CopyFileWithRetry(componentFilePath, backupFilePath);
             }
             else
@@ -44,7 +44,7 @@ namespace TaskBasedUpdater
                 backupFilePath = null;
             }
             lock (_syncObject)
-                _backupLookup.Add(component, backupFilePath);
+                _backupLookup.Add(updateItem, backupFilePath);
         }
 
         public void RestoreAllBackups()
@@ -54,12 +54,12 @@ namespace TaskBasedUpdater
                 RestoreBackup(component);
         }
         
-        public void RestoreBackup(IComponent component)
+        public void RestoreBackup(IUpdateItem updateItem)
         {
-            if (!_backupLookup.ContainsKey(component))
+            if (!_backupLookup.ContainsKey(updateItem))
                 return;
-            var backupFile = _backupLookup[component];
-            var componentFile = component.GetFilePath();
+            var backupFile = _backupLookup[updateItem];
+            var updateItemFile = updateItem.GetFilePath();
 
             var remove = true;
 
@@ -67,9 +67,9 @@ namespace TaskBasedUpdater
             {
                 if (string.IsNullOrEmpty(backupFile))
                 {
-                    if (!File.Exists(componentFile))
+                    if (!File.Exists(updateItemFile))
                         return;
-                    var success = FileSystemExtensions.DeleteFileWithRetry(componentFile, out _);
+                    var success = FileSystemExtensions.DeleteFileWithRetry(updateItemFile, out _);
                     if (success) 
                         return;
                     remove = false;
@@ -80,7 +80,7 @@ namespace TaskBasedUpdater
                     if (!File.Exists(backupFile))
                         return;
 
-                    if (File.Exists(componentFile))
+                    if (File.Exists(updateItemFile))
                     {
                         var backupHash = UpdaterUtilities.GetFileHash(backupFile!, HashType.Sha256);
                         var fileHash = UpdaterUtilities.GetFileHash(backupFile!, HashType.Sha256);
@@ -90,7 +90,7 @@ namespace TaskBasedUpdater
                             return;
                         }
                     }
-                    var success = FileSystemExtensions.MoveFile(backupFile, component.GetFilePath(), true);
+                    var success = FileSystemExtensions.MoveFile(backupFile, updateItem.GetFilePath(), true);
                     if (!success)
                     {
                         remove = false;
@@ -98,7 +98,7 @@ namespace TaskBasedUpdater
                     }
 
                     if (UpdateConfiguration.Instance.DownloadOnlyMode)
-                        ComponentDownloadPathStorage.Instance.Remove(component);
+                        UpdateItemDownloadPathStorage.Instance.Remove(updateItem);
 
                     try
                     {
@@ -114,11 +114,11 @@ namespace TaskBasedUpdater
             {
                 if (remove)
                     lock (_syncObject)
-                        _backupLookup.Remove(component);
+                        _backupLookup.Remove(updateItem);
             }
         }
         
-        public bool TryGetValue(IComponent component, out string? value)
+        public bool TryGetValue(IUpdateItem component, out string? value)
         {
             lock (_syncObject)
                 return _backupLookup.TryGetValue(component, out value);
@@ -129,7 +129,7 @@ namespace TaskBasedUpdater
             _backupLookup.Clear();
         }
 
-        public IEnumerator<KeyValuePair<IComponent, string?>> GetEnumerator()
+        public IEnumerator<KeyValuePair<IUpdateItem, string?>> GetEnumerator()
         {
             return _backupLookup.GetEnumerator();
         }
@@ -139,11 +139,11 @@ namespace TaskBasedUpdater
             return GetEnumerator();
         }
 
-        internal static void ValidateComponent(IComponent component)
+        internal static void ValidateComponent(IUpdateItem updateItem)
         {
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
-            if (string.IsNullOrEmpty(component.Destination))
+            if (updateItem == null)
+                throw new ArgumentNullException(nameof(updateItem));
+            if (string.IsNullOrEmpty(updateItem.Destination))
                 throw new IOException("Unable to resolve the component's file path");
         }
 
@@ -155,18 +155,18 @@ namespace TaskBasedUpdater
                 throw new InvalidOperationException($"No Read/Write access to the backup directory: {path}");
         }
 
-        private static string CreateBackupFilePath(IComponent component, string backupPath)
+        private static string CreateBackupFilePath(IUpdateItem updateItem, string backupPath)
         {
             var randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
-            var backupFileName = $"{component.Name}.{randomFileName}.bak";
+            var backupFileName = $"{updateItem.Name}.{randomFileName}.bak";
             return Path.Combine(backupPath, backupFileName);
         }
 
-        private static string GetBackupPath(IComponent component)
+        private static string GetBackupPath(IUpdateItem updateItem)
         {
             var backupPath = UpdateConfiguration.Instance.BackupPath;
             if (string.IsNullOrEmpty(backupPath))
-                backupPath = component.Destination;
+                backupPath = updateItem.Destination;
             return backupPath!;
         }
     }

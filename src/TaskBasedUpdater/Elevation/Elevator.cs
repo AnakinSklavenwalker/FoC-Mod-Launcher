@@ -20,11 +20,11 @@ namespace TaskBasedUpdater.Elevation
         {
         }
 
-        public bool RequestElevation(UnauthorizedAccessException accessException, IComponent component)
+        public bool RequestElevation(UnauthorizedAccessException accessException, IUpdateItem updateItem)
         {
             if (IsElevated())
                 return false;
-            var data = new ElevationRequestData(accessException, component);
+            var data = new ElevationRequestData(accessException, updateItem);
             OnElevationRequested(data);
             return true;
         }

@@ -44,11 +44,11 @@ namespace TaskBasedUpdater
             return result == InstallResult.Failure || result == InstallResult.FailureException;
         }
 
-        internal static string GetFailureSignature(this IComponent package, string action, string result)
+        internal static string GetFailureSignature(this IUpdateItem updateItem, string action, string result)
         {
             var stringBuilder = new StringBuilder();
-            if (!string.IsNullOrEmpty(package.Name)) 
-                stringBuilder.Append("Component=" + package.Name);
+            if (!string.IsNullOrEmpty(updateItem.Name)) 
+                stringBuilder.Append("Component=" + updateItem.Name);
             if (!string.IsNullOrEmpty(action))
             {
                 if (stringBuilder.Length > 0) 

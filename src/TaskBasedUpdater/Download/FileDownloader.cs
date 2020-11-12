@@ -12,7 +12,7 @@ namespace TaskBasedUpdater.Download
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IComponent? component)
+            CancellationToken cancellationToken, IUpdateItem? updateItem)
         {
             if (!uri.IsFile && !uri.IsUnc)
                 throw new ArgumentException("Expected file or UNC path", nameof(uri));

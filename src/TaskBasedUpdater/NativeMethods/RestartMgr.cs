@@ -6,6 +6,8 @@ namespace TaskBasedUpdater.NativeMethods
 {
     internal static class RestartMgr
     {
+        internal delegate void RmWriteStatusCallback([MarshalAs(UnmanagedType.U4)] int nPercentComplete);
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         internal struct RmProcessInfo
         {
@@ -26,8 +28,6 @@ namespace TaskBasedUpdater.NativeMethods
             public int DwProcessId;
             public System.Runtime.InteropServices.ComTypes.FILETIME ProcessStartTime;
         }
-
-        internal delegate void RmWriteStatusCallback([MarshalAs(UnmanagedType.U4)] int nPercentComplete);
         
 
         [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]

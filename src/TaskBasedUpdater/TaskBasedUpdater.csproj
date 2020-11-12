@@ -41,16 +41,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BackupManager.cs" />
-    <Compile Include="ComponentDownloadPathStorage.cs" />
-    <Compile Include="ComponentFailedException.cs" />
-    <Compile Include="Component\Component.cs" />
-    <Compile Include="Component\ComponentAction.cs" />
-    <Compile Include="Component\ComponentIdentityComparer.cs" />
-    <Compile Include="Component\CurrentState.cs" />
-    <Compile Include="Component\HashType.cs" />
-    <Compile Include="Component\IComponent.cs" />
-    <Compile Include="Component\OriginInfo.cs" />
-    <Compile Include="Component\ValidationContext.cs" />
+    <Compile Include="FileSystem\ValidationResult.cs" />
+    <Compile Include="Tasks\IUpdaterTask.cs" />
+    <Compile Include="UpdateItemDownloadPathStorage.cs" />
+    <Compile Include="UpdateItemFailedException.cs" />
+    <Compile Include="UpdateItem\UpdateItem.cs" />
+    <Compile Include="UpdateItem\UpdateAction.cs" />
+    <Compile Include="UpdateItem\UpdateItemIdentityComparer.cs" />
+    <Compile Include="UpdateItem\CurrentState.cs" />
+    <Compile Include="UpdateItem\HashType.cs" />
+    <Compile Include="UpdateItem\IUpdateItem.cs" />
+    <Compile Include="UpdateItem\OriginInfo.cs" />
+    <Compile Include="UpdateItem\ValidationContext.cs" />
     <Compile Include="Configuration\BackupPolicy.cs" />
     <Compile Include="Configuration\UpdateConfiguration.cs" />
     <Compile Include="Configuration\ValidationPolicy.cs" />

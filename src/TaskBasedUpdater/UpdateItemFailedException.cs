@@ -6,9 +6,9 @@ using TaskBasedUpdater.Component;
 namespace TaskBasedUpdater
 {
     [Serializable]
-    public class ComponentFailedException : UpdaterException
+    public class UpdateItemFailedException : UpdaterException
     {
-        private readonly IEnumerable<IComponent>? _failedComponents;
+        private readonly IEnumerable<IUpdateItem>? _failedComponents;
         private string? _error;
 
         public override string Message => Error;
@@ -29,13 +29,13 @@ namespace TaskBasedUpdater
             }
         }
 
-        public ComponentFailedException(IEnumerable<IComponent> failedComponents) : base()
+        public UpdateItemFailedException(IEnumerable<IUpdateItem> failedComponents) : base()
         {
             _failedComponents = failedComponents;
             HResult = 1603;
         }
 
-        internal ComponentFailedException(string error, int errorCode = 1603)
+        internal UpdateItemFailedException(string error, int errorCode = 1603)
         {
             if (string.IsNullOrEmpty(error))
                 throw new ArgumentNullException(nameof(error));

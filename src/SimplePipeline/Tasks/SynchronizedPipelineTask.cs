@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 
-namespace SimplePipeline
+namespace SimplePipeline.Tasks
 {
-    internal abstract class SynchronizedPipelineTask : PipelineTask
+    public abstract class SynchronizedPipelineTask : PipelineTask
     {
         public event EventHandler<EventArgs>? Canceled;
 

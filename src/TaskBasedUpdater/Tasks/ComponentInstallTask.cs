@@ -1,19 +1,23 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
 
 namespace TaskBasedUpdater.Tasks
 {
-    internal class ComponentInstallTask : SynchronizedUpdaterTask
+    internal class UpdateItemInstallTask : SynchronizedPipelineTask, IUpdaterTask
     {
-        private readonly ComponentDownloadTask _download;
+        private readonly UpdateItemDownloadTask _download;
         internal static readonly long AdditionalSizeBuffer = 20000000;
         private readonly bool _isPresent;
 
-        internal ComponentAction Action { get; }
+        internal UpdateAction Action { get; }
+
+        public IUpdateItem UpdateItem { get; }
 
         internal InstallResult Result { get; set; }
 
@@ -21,27 +25,30 @@ namespace TaskBasedUpdater.Tasks
 
         public virtual TimeSpan DownloadWaitTime { get; internal set; } = new TimeSpan(0L);
 
-        public ComponentInstallTask(IComponent component, ComponentAction action, ComponentDownloadTask download, bool isPresent = false) :
-            this(component, action, isPresent)
+        public UpdateItemInstallTask(IServiceProvider serviceProvider,
+            IUpdateItem updateItem, UpdateAction action, UpdateItemDownloadTask download,
+            bool isPresent = false) :
+            this(serviceProvider, updateItem, action, isPresent)
         {
             _download = download;
         }
 
-        public ComponentInstallTask(IComponent component, ComponentAction action, bool isPresent = false)
+        public UpdateItemInstallTask(IServiceProvider serviceProvider, IUpdateItem updateItem, UpdateAction action,
+            bool isPresent = false) : base(serviceProvider)
         {
-            Component = component ?? throw new ArgumentNullException(nameof(component));
+            UpdateItem = updateItem ?? throw new ArgumentNullException(nameof(updateItem));
             Action = action;
             _isPresent = isPresent;
         }
 
         public override string ToString()
         {
-            return $"{Action}ing \"{Component.Name}\"";
+            return $"{Action}ing \"{UpdateItem.Name}\"";
         }
 
         protected override void SynchronizedInvoke(CancellationToken token)
         {
-            if (Action == ComponentAction.Keep)
+            if (Action == UpdateAction.Keep)
             {
                 Result = InstallResult.Success;
                 return;
@@ -52,7 +59,7 @@ namespace TaskBasedUpdater.Tasks
             DownloadWaitTime += DateTime.Now - now;
             if (_download?.Error != null)
             {
-                Logger.Warn($"Skipping {Action} of '{Component.Name}' since downloading it failed: {_download.Error.Message}");
+                Logger.LogWarning($"Skipping {Action} of '{UpdateItem.Name}' since downloading it failed: {_download.Error.Message}");
                 return;
             }
 
@@ -61,26 +68,26 @@ namespace TaskBasedUpdater.Tasks
             {
                 try
                 {
-                    ValidateEnoughDiskSpaceAvailable(Component);
+                    ValidateEnoughDiskSpaceAvailable(UpdateItem);
 
                     if (UpdateConfiguration.Instance.BackupPolicy != BackupPolicy.Disable)
                         BackupComponent();
 
-                    if (Action == ComponentAction.Update)
+                    if (Action == UpdateAction.Update)
                     {
                         string localPath;
                         if (_download != null)
                             localPath = _download.DownloadPath;
-                        else if (Component.CurrentState == CurrentState.Downloaded && ComponentDownloadPathStorage.Instance.TryGetValue(Component, out var downloadedFile))
+                        else if (UpdateItem.CurrentState == CurrentState.Downloaded && UpdateItemDownloadPathStorage.Instance.TryGetValue(UpdateItem, out var downloadedFile))
                             localPath = downloadedFile;
                         else
                             throw new FileNotFoundException("Unable to find the downloaded file.");
 
-                        Result = installer.Install(Component, token, localPath, _isPresent);
+                        Result = installer.Install(UpdateItem, token, localPath, _isPresent);
                     }
-                    else if (Action == ComponentAction.Delete)
+                    else if (Action == UpdateAction.Delete)
                     {
-                        Result = installer.Remove(Component, token, _isPresent);
+                        Result = installer.Remove(UpdateItem, token, _isPresent);
                     }
 
                 }
@@ -96,7 +103,7 @@ namespace TaskBasedUpdater.Tasks
                 }
 
                 if (Result.IsFailure())
-                    throw new ComponentFailedException(new[] { Component });
+                    throw new UpdateItemFailedException(new[] { UpdateItem });
                 if (Result == InstallResult.Cancel)
                     throw new OperationCanceledException();
             }
@@ -105,30 +112,30 @@ namespace TaskBasedUpdater.Tasks
             }
         }
 
-        private static void ValidateEnoughDiskSpaceAvailable(IComponent component)
+        private static void ValidateEnoughDiskSpaceAvailable(IUpdateItem updateItem)
         {
-            if (component.RequiredAction == ComponentAction.Keep)
+            if (updateItem.RequiredAction == UpdateAction.Keep)
                 return;
             var option = DiskSpaceCalculator.CalculationOption.All;
-            if (component.CurrentState == CurrentState.Downloaded)
+            if (updateItem.CurrentState == CurrentState.Downloaded)
                 option &= ~DiskSpaceCalculator.CalculationOption.Download;
             if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Disable)
                 option &= ~DiskSpaceCalculator.CalculationOption.Backup;
-            DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(component, AdditionalSizeBuffer, option);
+            DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(updateItem, AdditionalSizeBuffer, option);
         }
 
         private void BackupComponent()
         {
             try
             {
-                BackupManager.Instance.CreateBackup(Component);
+                BackupManager.Instance.CreateBackup(UpdateItem);
             }
             catch (Exception ex)
             {
-                Logger.Warn(ex, $"Creating backup of {Component.Name} failed.");
+                Logger.LogWarning(ex, $"Creating backup of {UpdateItem.Name} failed.");
                 if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Required)
                 {
-                    Logger.Trace("Cancelling update operation due to BackupPolicy");
+                    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
                     throw;
                 }
             }

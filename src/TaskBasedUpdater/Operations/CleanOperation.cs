@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NLog;
+using SimplePipeline;
+using SimplePipeline.Runners;
 using TaskBasedUpdater.Component;
-using TaskBasedUpdater.TaskRunner;
 using TaskBasedUpdater.Tasks;
 
 namespace TaskBasedUpdater.Operations
 {
-    internal class CleanOperation : IUpdaterOperation
+    internal class CleanOperation : IOperation
     {
         private const int ConcurrentClean = 2;
 
@@ -26,7 +27,7 @@ namespace TaskBasedUpdater.Operations
 
         public CleanOperation()
         {
-            _taskRunner = new AsyncTaskRunner(ConcurrentClean);
+            _taskRunner = new AsyncTaskRunner(null, ConcurrentClean);
             _taskRunner.Error += OnCleaningError;
             _cleanFileTasks = new List<CleanFileTask>();
         }
@@ -49,7 +50,7 @@ namespace TaskBasedUpdater.Operations
                 var file = data.Value;
                 if (!File.Exists(file)) 
                     continue;
-                var cleanTask = new CleanFileTask(data.Key, file);
+                var cleanTask = new CleanFileTask(null, data.Key, file);
                 _cleanFileTasks.Add(cleanTask);
                 _taskRunner.Queue(cleanTask);
                 _filesToBeCleaned.Add(file);
@@ -82,7 +83,7 @@ namespace TaskBasedUpdater.Operations
                 }
 
                 BackupManager.Instance.Flush();
-                ComponentDownloadPathStorage.Instance.Clear();
+                UpdateItemDownloadPathStorage.Instance.Clear();
 
                 if (!_filesFailedToBeCleaned.Any())
                     return;
@@ -92,10 +93,10 @@ namespace TaskBasedUpdater.Operations
             }
         }
 
-        private static IEnumerable<KeyValuePair<IComponent, string?>> GetFiles()
+        private static IEnumerable<KeyValuePair<IUpdateItem, string?>> GetFiles()
         {
             var backupsFiles = BackupManager.Instance;
-            var downloadFiles = ComponentDownloadPathStorage.Instance;
+            var downloadFiles = UpdateItemDownloadPathStorage.Instance;
             return backupsFiles.Concat(downloadFiles).ToHashSet();
         }
     }

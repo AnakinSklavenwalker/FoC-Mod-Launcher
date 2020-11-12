@@ -2,6 +2,8 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
@@ -10,7 +12,7 @@ using TaskBasedUpdater.FileSystem;
 
 namespace TaskBasedUpdater.Tasks
 {
-    internal sealed class ComponentDownloadTask : SynchronizedUpdaterTask
+    internal sealed class UpdateItemDownloadTask : SynchronizedPipelineTask, IUpdaterTask
     {
         public const string NewFileExtension = ".new";
         internal static readonly long AdditionalSizeBuffer = 20000000;
@@ -21,26 +23,29 @@ namespace TaskBasedUpdater.Tasks
 
         public Uri Uri { get; }
 
+        public IUpdateItem UpdateItem { get; }
+
         public string DownloadPath { get; private set; }
 
-        public ComponentDownloadTask(IComponent component)
+        public UpdateItemDownloadTask(IServiceProvider serviceProvider, IUpdateItem updateItem) 
+            : base(serviceProvider)
         {
-            Component = component ?? throw new ArgumentNullException(nameof(component));
-            if (component.OriginInfo?.Origin == null)
+            UpdateItem = updateItem ?? throw new ArgumentNullException(nameof(updateItem));
+            if (updateItem.OriginInfo?.Origin == null)
                 throw new ArgumentNullException(nameof(OriginInfo));
-            Uri = component.OriginInfo.Origin;
+            Uri = updateItem.OriginInfo.Origin;
         }
 
         public override string ToString()
         {
-            return $"Downloading component '{Component.Name}' form \"{Uri}\"";
+            return $"Downloading component '{UpdateItem.Name}' form \"{Uri}\"";
         }
 
         protected override void SynchronizedInvoke(CancellationToken token)
         {
             if (token.IsCancellationRequested)
                 return;
-            var destination = Component.Destination;
+            var destination = UpdateItem.Destination;
 
             if (!Path.IsPathRooted(destination))
             {
@@ -63,7 +68,7 @@ namespace TaskBasedUpdater.Tasks
             if (lastException != null)
             {
                 var action = lastException is ValidationFailedException ? "validate download" : "download";
-                Logger.Error(lastException, $"Failed to {action} from '{Uri}'. {lastException.Message}");
+                Logger.LogError(lastException, $"Failed to {action} from '{Uri}'. {lastException.Message}");
                 throw lastException;
             }
         }
@@ -72,14 +77,14 @@ namespace TaskBasedUpdater.Tasks
         {
             try
             {
-                BackupManager.Instance.CreateBackup(Component);
+                BackupManager.Instance.CreateBackup(UpdateItem);
             }
             catch (Exception ex)
             {
-                Logger.Warn(ex, $"Creating backup of {Component.Name} failed.");
+                Logger.LogWarning(ex, $"Creating backup of {UpdateItem.Name} failed.");
                 if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Required)
                 {
-                    Logger.Trace("Cancelling update operation due to BackupPolicy");
+                    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
                     throw;
                 }
             }
@@ -98,14 +103,14 @@ namespace TaskBasedUpdater.Tasks
                 {
                     var downloadPath = CalculateDownloadPath();
                     DownloadPath = downloadPath;
-                    ComponentDownloadPathStorage.Instance.Add(Component, DownloadPath);
+                    UpdateItemDownloadPathStorage.Instance.Add(UpdateItem, DownloadPath);
 
                     DownloadAndVerifyAsync(downloadManager, DownloadPath, token).Wait();
                     if (!File.Exists(DownloadPath))
                     {
                         var message = "File not found after being successfully downloaded and verified: " +
-                                      DownloadPath + ", package: " + Component.Name;
-                        Logger.Warn(message);
+                                      DownloadPath + ", package: " + UpdateItem.Name;
+                        Logger.LogWarning(message);
                         throw new FileNotFoundException(message, DownloadPath);
                     }
 
@@ -113,18 +118,18 @@ namespace TaskBasedUpdater.Tasks
 
                     if (UpdateConfiguration.Instance.DownloadOnlyMode)
                     {
-                        Component.CurrentState = CurrentState.Installed;
-                        ComponentDownloadPathStorage.Instance.Remove(Component);
+                        UpdateItem.CurrentState = CurrentState.Installed;
+                        UpdateItemDownloadPathStorage.Instance.Remove(UpdateItem);
                     }
                     else
-                        Component.CurrentState = CurrentState.Downloaded;
+                        UpdateItem.CurrentState = CurrentState.Downloaded;
 
                     break;
                 }
                 catch (OperationCanceledException ex)
                 {
                     lastException = ex;
-                    Logger.Warn($"Download of {Uri} was cancelled.");
+                    Logger.LogWarning($"Download of {Uri} was cancelled.");
                     break;
                 }
                 catch (Exception ex)
@@ -132,7 +137,7 @@ namespace TaskBasedUpdater.Tasks
                     if (ex is AggregateException && ex.IsExceptionType<OperationCanceledException>())
                     {
                         lastException = ex;
-                        Logger.Warn($"Download of {Uri} was cancelled.");
+                        Logger.LogWarning($"Download of {Uri} was cancelled.");
                         break;
                     }
                     var wrappedException = ex.TryGetWrappedException();
@@ -141,12 +146,12 @@ namespace TaskBasedUpdater.Tasks
                     if (ex is UnauthorizedAccessException unauthorizedAccessException)
                     {
                         lastException = ex;
-                        Logger.Error(ex, $"Failed to download \"{Uri}\" to {DownloadPath}: {ex.Message}");
-                        Elevator.Instance.RequestElevation(unauthorizedAccessException, Component);
+                        Logger.LogError(ex, $"Failed to download \"{Uri}\" to {DownloadPath}: {ex.Message}");
+                        Elevator.Instance.RequestElevation(unauthorizedAccessException, UpdateItem);
                         break;
                     }
                     lastException = ex;
-                    Logger.Error(ex, $"Failed to download \"{Uri}\" on try {i}: {ex.Message}");
+                    Logger.LogError(ex, $"Failed to download \"{Uri}\" on try {i}: {ex.Message}");
                 }
             }
         }
@@ -155,19 +160,19 @@ namespace TaskBasedUpdater.Tasks
         {
             if (UpdateConfiguration.Instance.DownloadOnlyMode)
             {
-                var destination = Component.GetFilePath(); 
+                var destination = UpdateItem.GetFilePath(); 
                 return destination;
             }
 
             var randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
-            var backupFileName = $"{Component.Name}.{randomFileName}{NewFileExtension}";
+            var backupFileName = $"{UpdateItem.Name}.{randomFileName}{NewFileExtension}";
 
             if (!string.IsNullOrEmpty(UpdateConfiguration.Instance.AlternativeDownloadPath))
             {
                 Directory.CreateDirectory(UpdateConfiguration.Instance.AlternativeDownloadPath);
                 return Path.Combine(UpdateConfiguration.Instance.AlternativeDownloadPath, backupFileName);
             }
-            return Path.Combine(Component.Destination, backupFileName);
+            return Path.Combine(UpdateItem.Destination, backupFileName);
         }
 
         private async Task DownloadAndVerifyAsync(IDownloadManager downloadManager, string destination, CancellationToken token)
@@ -175,25 +180,25 @@ namespace TaskBasedUpdater.Tasks
             try
             {
                 using var file = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-                await downloadManager.DownloadAsync(Uri, file, status => _progress?.Invoke(status), token, Component, true);
+                await downloadManager.DownloadAsync(Uri, file, status => _progress?.Invoke(status), token, UpdateItem, true);
             }
             catch (OperationCanceledException)
             {
                 try
                 {
-                    Logger.Trace($"Deleting potentially partially downloaded file '{destination}' generated as a result of operation cancellation.");
+                    Logger.LogTrace($"Deleting potentially partially downloaded file '{destination}' generated as a result of operation cancellation.");
                     File.Delete(destination);
                 }
                 catch (Exception e)
                 {
-                    Logger.Trace($"Could not delete partially downloaded file '{destination}' due to exception: {e}");
+                    Logger.LogTrace($"Could not delete partially downloaded file '{destination}' due to exception: {e}");
                 }
                 throw;
             }
         }
 
         // TODO: This has to be a precheck, because of parallel download tasks
-        private static void ValidateEnoughDiskSpaceAvailable(IComponent component)
+        private static void ValidateEnoughDiskSpaceAvailable(IUpdateItem updateItem)
         {
             var option = DiskSpaceCalculator.CalculationOption.Download;
             if (UpdateConfiguration.Instance.DownloadOnlyMode)
@@ -203,7 +208,7 @@ namespace TaskBasedUpdater.Tasks
                     option |= DiskSpaceCalculator.CalculationOption.Backup;
             }
 
-            DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(component, AdditionalSizeBuffer, option);
+            DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(updateItem, AdditionalSizeBuffer, option);
         }
     }
 }
