@@ -8,7 +8,6 @@ using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Threading;
-using System.Threading.Tasks;
 using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater
@@ -139,14 +138,6 @@ namespace TaskBasedUpdater
                 mutexAbandoned = true;
             }
             return mutexAbandoned ? mutex : null;
-        }
-
-        public static async Task CopyFileToStreamAsync(string filePath, Stream stream, CancellationToken cancellation = default)
-        {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException(nameof(filePath));
-            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            await fileStream.CopyToAsync(stream, 81920, cancellation);
         }
 
         public static long CopyFileToStream(string filePath, Stream outStream, ProgressUpdateCallback progress, CancellationToken cancellationToken)
