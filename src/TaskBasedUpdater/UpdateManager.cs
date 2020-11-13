@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NLog;
+using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
@@ -18,7 +18,7 @@ namespace TaskBasedUpdater
 {
     public abstract class UpdateManager
     {
-        protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        protected readonly ILogger? Logger;
         private readonly List<IUpdateItem> _components = new List<IUpdateItem>();
         private readonly List<IUpdateItem> _removableComponents = new List<IUpdateItem>();
         private ReadOnlyCollection<IUpdateItem> _componentsReadOnly;
@@ -54,7 +54,7 @@ namespace TaskBasedUpdater
 
         public async Task CalculateComponentStatusAsync(CancellationToken cancellation = default)
         {
-            Logger.Trace("Calculating current component state");
+            Logger?.LogTrace("Calculating current component state");
 
             foreach (var component in Components)
             {
@@ -71,12 +71,12 @@ namespace TaskBasedUpdater
             {
                 Stream metadataStream = new MemoryStream();
                 await DownloadManager.Instance.DownloadAsync(UpdateCatalogLocation, metadataStream, null, cancellation);
-                Logger.Info($"Retrieved metadata stream from {UpdateCatalogLocation}");
+                Logger.LogInformation($"Retrieved metadata stream from {UpdateCatalogLocation}");
                 return metadataStream;
             }
             catch (OperationCanceledException)
             {
-                Logger.Trace("Getting metadata stream was cancelled");
+                Logger.LogTrace("Getting metadata stream was cancelled");
                 throw;
             }
         }
@@ -89,7 +89,7 @@ namespace TaskBasedUpdater
         public virtual async Task<UpdateInformation> CheckAndPerformUpdateAsync(CancellationToken cancellation)
         {
             cancellation.ThrowIfCancellationRequested();
-            Logger.Info("Start automatic check and update...");
+            Logger?.LogInformation("Start automatic check and update...");
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
 
             var updateInformation = new UpdateInformation();
@@ -119,7 +119,7 @@ namespace TaskBasedUpdater
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"Failed processing catalog: {e.Message}");
+                        Logger.LogError($"Failed processing catalog: {e.Message}");
                         throw;
                     }
 
@@ -204,7 +204,7 @@ namespace TaskBasedUpdater
                 if (!FileCanBeDeleted(file))
                     continue;
 
-                Logger.Info($"File marked to get deleted: {file.FullName}");
+                Logger.LogInformation($"File marked to get deleted: {file.FullName}");
 
                 var updateItem = new UpdateItem
                 {
@@ -232,7 +232,7 @@ namespace TaskBasedUpdater
                 var message =
                     $"Failed to restore from an unsuccessful update attempt: {restoreException.Message}. " +
                     "Please Restart your computer and try again!";
-                Logger.Error(message);
+                Logger.LogError(message);
                 throw new RestoreFailedException(message, restoreException);
             }
         }
@@ -242,33 +242,33 @@ namespace TaskBasedUpdater
             BackupManager.Instance.RestoreAllBackups();
         }
 
-        protected static void NoUpdateInformation(UpdateInformation updateInformation, bool userNotification = false)
+        protected void NoUpdateInformation(UpdateInformation updateInformation, bool userNotification = false)
         {
-            Logger.Debug("No update was required");
+            Logger?.LogDebug("No update was required");
             updateInformation.Result = UpdateResult.NoUpdate;
             updateInformation.Message = "No update was required";
             updateInformation.RequiresUserNotification = userNotification;
         }
 
-        protected static void SuccessInformation(UpdateInformation updateInformation, string message, bool requiresRestart = false, bool userNotification = true)
+        protected void SuccessInformation(UpdateInformation updateInformation, string message, bool requiresRestart = false, bool userNotification = true)
         {
-            Logger.Debug("Update was completed sucessfully");
+            Logger?.LogDebug("Update was completed sucessfully");
             updateInformation.Result = requiresRestart ? UpdateResult.SuccessRestartRequired : UpdateResult.Success;
             updateInformation.Message = message;
             updateInformation.RequiresUserNotification = userNotification;
         }
 
-        protected static void ErrorInformation(UpdateInformation updateInformation, string errorMessage, bool userNotification = true)
+        protected void ErrorInformation(UpdateInformation updateInformation, string errorMessage, bool userNotification = true)
         {
-            Logger.Debug($"Update failed with message: {errorMessage}");
+            Logger?.LogDebug($"Update failed with message: {errorMessage}");
             updateInformation.Result = UpdateResult.Failed;
             updateInformation.Message = errorMessage;
             updateInformation.RequiresUserNotification = userNotification;
         }
 
-        protected static void CancelledInformation(UpdateInformation updateInformation, bool userNotification = false)
+        protected void CancelledInformation(UpdateInformation updateInformation, bool userNotification = false)
         {
-            Logger.Debug("Operation was cancelled by user request");
+            Logger?.LogDebug("Operation was cancelled by user request");
             updateInformation.Result = UpdateResult.Cancelled;
             updateInformation.Message = "Operation cancelled by user request";
             updateInformation.RequiresUserNotification = userNotification;
@@ -317,11 +317,11 @@ namespace TaskBasedUpdater
         {
             try
             {
-                new CleanOperation().Run();
+                new CleanOperation(null).Run();
             }
             catch (Exception e)
             {
-                Logger.Trace(e, $"Failed clean up: {e.Message}");
+                Logger?.LogTrace(e, $"Failed clean up: {e.Message}");
             }
             return Task.CompletedTask;
         }
@@ -345,11 +345,11 @@ namespace TaskBasedUpdater
         {
             cancellation.ThrowIfCancellationRequested();
 
-            Logger.Trace("Performing update...");
+            Logger?.LogTrace("Performing update...");
 
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
 
-            var operation = new UpdateOperation(components);
+            var operation = new UpdateOperation(components, null);
             try
             {
                 await Task.Run(() =>
@@ -362,27 +362,27 @@ namespace TaskBasedUpdater
             }
             catch (OperationCanceledException e)
             {
-                Logger.Error(e, $"Cancelled update: {e.Message}");
+                Logger?.LogError(e, $"Cancelled update: {e.Message}");
                 throw;
             }
             catch (UpdateItemFailedException e)
             {
-                Logger?.Error(e, "Component Failed to update");
+                Logger?.LogError(e, "Component Failed to update");
                 throw;
             }
             catch (Exception e)
             {
-                Logger.Error(e, $"Failed update: {e.Message}");
+                Logger.LogError(e, $"Failed update: {e.Message}");
                 throw;
             }
         }
         
         protected internal Task CalculateComponentStatusAsync(IUpdateItem component)
         {
-            Logger.Trace($"Check dependency if update required: {component}");
+            Logger?.LogTrace($"Check dependency if update required: {component}");
             
             var destination = component.Destination;
-            Logger.Trace($"Dependency base path: {destination}");
+            Logger?.LogTrace($"Dependency base path: {destination}");
             if (string.IsNullOrEmpty(destination))
                 return Task.FromException(new InvalidOperationException());
 
@@ -392,7 +392,7 @@ namespace TaskBasedUpdater
                 var currentVersion = GetComponentVersion(component);
                 if (currentVersion == null)
                 {
-                    Logger.Info($"Dependency marked to get updated: {component}");
+                    Logger?.LogInformation($"Dependency marked to get updated: {component}");
                     component.CurrentState = CurrentState.None;
                     component.RequiredAction = UpdateAction.Update;
                     return Task.CompletedTask;
@@ -410,30 +410,30 @@ namespace TaskBasedUpdater
 
                 if (newVersion != null && newVersion != currentVersion)
                 {
-                    Logger.Info($"Dependency marked to get updated: {component}");
+                    Logger?.LogInformation($"Dependency marked to get updated: {component}");
                     component.RequiredAction = UpdateAction.Update;
                     return Task.CompletedTask;
                 }
 
                 if (component.OriginInfo.ValidationContext is null)
                 {
-                    Logger.Info($"Dependency marked to keep: {component}");
+                    Logger?.LogInformation($"Dependency marked to keep: {component}");
                     return Task.CompletedTask;
                 }
 
                 var hashResult = HashVerifier.VerifyFile(filePath, component.OriginInfo.ValidationContext);
                 if (hashResult == ValidationResult.HashMismatch)
                 {
-                    Logger.Info($"Dependency marked to get updated: {component}");
+                    Logger?.LogInformation($"Dependency marked to get updated: {component}");
                     component.RequiredAction = UpdateAction.Update;
                     return Task.CompletedTask;
                 }
 
-                Logger.Info($"Dependency marked to keep: {component}");
+                Logger?.LogInformation($"Dependency marked to keep: {component}");
                 return Task.CompletedTask;
             }
 
-            Logger.Info($"Dependency marked to get updated: {component}");
+            Logger?.LogInformation($"Dependency marked to get updated: {component}");
             component.RequiredAction = UpdateAction.Update;
             return Task.CompletedTask;
         }

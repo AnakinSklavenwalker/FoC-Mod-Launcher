@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
-using NLog;
+using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.NativeMethods;
 
 namespace TaskBasedUpdater.Restart
 {
     internal class LockingProcessManager : ILockingProcessManager
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly ILogger? Logger;
 
         private int _sessionId;
         private string _sessionKey;
@@ -60,7 +60,7 @@ namespace TaskBasedUpdater.Restart
             }
             catch (Exception ex)
             {
-                Logger.Warn($"Failed to query processes with open handles (0x{ex.HResult:x8}): {ex.Message}");
+                Logger.LogWarning($"Failed to query processes with open handles (0x{ex.HResult:x8}): {ex.Message}");
             }
 
             if (source != null)

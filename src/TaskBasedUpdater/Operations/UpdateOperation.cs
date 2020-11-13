@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
 using SimplePipeline.Tasks;
@@ -12,12 +12,14 @@ using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.Restart;
 using TaskBasedUpdater.Tasks;
+using Validation;
 
 namespace TaskBasedUpdater.Operations
 {
     internal class UpdateOperation : IOperation
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger? _logger;
 
         private readonly HashSet<IUpdateItem> _allComponents;
         private bool _scheduled;
@@ -44,8 +46,11 @@ namespace TaskBasedUpdater.Operations
 
         private static int ParallelDownload => 2;
 
-        public UpdateOperation(IEnumerable<IUpdateItem> dependencies)
+        public UpdateOperation(IEnumerable<IUpdateItem> dependencies, IServiceProvider serviceProvider)
         {
+            Requires.NotNull(dependencies, nameof(dependencies));
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceProvider = serviceProvider;
             _allComponents = new HashSet<IUpdateItem>(dependencies, UpdateItemIdentityComparer.Default);
         }
 
@@ -55,7 +60,7 @@ namespace TaskBasedUpdater.Operations
             if (_allComponents.Count == 0)
             {
                 var operationException = new InvalidOperationException("No packages were found to install/uninstall.");
-                Logger.Error(operationException, operationException.Message);
+                _logger.LogError(operationException, operationException.Message);
                 _planSuccessful = false;
                 return _planSuccessful.Value;
             }
@@ -112,7 +117,7 @@ namespace TaskBasedUpdater.Operations
                         _linkedCancellationTokenSource = null;
                     }
 
-                    Logger.Trace("Completed update operation");
+                    _logger.LogTrace("Completed update operation");
                 }
 
                 if (RequiredProcessElevation)
@@ -134,7 +139,7 @@ namespace TaskBasedUpdater.Operations
 
                 var requiresRestart = LockedFilesWatcher.Instance.LockedFiles.Any();
                 if (requiresRestart)
-                    Logger.Info("The operation finished. A restart is pedning.");
+                    _logger.LogInformation("The operation finished. A restart is pedning.");
             }
             finally
             {
@@ -145,7 +150,7 @@ namespace TaskBasedUpdater.Operations
 
         private void OnElevationRequested(object sender, ElevationRequestData e)
         {
-            Logger.Info($"Elevation requested: {e.Exception.Message}");
+            _logger.LogInformation($"Elevation requested: {e.Exception.Message}");
             RequiredProcessElevation = true;
             _elevationRequests.Add(e);
             if (UpdateConfiguration.Instance.RequiredElevationCancelsUpdate)
@@ -180,7 +185,7 @@ namespace TaskBasedUpdater.Operations
             if (_downloads == null)
             {
                 var workers = ParallelDownload;
-                Logger?.Trace($"Concurrent downloads: {workers}");
+                _logger?.LogTrace($"Concurrent downloads: {workers}");
                 _downloads = new AsyncTaskRunner(null, workers);
                 _downloads.Error += OnError;
             }
@@ -298,7 +303,7 @@ namespace TaskBasedUpdater.Operations
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Skipping as an error occurred");
+                _logger.LogError(ex, "Skipping as an error occurred");
             }
         }
 

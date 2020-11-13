@@ -2,14 +2,14 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using NLog;
+using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Restart;
 
 namespace TaskBasedUpdater.FileSystem
 {
     internal class LockedFileLogger
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger? _logger;
         private static LockedFileLogger? _instance;
 
         public static LockedFileLogger Instance => _instance ??= new LockedFileLogger();
@@ -27,7 +27,7 @@ namespace TaskBasedUpdater.FileSystem
             {
                 var processes = LockingProcessManager.GetProcesses(files).ToList();
                 if (!processes.IsNullOrEmpty())
-                    Logger.Warn($"The following file(s) are locked: {files.TryJoin(", ")}, process(es): {processes.Select(Format).TryJoin(", ")}");
+                    _logger?.LogWarning($"The following file(s) are locked: {files.TryJoin(", ")}, process(es): {processes.Select(Format).TryJoin(", ")}");
             }
             // TODO: Directories??
         }

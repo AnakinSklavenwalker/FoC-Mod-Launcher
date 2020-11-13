@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
 using TaskBasedUpdater.Component;
@@ -16,7 +16,8 @@ namespace TaskBasedUpdater.Operations
     {
         private const int ConcurrentClean = 2;
 
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger? _logger;
        
         private readonly IList<CleanFileTask> _cleanFileTasks;
         private readonly AsyncTaskRunner _taskRunner;
@@ -25,8 +26,9 @@ namespace TaskBasedUpdater.Operations
         private bool _planSuccessful;
        
 
-        public CleanOperation()
+        public CleanOperation(IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider;
             _taskRunner = new AsyncTaskRunner(null, ConcurrentClean);
             _taskRunner.Error += OnCleaningError;
             _cleanFileTasks = new List<CleanFileTask>();
@@ -66,12 +68,12 @@ namespace TaskBasedUpdater.Operations
             if (!Plan())
                 return;
             if (!_filesToBeCleaned.Any())
-                Logger.Trace("No files to clean up");
+                _logger.LogTrace("No files to clean up");
             else
             {
-                Logger.Trace("These files are going to be deleted:");
+                _logger.LogTrace("These files are going to be deleted:");
                 foreach (var file in _filesToBeCleaned)
-                    Logger.Trace(file);
+                    _logger.LogTrace(file);
 
                 _taskRunner.Run(token);
                 try
@@ -87,9 +89,9 @@ namespace TaskBasedUpdater.Operations
 
                 if (!_filesFailedToBeCleaned.Any())
                     return;
-                Logger.Trace("These files have not been deleted because of an internal error:");
+                _logger.LogTrace("These files have not been deleted because of an internal error:");
                 foreach (var file in _filesFailedToBeCleaned)
-                    Logger.Trace(file);
+                    _logger.LogTrace(file);
             }
         }
 

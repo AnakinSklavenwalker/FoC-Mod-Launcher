@@ -3,14 +3,17 @@ using System.IO;
 using System.Net;
 using System.Net.Cache;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
+using Validation;
 
 namespace TaskBasedUpdater.Download
 {
     internal class WebClientDownloader: DownloadEngineBase
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger? _logger;
         private readonly DownloadHelpers _helper;
 
         static WebClientDownloader()
@@ -20,9 +23,12 @@ namespace TaskBasedUpdater.Download
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
-        public WebClientDownloader() : base("WebClient", new[] {DownloadSource.Internet})
+        public WebClientDownloader(IServiceProvider serviceProvider) : base("WebClient", new[] {DownloadSource.Internet})
         {
-            _helper = new DownloadHelpers();
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceProvider = serviceProvider;
+            _logger = serviceProvider.GetService<ILogger>();
+            _helper = new DownloadHelpers(serviceProvider);
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
@@ -81,13 +87,13 @@ namespace TaskBasedUpdater.Download
                         : "DownloadCore failed";
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        Logger.Trace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "' - " +
+                        _logger.LogTrace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "' - " +
                                      message);
                         cancellationToken.ThrowIfCancellationRequested();
                     }
                     else
                     {
-                        Logger.Trace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "'.");
+                        _logger.LogTrace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "'.");
                         throw;
                     }
                 }
@@ -141,7 +147,7 @@ namespace TaskBasedUpdater.Download
                         !uri.ToString().EndsWith(responseUri, StringComparison.InvariantCultureIgnoreCase))
                     {
                         summary.FinalUri = responseUri;
-                        Logger.Trace($"Uri '{uri}' + redirected to '{responseUri}'");
+                        _logger.LogTrace($"Uri '{uri}' + redirected to '{responseUri}'");
                     }
 
                     switch (httpWebResponse.StatusCode)
@@ -156,15 +162,15 @@ namespace TaskBasedUpdater.Download
                             ++proxyResolution;
                             if (proxyResolution == ProxyResolution.Error)
                             {
-                                Logger?.Trace($"WebResponse error '{httpWebResponse.StatusCode}' with '{uri}'.");
+                                _logger?.LogTrace($"WebResponse error '{httpWebResponse.StatusCode}' with '{uri}'.");
                                 _helper.ThrowWrappedWebException((int) httpWebResponse.StatusCode, "WebRequest.GetResponse", summary.FinalUri);
                                 continue;
                             }
-                            Logger.Trace($"WebResponse error '{httpWebResponse.StatusCode}' - '{uri.AbsoluteUri}'. Reattempt with proxy set to '{proxyResolution}'");
+                            _logger.LogTrace($"WebResponse error '{httpWebResponse.StatusCode}' - '{uri.AbsoluteUri}'. Reattempt with proxy set to '{proxyResolution}'");
                             continue;
                         default:
                             proxyResolution = ProxyResolution.Error;
-                            Logger.Trace($"WebResponse error '{httpWebResponse.StatusCode}'  - '{uri.AbsoluteUri}'.");
+                            _logger.LogTrace($"WebResponse error '{httpWebResponse.StatusCode}'  - '{uri.AbsoluteUri}'.");
                             _helper.ThrowWrappedWebException((int) httpWebResponse.StatusCode, "WebRequest.GetResponse", summary.FinalUri);
                             continue;
                     }
@@ -173,7 +179,7 @@ namespace TaskBasedUpdater.Download
                 {
                     if (proxyResolution == ProxyResolution.Error)
                     {
-                        Logger.Debug($"WebResponse exception '{ex.Status}' with '{uri}'.");
+                        _logger.LogDebug($"WebResponse exception '{ex.Status}' with '{uri}'.");
                         throw;
                     }
                 }
@@ -182,10 +188,10 @@ namespace TaskBasedUpdater.Download
                     var errorMessage = cancellationToken.IsCancellationRequested ? "GetWebResponse failed along with a cancellation request" : "GetWebResponse failed";
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        Logger.Trace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "' - " + errorMessage);
+                        _logger.LogTrace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "' - " + errorMessage);
                         cancellationToken.ThrowIfCancellationRequested();
                     }
-                    Logger.Trace("WebClient error '" + ex.Status + "' - proxy setting '" + proxyResolution + "' - '" + uri.AbsoluteUri + "'.");
+                    _logger.LogTrace("WebClient error '" + ex.Status + "' - proxy setting '" + proxyResolution + "' - '" + uri.AbsoluteUri + "'.");
                     switch (ex.Status)
                     {
                         case WebExceptionStatus.NameResolutionFailure:
@@ -201,13 +207,13 @@ namespace TaskBasedUpdater.Download
                     }
                     if (proxyResolution == ProxyResolution.Error)
                     {
-                        Logger.Trace("WebClient failed in '" + uri.AbsoluteUri + "' with '" + ex.Message + "' - '" + uri.AbsoluteUri + "'.");
+                        _logger.LogTrace("WebClient failed in '" + uri.AbsoluteUri + "' with '" + ex.Message + "' - '" + uri.AbsoluteUri + "'.");
                         throw;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger?.Debug(ex, "General exception error in web client.");
+                    _logger?.LogDebug(ex, "General exception error in web client.");
                     throw;
                 }
                 finally

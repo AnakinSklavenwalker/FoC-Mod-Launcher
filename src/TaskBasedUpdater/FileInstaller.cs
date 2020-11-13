@@ -3,19 +3,21 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.FileSystem;
 using TaskBasedUpdater.Restart;
+using Validation;
 
 namespace TaskBasedUpdater
 {
     internal class FileInstaller
     {
+        private readonly IServiceProvider _serviceProvider;
         private static FileInstaller _fileInstaller;
 
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger? _logger;
 
         private readonly List<string> _lockedFiles;
         private LockedFileLogger _lockedFileLogger;
@@ -28,11 +30,13 @@ namespace TaskBasedUpdater
         protected IUpdateItem UpdateItem { get; private set; }
 
 
-        public static FileInstaller Instance => _fileInstaller ??= new FileInstaller();
+        public static FileInstaller Instance => _fileInstaller ??= new FileInstaller(null);
 
 
-        private FileInstaller()
+        private FileInstaller(IServiceProvider serviceProvider)
         {
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceProvider = serviceProvider;
             _lockedFilesWatcher = LockedFilesWatcher.Instance;
             _lockedFiles = new List<string>();
         }
@@ -66,7 +70,7 @@ namespace TaskBasedUpdater
             var file = updateItem.GetFilePath();
             if (localPath.Equals(file))
             {
-                Logger.Warn("Install: Local path and destination path are equal.");
+                _logger.LogWarning("Install: Local path and destination path are equal.");
                 return InstallResult.Failure;
             }
 
@@ -87,7 +91,7 @@ namespace TaskBasedUpdater
         {
             if (!FileSystemExtensions.ContainsPath(installDir, updateItem.Destination))
             {
-                Logger.Warn("Different paths for component and method input");
+                _logger.LogWarning("Different paths for component and method input");
                 return InstallResult.Failure;
             }
 
@@ -125,7 +129,7 @@ namespace TaskBasedUpdater
 
             if (output == null)
             {
-                Logger.Error($"Creation of file {destination} failed");
+                _logger.LogError($"Creation of file {destination} failed");
                 return false;
             }
 
@@ -141,7 +145,7 @@ namespace TaskBasedUpdater
         {
             if (!File.Exists(file))
             {
-                Logger.Trace($"'{file}' file is already deleted.");
+                _logger.LogTrace($"'{file}' file is already deleted.");
                 restartRequired = false;
                 return true;
             }
@@ -149,16 +153,16 @@ namespace TaskBasedUpdater
             var deleteSuccess = FileSystemExtensions.DeleteFileWithRetry(file, out restartRequired, true, 2, 500,
                 (ex, attempt) =>
                 {
-                    Logger?.Trace(
+                    _logger?.LogTrace(
                         $"Error occurred while deleting file '{file}'. Error details: {ex.Message}. Retrying after {0.5f} seconds...");
                     return true;
                 });
             if (deleteSuccess)
-                Logger.Info($"{file} file deleted.");
+                _logger.LogInformation($"{file} file deleted.");
             else
             {
                 _lockedFiles.Add(file);
-                Logger.Info($"{file} file is scheduled for deletion after restarting.");
+                _logger.LogInformation($"{file} file is scheduled for deletion after restarting.");
             }
 
             return deleteSuccess;
@@ -174,7 +178,7 @@ namespace TaskBasedUpdater
             else
             {
                 var text = "Result: " + result;
-                Logger.Trace("Package executed successfully. {0}", text);
+                _logger.LogTrace("Package executed successfully. {0}", text);
             }
         }
 
@@ -206,7 +210,7 @@ namespace TaskBasedUpdater
             }
             catch (OperationCanceledException)
             {
-                Logger.Info("User canceled during install.");
+                _logger.LogInformation("User canceled during install.");
                 return InstallResult.Cancel;
             }
             catch (UnauthorizedAccessException e)
@@ -237,7 +241,7 @@ namespace TaskBasedUpdater
             }
             catch (OperationCanceledException)
             {
-                Logger.Info("User canceled during component uninstall.");
+                _logger.LogInformation("User canceled during component uninstall.");
                 return InstallResult.Cancel;
             }
             catch (Exception e)
@@ -259,7 +263,7 @@ namespace TaskBasedUpdater
             }
             catch (Exception ex)
             {
-                Logger?.Warn($"Failed to log locking processes: {ex.Message}");
+                _logger?.LogWarning($"Failed to log locking processes: {ex.Message}");
             }
             return installResult;
         }
@@ -311,9 +315,9 @@ namespace TaskBasedUpdater
             this._lockedFiles.Clear();
         }
 
-        private static void LogFailure(IUpdateItem updateItem, UpdateAction executeAction, string details)
+        private void LogFailure(IUpdateItem updateItem, UpdateAction executeAction, string details)
         {
-            Logger.Error(updateItem != null
+            _logger?.LogError(updateItem != null
                 ? $"Package '{updateItem.Name}' failed to {executeAction.ToString().ToLowerInvariant()}. {details}"
                 : $"Failed to {executeAction.ToString().ToLowerInvariant()}. {details}");
         }

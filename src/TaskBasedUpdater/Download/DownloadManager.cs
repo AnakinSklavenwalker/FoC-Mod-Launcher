@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NLog;
+using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
@@ -13,7 +13,7 @@ namespace TaskBasedUpdater.Download
 {
     internal class DownloadManager : IDownloadManager
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger? _logger;
         private static DownloadManager? _instance;
         private readonly List<IDownloadEngine> _allEngines = new List<IDownloadEngine>();
         private readonly List<IDownloadEngine> _defaultEngines = new List<IDownloadEngine>();
@@ -49,7 +49,7 @@ namespace TaskBasedUpdater.Download
 
         private DownloadManager()
         {
-            AddDownloadEngine(new WebClientDownloader());
+            AddDownloadEngine(new WebClientDownloader(null));
             AddDownloadEngine(new FileDownloader());
             DefaultEngines = _allEngines.Select(e => e.Name);
             SleepDurationBetweenRetries = UpdateConfiguration.Instance.DownloadRetryDelay;
@@ -58,7 +58,7 @@ namespace TaskBasedUpdater.Download
         public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken,
             IUpdateItem? updateItem = default, bool verify = false)
         {
-            Logger.Trace($"Download requested: {uri.AbsoluteUri}");
+            _logger?.LogTrace($"Download requested: {uri.AbsoluteUri}");
             if (outputStream == null)
                 throw new ArgumentNullException(nameof(outputStream));
             if (!outputStream.CanWrite)
@@ -68,13 +68,13 @@ namespace TaskBasedUpdater.Download
                 if (!string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase) && !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase) && !string.Equals(uri.Scheme, "ftp", StringComparison.OrdinalIgnoreCase))
                 {
                     var argumentException = new ArgumentException($"Uri scheme '{uri.Scheme}' is not supported.");
-                    Logger?.Trace($"Uri scheme '{uri.Scheme}' is not supported. {argumentException.Message}");
+                    _logger?.LogTrace($"Uri scheme '{uri.Scheme}' is not supported. {argumentException.Message}");
                     throw argumentException;
                 }
                 if (uri.AbsoluteUri.Length < 7)
                 {
                     var argumentException = new ArgumentException($"Invalid Uri: {uri.AbsoluteUri}.");
-                    Logger?.Trace($"The Uri is too short: {uri.AbsoluteUri}; {argumentException.Message}");
+                    _logger?.LogTrace($"The Uri is too short: {uri.AbsoluteUri}; {argumentException.Message}");
                     throw argumentException;
                 }
             }
@@ -88,7 +88,7 @@ namespace TaskBasedUpdater.Download
             }
             catch (Exception ex)
             {
-                Logger.Trace($"Unable to get download engine: {ex.Message}");
+                _logger.LogTrace($"Unable to get download engine: {ex.Message}");
                 throw;
             }
         }
@@ -104,7 +104,7 @@ namespace TaskBasedUpdater.Download
                 var length = outputStream.Length;
                 try
                 {
-                    Logger.Trace($"Attempting download '{uri.AbsoluteUri}' using engine '{engine.Name}'");
+                    _logger.LogTrace($"Attempting download '{uri.AbsoluteUri}' using engine '{engine.Name}'");
                     var engineSummary = engine.Download(uri, outputStream,
                         status =>
                         {
@@ -115,7 +115,7 @@ namespace TaskBasedUpdater.Download
                     if (outputStream.Length == 0 && !UpdateConfiguration.Instance.AllowEmptyFileDownload)
                     {
                         var exception = new UpdaterException($"Empty file downloaded on '{uri}'.");
-                        Logger?.Error(exception, exception.Message);
+                        _logger?.LogError(exception, exception.Message);
                         throw exception;
                     }
 
@@ -145,17 +145,17 @@ namespace TaskBasedUpdater.Download
                                 {
                                     var exception = new ValidationFailedException(DownloadResult.HashMismatch,
                                         $"Hash on downloaded file '{uri.AbsoluteUri}' does not match expected value.");
-                                    Logger?.Error(exception, exception.Message);
+                                    _logger?.LogError(exception, exception.Message);
                                     throw exception;
                                 }
                             }
                             else
-                                Logger.Trace(
+                                _logger.LogTrace(
                                     $"Skipping validation because validation context of Component {updateItem.Name} is not valid.");
                         }
                     }
 
-                    Logger?.Info($"Download of '{uri.AbsoluteUri}' succeeded using engine '{engine.Name}'");
+                    _logger?.LogInformation($"Download of '{uri.AbsoluteUri}' succeeded using engine '{engine.Name}'");
                     PreferredDownloadEngines.Instance.LastSuccessfulEngineName = engine.Name;
                     engineSummary.DownloadEngine = engine.Name;
                     return engineSummary;
@@ -167,7 +167,7 @@ namespace TaskBasedUpdater.Download
                 catch (Exception ex)
                 {
                     failureList.Add(new DownloadFailureInformation(ex, engine.Name));
-                    Logger.Trace($"Download failed using {engine.Name} engine. {ex}");
+                    _logger.LogTrace($"Download failed using {engine.Name} engine. {ex}");
 
                     if (engine.Equals(engines.LastOrDefault()))
                         throw new DownloadFailureException(failureList);
@@ -178,7 +178,7 @@ namespace TaskBasedUpdater.Download
                     var millisecondsTimeout = SleepDurationBetweenRetries;
                     if (millisecondsTimeout < 0)
                         millisecondsTimeout = 0;
-                    Logger.Trace($"Sleeping {millisecondsTimeout} before retrying download.");
+                    _logger.LogTrace($"Sleeping {millisecondsTimeout} before retrying download.");
                     Thread.Sleep(millisecondsTimeout);
                 }
             }
@@ -196,13 +196,13 @@ namespace TaskBasedUpdater.Download
             _defaultEngines.Add(engine);
         }
 
-        private static IDownloadEngine[] GetSuitableEngines(IEnumerable<IDownloadEngine> downloadEngines, Uri uri)
+        private IDownloadEngine[] GetSuitableEngines(IEnumerable<IDownloadEngine> downloadEngines, Uri uri)
         {
             var source = uri.IsFile || uri.IsUnc ? DownloadSource.File : DownloadSource.Internet;
             var array = downloadEngines.Where(e => e.IsSupported(source)).ToArray();
             if (array.Length == 0)
             {
-                Logger?.Trace("Unable to select suitable download engine.");
+                _logger?.LogTrace("Unable to select suitable download engine.");
                 throw new NoSuitableEngineException("Can not download. No suitable download engine found.");
             }
             return PreferredDownloadEngines.Instance.GetEnginesInPriorityOrder(array).ToArray();
