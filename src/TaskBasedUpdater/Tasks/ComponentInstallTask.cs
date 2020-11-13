@@ -71,7 +71,7 @@ namespace TaskBasedUpdater.Tasks
                     ValidateEnoughDiskSpaceAvailable(UpdateItem);
 
                     if (UpdateConfiguration.Instance.BackupPolicy != BackupPolicy.Disable)
-                        BackupComponent();
+                        BackupItem();
 
                     if (Action == UpdateAction.Update)
                     {
@@ -124,7 +124,7 @@ namespace TaskBasedUpdater.Tasks
             DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(updateItem, AdditionalSizeBuffer, option);
         }
 
-        private void BackupComponent()
+        private void BackupItem()
         {
             try
             {

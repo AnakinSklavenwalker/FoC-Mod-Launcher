@@ -8,7 +8,7 @@
              WindowStartupLocation="CenterScreen" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
              Width="320" DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <FrameworkElement.Resources>
-        <FontFamily x:Key="EaWFont">/FocLauncher.Core;component/Resources/Fonts/#Empire At War Bold</FontFamily>
+        <FontFamily x:Key="EaWFont">/FocLauncher.Core;updateItem/Resources/Fonts/#Empire At War Bold</FontFamily>
 
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters1:NullOrEmptyToVisibilityConverter x:Key="NullOrEmptyToVisibilityConverter"/>

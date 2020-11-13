@@ -48,7 +48,7 @@ namespace TaskBasedUpdater
         {
             var stringBuilder = new StringBuilder();
             if (!string.IsNullOrEmpty(updateItem.Name)) 
-                stringBuilder.Append("Component=" + updateItem.Name);
+                stringBuilder.Append("Item=" + updateItem.Name);
             if (!string.IsNullOrEmpty(action))
             {
                 if (stringBuilder.Length > 0) 

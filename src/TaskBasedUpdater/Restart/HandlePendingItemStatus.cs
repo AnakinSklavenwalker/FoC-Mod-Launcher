@@ -1,6 +1,6 @@
 ﻿namespace TaskBasedUpdater.Restart
 {
-    public enum HandlePendingComponentsStatus
+    public enum HandlePendingItemStatus
     {
         Handled,
         HandledButStillPending,

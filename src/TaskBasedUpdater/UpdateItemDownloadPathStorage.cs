@@ -18,22 +18,22 @@ namespace TaskBasedUpdater
         {
         }
 
-        public void Add(IUpdateItem component, string downloadPath)
+        public void Add(IUpdateItem item, string downloadPath)
         {
-            if (_downloadLookup.ContainsKey(component))
-                _downloadLookup[component] = downloadPath;
+            if (_downloadLookup.ContainsKey(item))
+                _downloadLookup[item] = downloadPath;
             else
-                _downloadLookup.Add(component, downloadPath);
+                _downloadLookup.Add(item, downloadPath);
         }
 
-        public bool TryGetValue(IUpdateItem component, out string value)
+        public bool TryGetValue(IUpdateItem item, out string value)
         {
-            return _downloadLookup.TryGetValue(component, out value);
+            return _downloadLookup.TryGetValue(item, out value);
         }
 
-        public bool Remove(IUpdateItem component)
+        public bool Remove(IUpdateItem item)
         {
-            return _downloadLookup.Remove(component);
+            return _downloadLookup.Remove(item);
         }
 
         public void Clear()

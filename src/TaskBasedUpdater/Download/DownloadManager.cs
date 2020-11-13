@@ -129,17 +129,17 @@ namespace TaskBasedUpdater.Download
                         }
                         else
                         {
-                            var componentValidationContext = updateItem.OriginInfo?.ValidationContext;
-                            var valid = componentValidationContext?.Verify();
+                            var validationContext = updateItem.OriginInfo?.ValidationContext;
+                            var valid = validationContext?.Verify();
 
                             if ((!valid.HasValue || !valid.Value) && UpdateConfiguration.Instance.ValidationPolicy ==
                                 ValidationPolicy.Enforce)
                                 throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
-                                    $"Component '{updateItem.Name}' is missing or has an invalid ValidationInfo");
+                                    $"Update Item'{updateItem.Name}' is missing or has an invalid ValidationInfo");
 
                             if (valid.HasValue && valid.Value)
                             {
-                                var validationResult = HashVerifier.Verify(outputStream, componentValidationContext);
+                                var validationResult = HashVerifier.Verify(outputStream, validationContext);
                                 engineSummary.ValidationResult = validationResult;
                                 if (validationResult == ValidationResult.HashMismatch)
                                 {
@@ -151,7 +151,7 @@ namespace TaskBasedUpdater.Download
                             }
                             else
                                 _logger.LogTrace(
-                                    $"Skipping validation because validation context of Component {updateItem.Name} is not valid.");
+                                    $"Skipping validation because validation context of Update Item {updateItem.Name} is not valid.");
                         }
                     }
 

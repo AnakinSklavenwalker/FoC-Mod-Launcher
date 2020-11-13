@@ -6,7 +6,7 @@ namespace TaskBasedUpdater.Elevation
 {
     public static class ElevationUtilities
     {
-        public static IEnumerable<IUpdateItem> AggregateComponents(this ElevationRequireException exception)
+        public static IEnumerable<IUpdateItem> AggregateItems(this ElevationRequireException exception)
         {
             if (exception == null)
                 throw new ArgumentNullException(nameof(exception));

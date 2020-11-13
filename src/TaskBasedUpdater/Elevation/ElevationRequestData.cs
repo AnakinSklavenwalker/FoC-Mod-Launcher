@@ -9,10 +9,10 @@ namespace TaskBasedUpdater.Elevation
 
         public Exception Exception { get; }
 
-        public ElevationRequestData(Exception exception, IUpdateItem component)
+        public ElevationRequestData(Exception exception, IUpdateItem updateItem)
         {
             Exception = exception;
-            UpdateItem = component;
+            UpdateItem = updateItem;
         }
 
         public bool Equals(ElevationRequestData? other)

@@ -48,7 +48,7 @@ namespace FocLauncherHost
 
         protected override bool FileCanBeDeleted(FileInfo file)
         {
-            return !Components.Any(x =>
+            return !UpdateItems.Any(x =>
                 file.Name.Equals(x.Name) && x.Destination.Equals(LauncherConstants.ApplicationBasePath));
         }
 
@@ -121,7 +121,7 @@ namespace FocLauncherHost
         {
             token.ThrowIfCancellationRequested();
             if (!pendingComponents.Any())
-                return new PendingHandledResult(HandlePendingComponentsStatus.Handled);
+                return new PendingHandledResult(HandlePendingItemStatus.Handled);
 
             Logger.Trace("Hanlde restart request due to locked files");
 
@@ -129,7 +129,7 @@ namespace FocLauncherHost
             var isSelfLocking = lockingProcessManager.ProcessesContainsSelf();
 
             if (!isSelfLocking && processes.Any(x => x.ApplicationType == TaskBasedUpdater.Restart.ApplicationType.Critical))
-                return new PendingHandledResult(HandlePendingComponentsStatus.Declined,
+                return new PendingHandledResult(HandlePendingItemStatus.Declined,
                     "Files are locked by a system process that cannot be terminated. Please restart the system");
 
             using var lockingProcessManagerWithoutSelf = CreateFromProcessesWithoutSelf(processes);
@@ -140,7 +140,7 @@ namespace FocLauncherHost
                     LauncherRestartManager.ShowProcessKillDialog(lockingProcessManagerWithoutSelf, token);
                 Logger.Trace($"Kill locking processes: {restartRequestResult}, Launcher needs restart: {false}");
                 if (!restartRequestResult)
-                    return new PendingHandledResult(HandlePendingComponentsStatus.Declined,
+                    return new PendingHandledResult(HandlePendingItemStatus.Declined,
                         "Update aborted because locked files have not been released.");
 
                 lockingProcessManagerWithoutSelf.Shutdown();
@@ -148,23 +148,23 @@ namespace FocLauncherHost
                 await UpdateAsync(pendingComponents, token).ConfigureAwait(false);
 
                 return LockedFilesWatcher.Instance.LockedFiles.Any()
-                    ? new PendingHandledResult(HandlePendingComponentsStatus.HandledButStillPending,
+                    ? new PendingHandledResult(HandlePendingItemStatus.HandledButStillPending,
                         "Update failed because there are still locked files which have not been released.")
-                    : new PendingHandledResult(HandlePendingComponentsStatus.Handled);
+                    : new PendingHandledResult(HandlePendingItemStatus.Handled);
             }
 
             if (!UpdateConfiguration.Instance.SupportsRestart)
-                return new PendingHandledResult(HandlePendingComponentsStatus.Declined,
+                return new PendingHandledResult(HandlePendingItemStatus.Declined,
                     "Update requires a self-update which is not supported for this update configuration.");
 
             var result = LauncherRestartManager.ShowSelfKillDialog(lockingProcessManager, token);
             Logger.Trace($"Kill locking processes: {result}, Launcher needs restart: {true}");
             if (!result)
-                return new PendingHandledResult(HandlePendingComponentsStatus.Declined,
+                return new PendingHandledResult(HandlePendingItemStatus.Declined,
                     "Update aborted because locked files have not been released.");
 
             lockingProcessManagerWithoutSelf.Shutdown();
-            return new PendingHandledResult(HandlePendingComponentsStatus.Restart);
+            return new PendingHandledResult(HandlePendingItemStatus.Restart);
         }
         
         protected override Version? GetComponentVersion(IComponent component)
@@ -273,7 +273,7 @@ namespace FocLauncherHost
                 yield return item;
             }
 
-            var completedComponents = AllComponents.Except(pendingComponents).ToList();
+            var completedComponents = AllUpdateItems.Except(pendingComponents).ToList();
             foreach (var completedComponent in completedComponents)
             {
                 if (completedComponent.RequiredAction == ComponentAction.Keep)

@@ -91,7 +91,7 @@ namespace TaskBasedUpdater
         {
             if (!FileSystemExtensions.ContainsPath(installDir, updateItem.Destination))
             {
-                _logger.LogWarning("Different paths for component and method input");
+                _logger.LogWarning("Different paths for item and method input");
                 return InstallResult.Failure;
             }
 
@@ -200,13 +200,13 @@ namespace TaskBasedUpdater
         private InstallResult InstallHelper(InstallData installData)
         {
             InstallResult installResult;
-            var component = installData.UpdateItem;
+            var updateItem = installData.UpdateItem;
 
             try
             {
                 if (installData.LocalPath == null)
                     return InstallResult.Failure;
-                installResult = InstallCore(installData.LocalPath, installData.InstallDir, component);
+                installResult = InstallCore(installData.LocalPath, installData.InstallDir, updateItem);
             }
             catch (OperationCanceledException)
             {
@@ -220,36 +220,36 @@ namespace TaskBasedUpdater
             }
             catch (Exception ex)
             {
-                LogFailure(component, UpdateAction.Update, ex.Message);
+                LogFailure(updateItem, UpdateAction.Update, ex.Message);
                 return InstallResult.FailureException;
             }
-            PrintReturnCode(installResult, component, UpdateAction.Update);
+            PrintReturnCode(installResult, updateItem, UpdateAction.Update);
             return installResult;
         }
 
         private InstallResult UninstallHelper(InstallData uninstallData)
         {
             InstallResult result;
-            var component = uninstallData.UpdateItem;
+            var updateItem = uninstallData.UpdateItem;
 
             try
             {
                 if (uninstallData.UpdateItem == null && uninstallData.LocalPath == null)
                     result = InstallResult.Failure;
                 else
-                    result = UninstallCore(uninstallData.InstallDir, component);
+                    result = UninstallCore(uninstallData.InstallDir, updateItem);
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("User canceled during component uninstall.");
+                _logger.LogInformation("User canceled during item uninstall.");
                 return InstallResult.Cancel;
             }
             catch (Exception e)
             {
-                LogFailure(component, UpdateAction.Delete, e.ToString());
+                LogFailure(updateItem, UpdateAction.Delete, e.ToString());
                 return InstallResult.FailureException;
             }
-            PrintReturnCode(result, component, UpdateAction.Delete);
+            PrintReturnCode(result, updateItem, UpdateAction.Delete);
             return result;
         }
 

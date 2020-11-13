@@ -5,15 +5,15 @@ namespace TaskBasedUpdater.Restart
     public struct PendingHandledResult
     {
         public string Message { get; }
-        public HandlePendingComponentsStatus Status { get; }
+        public HandlePendingItemStatus Status { get; }
 
-        public PendingHandledResult(HandlePendingComponentsStatus status, string message)
+        public PendingHandledResult(HandlePendingItemStatus status, string message)
         {
             Message = message;
             Status = status;
         }
 
-        public PendingHandledResult(HandlePendingComponentsStatus status) : this(status, String.Empty)
+        public PendingHandledResult(HandlePendingItemStatus status) : this(status, String.Empty)
         {
         }
     }

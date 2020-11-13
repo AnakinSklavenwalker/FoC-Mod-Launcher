@@ -19,10 +19,10 @@ namespace TaskBasedUpdater
     public abstract class UpdateManager
     {
         protected readonly ILogger? Logger;
-        private readonly List<IUpdateItem> _components = new List<IUpdateItem>();
-        private readonly List<IUpdateItem> _removableComponents = new List<IUpdateItem>();
-        private ReadOnlyCollection<IUpdateItem> _componentsReadOnly;
-        private ReadOnlyCollection<IUpdateItem> _removableComponentsReadOnly;
+        private readonly List<IUpdateItem> _updateItems = new List<IUpdateItem>();
+        private readonly List<IUpdateItem> _removableUpdateItems = new List<IUpdateItem>();
+        private ReadOnlyCollection<IUpdateItem> _itemsReadOnly;
+        private ReadOnlyCollection<IUpdateItem> _removableItemsReadOnly;
 
         public Uri UpdateCatalogLocation { get; }
 
@@ -32,11 +32,11 @@ namespace TaskBasedUpdater
 
         protected virtual IEnumerable<string> FileDeleteExtensionFilter => new List<string> {".dll", ".exe"};
 
-        public IReadOnlyCollection<IUpdateItem> AllComponents => Components.Union(RemovableComponents).ToList();
+        public IReadOnlyCollection<IUpdateItem> AllUpdateItems => UpdateItems.Union(RemovableUpdateItems).ToList();
 
-        public IReadOnlyCollection<IUpdateItem> Components => _componentsReadOnly ??= new ReadOnlyCollection<IUpdateItem>(_components);
+        public IReadOnlyCollection<IUpdateItem> UpdateItems => _itemsReadOnly ??= new ReadOnlyCollection<IUpdateItem>(_updateItems);
 
-        public IReadOnlyCollection<IUpdateItem> RemovableComponents => _removableComponentsReadOnly ??= new ReadOnlyCollection<IUpdateItem>(_removableComponents);
+        public IReadOnlyCollection<IUpdateItem> RemovableUpdateItems => _removableItemsReadOnly ??= new ReadOnlyCollection<IUpdateItem>(_removableUpdateItems);
 
         protected UpdateManager(string applicationPath, string versionMetadataPath)
         {
@@ -48,19 +48,19 @@ namespace TaskBasedUpdater
 
         public async Task<UpdateResult> UpdateAsync(CancellationToken cancellation)
         {
-            var allComponents = Components.Concat(RemovableComponents);
-            return await UpdateAsync(allComponents, cancellation);
+            var allItems = UpdateItems.Concat(RemovableUpdateItems);
+            return await UpdateAsync(allItems, cancellation);
         }
 
-        public async Task CalculateComponentStatusAsync(CancellationToken cancellation = default)
+        public async Task CalculateUpdateItemsStatusAsync(CancellationToken cancellation = default)
         {
-            Logger?.LogTrace("Calculating current component state");
+            Logger?.LogTrace("Calculating current item state");
 
-            foreach (var component in Components)
+            foreach (var item in UpdateItems)
             {
                 cancellation.ThrowIfCancellationRequested();
                 await Task.Yield();
-                await CalculateComponentStatusAsync(component);
+                await CalculateUpdateItemsStatusAsync(item);
             }
         }
 
@@ -81,9 +81,9 @@ namespace TaskBasedUpdater
             }
         }
 
-        public async Task CalculateRemovableComponentsAsync()
+        public async Task CalculateRemovableUpdateItemsAsync()
         {
-            await CalculateRemovableComponentsAsync(ApplicationPath);
+            await CalculateRemovableUpdateItemsAsync(ApplicationPath);
         }
 
         public virtual async Task<UpdateInformation> CheckAndPerformUpdateAsync(CancellationToken cancellation)
@@ -109,13 +109,13 @@ namespace TaskBasedUpdater
 
                     try
                     {
-                        var components = await GetCatalogComponentsAsync(stream, cts.Token);
-                        if (components is null)
+                        var items = await GetCatalogItemsAsync(stream, cts.Token);
+                        if (items is null)
                         {
                             NoUpdateInformation(updateInformation);
                             return updateInformation;
                         }
-                        _components.AddRange(components);
+                        _updateItems.AddRange(items);
                     }
                     catch (Exception e)
                     {
@@ -123,12 +123,12 @@ namespace TaskBasedUpdater
                         throw;
                     }
 
-                    await CalculateComponentStatusAsync(cts.Token);
-                    await CalculateRemovableComponentsAsync();
+                    await CalculateUpdateItemsStatusAsync(cts.Token);
+                    await CalculateRemovableUpdateItemsAsync();
 
                     cts.Token.ThrowIfCancellationRequested();
 
-                    if (!RemovableComponents.Any() && (!Components.Any() || Components.All(x => x.RequiredAction == UpdateAction.Keep)))
+                    if (!RemovableUpdateItems.Any() && (!UpdateItems.Any() || UpdateItems.All(x => x.RequiredAction == UpdateAction.Keep)))
                     {
                         NoUpdateInformation(updateInformation);
                         return updateInformation;
@@ -136,13 +136,13 @@ namespace TaskBasedUpdater
 
                     await UpdateAsync(cts.Token);
 
-                    var pendingResult = await HandleLockedComponentsAsync(false, out var pc, cts.Token);
+                    var pendingResult = await HandleLockedItemsAsync(false, out var pc, cts.Token);
                     switch (pendingResult.Status)
                     {
-                        case HandlePendingComponentsStatus.HandledButStillPending:
-                        case HandlePendingComponentsStatus.Declined:
+                        case HandlePendingItemStatus.HandledButStillPending:
+                        case HandlePendingItemStatus.Declined:
                             throw new RestartDeniedOrFailedException(pendingResult.Message);
-                        case HandlePendingComponentsStatus.Restart:
+                        case HandlePendingItemStatus.Restart:
                             finalCleanUp = false;
                             Restart(pc.ToList());
                             break;
@@ -188,7 +188,7 @@ namespace TaskBasedUpdater
             return updateInformation;
         }
 
-        internal Task CalculateRemovableComponentsAsync(string basePath)
+        internal Task CalculateRemovableUpdateItemsAsync(string basePath)
         {
             if (basePath == null || !Directory.Exists(basePath))
                 return Task.FromException(new DirectoryNotFoundException(nameof(basePath)));
@@ -215,7 +215,7 @@ namespace TaskBasedUpdater
                     Destination = file.DirectoryName
                 };
 
-                _removableComponents.Add(updateItem);
+                _removableUpdateItems.Add(updateItem);
             }
 
             return Task.CompletedTask;
@@ -274,19 +274,19 @@ namespace TaskBasedUpdater
             updateInformation.RequiresUserNotification = userNotification;
         }
 
-        protected abstract Task<IEnumerable<IUpdateItem>?> GetCatalogComponentsAsync(Stream catalogStream, CancellationToken token);
+        protected abstract Task<IEnumerable<IUpdateItem>?> GetCatalogItemsAsync(Stream catalogStream, CancellationToken token);
 
         protected abstract Task<bool> ValidateCatalogStreamAsync(Stream inputStream);
 
-        protected abstract IRestartOptions CreateRestartOptions(IReadOnlyCollection<IUpdateItem>? components = null);
+        protected abstract IRestartOptions CreateRestartOptions(IReadOnlyCollection<IUpdateItem>? updateItems = null);
         
-        protected virtual Task<PendingHandledResult> HandleLockedComponentsCoreAsync(ICollection<IUpdateItem> pendingComponents, ILockingProcessManager lockingProcessManager,
+        protected virtual Task<PendingHandledResult> HandleLockedItemsCoreAsync(ICollection<IUpdateItem> pendingItems, ILockingProcessManager lockingProcessManager,
             bool ignoreSelfLocked, CancellationToken token)
         {
-            return Task.FromResult(new PendingHandledResult(HandlePendingComponentsStatus.Declined, "Handling restart is not implemented"));
+            return Task.FromResult(new PendingHandledResult(HandlePendingItemStatus.Declined, "Handling restart is not implemented"));
         }
 
-        protected virtual Version? GetComponentVersion(IUpdateItem updateItem)
+        protected virtual Version? GetFileVersion(IUpdateItem updateItem)
         {
             try
             {
@@ -326,21 +326,21 @@ namespace TaskBasedUpdater
             return Task.CompletedTask;
         }
 
-        protected internal ICollection<IUpdateItem> GetPendingComponents(ICollection<string> files, out ILockingProcessManager lockingProcessManager)
+        protected internal ICollection<IUpdateItem> GetPendingItems(ICollection<string> files, out ILockingProcessManager lockingProcessManager)
         {
-            var components = FindComponentsFromFiles(files).ToList();
+            var items = FindUpdateItemsFromFiles(files).ToList();
             lockingProcessManager = LockingProcessManagerFactory.Create();
             lockingProcessManager.Register(files);
-            return components;
+            return items;
         }
 
-        protected internal void Restart(IReadOnlyList<IUpdateItem> components)
+        protected internal void Restart(IReadOnlyList<IUpdateItem> items)
         {
-            var options = CreateRestartOptions(components);
+            var options = CreateRestartOptions(items);
             ApplicationRestartManager.RestartApplication(options);
         }
 
-        protected internal async Task<UpdateResult> UpdateAsync(IEnumerable<IUpdateItem> components,
+        protected internal async Task<UpdateResult> UpdateAsync(IEnumerable<IUpdateItem> items,
             CancellationToken cancellation)
         {
             cancellation.ThrowIfCancellationRequested();
@@ -349,7 +349,7 @@ namespace TaskBasedUpdater
 
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
 
-            var operation = new UpdateOperation(components, null);
+            var operation = new UpdateOperation(items, null);
             try
             {
                 await Task.Run(() =>
@@ -367,7 +367,7 @@ namespace TaskBasedUpdater
             }
             catch (UpdateItemFailedException e)
             {
-                Logger?.LogError(e, "Component Failed to update");
+                Logger?.LogError(e, "Update Item Failed to update");
                 throw;
             }
             catch (Exception e)
@@ -377,76 +377,76 @@ namespace TaskBasedUpdater
             }
         }
         
-        protected internal Task CalculateComponentStatusAsync(IUpdateItem component)
+        protected internal Task CalculateUpdateItemsStatusAsync(IUpdateItem item)
         {
-            Logger?.LogTrace($"Check dependency if update required: {component}");
+            Logger?.LogTrace($"Check dependency if update required: {item}");
             
-            var destination = component.Destination;
+            var destination = item.Destination;
             Logger?.LogTrace($"Dependency base path: {destination}");
             if (string.IsNullOrEmpty(destination))
                 return Task.FromException(new InvalidOperationException());
 
-            var filePath = component.GetFilePath();
+            var filePath = item.GetFilePath();
             if (File.Exists(filePath))
             {
-                var currentVersion = GetComponentVersion(component);
+                var currentVersion = GetFileVersion(item);
                 if (currentVersion == null)
                 {
-                    Logger?.LogInformation($"Dependency marked to get updated: {component}");
-                    component.CurrentState = CurrentState.None;
-                    component.RequiredAction = UpdateAction.Update;
+                    Logger?.LogInformation($"Dependency marked to get updated: {item}");
+                    item.CurrentState = CurrentState.None;
+                    item.RequiredAction = UpdateAction.Update;
                     return Task.CompletedTask;
                 }
 
-                component.CurrentState = CurrentState.Installed;
-                component.CurrentVersion = currentVersion;
-                component.DiskSize = new FileInfo(filePath).Length;
+                item.CurrentState = CurrentState.Installed;
+                item.CurrentVersion = currentVersion;
+                item.DiskSize = new FileInfo(filePath).Length;
 
 
-                if (component.OriginInfo is null)
+                if (item.OriginInfo is null)
                     return Task.CompletedTask;
 
-                var newVersion = component.OriginInfo.Version;
+                var newVersion = item.OriginInfo.Version;
 
                 if (newVersion != null && newVersion != currentVersion)
                 {
-                    Logger?.LogInformation($"Dependency marked to get updated: {component}");
-                    component.RequiredAction = UpdateAction.Update;
+                    Logger?.LogInformation($"Dependency marked to get updated: {item}");
+                    item.RequiredAction = UpdateAction.Update;
                     return Task.CompletedTask;
                 }
 
-                if (component.OriginInfo.ValidationContext is null)
+                if (item.OriginInfo.ValidationContext is null)
                 {
-                    Logger?.LogInformation($"Dependency marked to keep: {component}");
+                    Logger?.LogInformation($"Dependency marked to keep: {item}");
                     return Task.CompletedTask;
                 }
 
-                var hashResult = HashVerifier.VerifyFile(filePath, component.OriginInfo.ValidationContext);
+                var hashResult = HashVerifier.VerifyFile(filePath, item.OriginInfo.ValidationContext);
                 if (hashResult == ValidationResult.HashMismatch)
                 {
-                    Logger?.LogInformation($"Dependency marked to get updated: {component}");
-                    component.RequiredAction = UpdateAction.Update;
+                    Logger?.LogInformation($"Dependency marked to get updated: {item}");
+                    item.RequiredAction = UpdateAction.Update;
                     return Task.CompletedTask;
                 }
 
-                Logger?.LogInformation($"Dependency marked to keep: {component}");
+                Logger?.LogInformation($"Dependency marked to keep: {item}");
                 return Task.CompletedTask;
             }
 
-            Logger?.LogInformation($"Dependency marked to get updated: {component}");
-            component.RequiredAction = UpdateAction.Update;
+            Logger?.LogInformation($"Dependency marked to get updated: {item}");
+            item.RequiredAction = UpdateAction.Update;
             return Task.CompletedTask;
         }
         
-        private Task<PendingHandledResult> HandleLockedComponentsAsync(bool ignoreSelfLockedProcess, out IEnumerable<IUpdateItem> pendingComponents, CancellationToken token = default)
+        private Task<PendingHandledResult> HandleLockedItemsAsync(bool ignoreSelfLockedProcess, out IEnumerable<IUpdateItem> pendingItems, CancellationToken token = default)
         {
-            pendingComponents = Enumerable.Empty<IUpdateItem>();
+            pendingItems = Enumerable.Empty<IUpdateItem>();
             var lockedFiles = LockedFilesWatcher.Instance.LockedFiles.ToList();
             if (!lockedFiles.Any())
-                return Task.FromResult(new PendingHandledResult(HandlePendingComponentsStatus.Handled));
-            var allPendingComponents = GetPendingComponents(lockedFiles, out var p);
-            var result = HandleLockedComponentsCoreAsync(allPendingComponents, p, ignoreSelfLockedProcess, token).Result;
-            pendingComponents = GetPendingComponents(LockedFilesWatcher.Instance.LockedFiles, out _);
+                return Task.FromResult(new PendingHandledResult(HandlePendingItemStatus.Handled));
+            var allPendingItems = GetPendingItems(lockedFiles, out var p);
+            var result = HandleLockedItemsCoreAsync(allPendingItems, p, ignoreSelfLockedProcess, token).Result;
+            pendingItems = GetPendingItems(LockedFilesWatcher.Instance.LockedFiles, out _);
             return Task.FromResult(result);
         }
 
@@ -458,10 +458,10 @@ namespace TaskBasedUpdater
                 if (Elevator.IsProcessElevated)
                     throw new UpdaterException("The process is already elevated", e);
 
-                var lockedResult = HandleLockedComponentsAsync(true, out var pendingComponents).Result;
+                var lockedResult = HandleLockedItemsAsync(true, out var pendingItems).Result;
                 switch (lockedResult.Status)
                 {
-                    case HandlePendingComponentsStatus.Declined:
+                    case HandlePendingItemStatus.Declined:
                         ErrorInformation(updateInformation, lockedResult.Message);
                         return;
                 }
@@ -474,8 +474,8 @@ namespace TaskBasedUpdater
 
                 try
                 {
-                    var allComponents = CreateRestartOptions(e.AggregateComponents().Union(pendingComponents).Distinct().ToList());
-                    Elevator.RestartElevated(allComponents);
+                    var restartOptions = CreateRestartOptions(e.AggregateItems().Union(pendingItems).Distinct().ToList());
+                    Elevator.RestartElevated(restartOptions);
                     restoreBackup = false;
                 }
                 catch (Exception ex)
@@ -493,14 +493,14 @@ namespace TaskBasedUpdater
             }
         }
 
-        private IEnumerable<IUpdateItem> FindComponentsFromFiles(IEnumerable<string> files)
+        private IEnumerable<IUpdateItem> FindUpdateItemsFromFiles(IEnumerable<string> files)
         {
-            return files.Select(FindComponentsFromFile).Where(component => component != null);
+            return files.Select(FindUpdateItemFromFile).Where(item => item != null);
         }
 
-        private IUpdateItem? FindComponentsFromFile(string file)
+        private IUpdateItem? FindUpdateItemFromFile(string file)
         {
-            return Components.Concat(RemovableComponents).FirstOrDefault(x => x.GetFilePath().Equals(file));
+            return UpdateItems.Concat(RemovableUpdateItems).FirstOrDefault(x => x.GetFilePath().Equals(file));
         }
     }
 }

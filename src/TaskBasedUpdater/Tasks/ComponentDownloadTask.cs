@@ -38,7 +38,7 @@ namespace TaskBasedUpdater.Tasks
 
         public override string ToString()
         {
-            return $"Downloading component '{UpdateItem.Name}' form \"{Uri}\"";
+            return $"Downloading item '{UpdateItem.Name}' form \"{Uri}\"";
         }
 
         protected override void SynchronizedInvoke(CancellationToken token)
@@ -56,7 +56,7 @@ namespace TaskBasedUpdater.Tasks
             }
 
             if (UpdateConfiguration.Instance.BackupPolicy != BackupPolicy.NotRequired && UpdateConfiguration.Instance.DownloadOnlyMode)
-                BackupComponent();
+                BackupItem();
 
 
             Exception lastException = null;
@@ -73,7 +73,7 @@ namespace TaskBasedUpdater.Tasks
             }
         }
 
-        private void BackupComponent()
+        private void BackupItem()
         {
             try
             {

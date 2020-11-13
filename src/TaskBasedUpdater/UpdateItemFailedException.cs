@@ -8,7 +8,7 @@ namespace TaskBasedUpdater
     [Serializable]
     public class UpdateItemFailedException : UpdaterException
     {
-        private readonly IEnumerable<IUpdateItem>? _failedComponents;
+        private readonly IEnumerable<IUpdateItem>? _failedUpdateItems;
         private string? _error;
 
         public override string Message => Error;
@@ -20,18 +20,18 @@ namespace TaskBasedUpdater
                 if (_error != null)
                     return _error;
                 var stringBuilder = new StringBuilder();
-                if (_failedComponents != null)
+                if (_failedUpdateItems != null)
                 {
-                    foreach (var component in _failedComponents)
-                        stringBuilder.Append("Package '" + component.Name + "' failed to " + component.RequiredAction + ";");
+                    foreach (var item in _failedUpdateItems)
+                        stringBuilder.Append("Update Item '" + item.Name + "' failed to " + item.RequiredAction + ";");
                 }
                 return stringBuilder.ToString().TrimEnd(';');
             }
         }
 
-        public UpdateItemFailedException(IEnumerable<IUpdateItem> failedComponents) : base()
+        public UpdateItemFailedException(IEnumerable<IUpdateItem> failedUpdateItems) : base()
         {
-            _failedComponents = failedComponents;
+            _failedUpdateItems = failedUpdateItems;
             HResult = 1603;
         }
 

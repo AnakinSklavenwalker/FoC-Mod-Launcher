@@ -21,12 +21,12 @@ namespace TaskBasedUpdater.Operations
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger? _logger;
 
-        private readonly HashSet<IUpdateItem> _allComponents;
+        private readonly HashSet<IUpdateItem> _allUpdateItems;
         private bool _scheduled;
         private bool? _planSuccessful;
-        private readonly List<IUpdaterTask> _componentsToInstall = new List<IUpdaterTask>();
-        private readonly List<IUpdaterTask> _componentsToRemove = new List<IUpdaterTask>();
-        private readonly List<UpdateItemDownloadTask> _componentsToDownload = new List<UpdateItemDownloadTask>();
+        private readonly List<IUpdaterTask> _itemsToInstall = new List<IUpdaterTask>();
+        private readonly List<IUpdaterTask> _itemToRemove = new List<IUpdaterTask>();
+        private readonly List<UpdateItemDownloadTask> _itemsToDownload = new List<UpdateItemDownloadTask>();
         private readonly ICollection<ElevationRequestData> _elevationRequests = new HashSet<ElevationRequestData>();
 
         private IEnumerable<IPipelineTask> _installsOrUninstalls;
@@ -51,13 +51,13 @@ namespace TaskBasedUpdater.Operations
             Requires.NotNull(dependencies, nameof(dependencies));
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             _serviceProvider = serviceProvider;
-            _allComponents = new HashSet<IUpdateItem>(dependencies, UpdateItemIdentityComparer.Default);
+            _allUpdateItems = new HashSet<IUpdateItem>(dependencies, UpdateItemIdentityComparer.Default);
         }
 
         public bool Plan()
         {
             Initialize();
-            if (_allComponents.Count == 0)
+            if (_allUpdateItems.Count == 0)
             {
                 var operationException = new InvalidOperationException("No packages were found to install/uninstall.");
                 _logger.LogError(operationException, operationException.Message);
@@ -66,21 +66,21 @@ namespace TaskBasedUpdater.Operations
             }
 
             var downloadLookup = new Dictionary<IUpdateItem, UpdateItemDownloadTask>();
-            foreach (var dependency in _allComponents)
+            foreach (var dependency in _allUpdateItems)
             {
                 var packageActivities = PlanInstallable(dependency, downloadLookup);
                 if (dependency.RequiredAction == UpdateAction.Delete && packageActivities.Install != null)
-                    _componentsToRemove.Add(packageActivities.Install);
+                    _itemToRemove.Add(packageActivities.Install);
             }
 
-            _componentsToRemove.Reverse();
-            _installsOrUninstalls = _componentsToRemove.Concat(_componentsToInstall);
+            _itemToRemove.Reverse();
+            _installsOrUninstalls = _itemToRemove.Concat(_itemsToInstall);
 
             foreach (var installsOrUninstall in _installsOrUninstalls)
             {
                 if (installsOrUninstall is UpdateItemInstallTask install && downloadLookup.ContainsKey(install.UpdateItem) && 
                     (install.Action != UpdateAction.Delete|| install.UpdateItem.RequiredAction != UpdateAction.Keep))
-                    _componentsToDownload.Add(downloadLookup[install.UpdateItem]);
+                    _itemsToDownload.Add(downloadLookup[install.UpdateItem]);
             }
 
             _planSuccessful = true;
@@ -127,7 +127,7 @@ namespace TaskBasedUpdater.Operations
                     throw new OperationCanceledException(token);
                 token.ThrowIfCancellationRequested();
                 
-                var failedDownloads = _componentsToDownload.Where(p =>
+                var failedDownloads = _itemsToDownload.Where(p =>
                     p.Error != null && !p.Error.IsExceptionType<OperationCanceledException>());
 
                 var failedInstalls = installsOrUninstalls
@@ -165,7 +165,7 @@ namespace TaskBasedUpdater.Operations
             if (!Plan())
                 return;
 
-            _componentsToDownload.ForEach(download => _downloads.Queue(download));
+            _itemsToDownload.ForEach(download => _downloads.Queue(download));
             QueueInitialActivities();
             foreach (var installsOrUninstall in _installsOrUninstalls)
                 _installs.Queue(installsOrUninstall);
@@ -212,63 +212,63 @@ namespace TaskBasedUpdater.Operations
             _installs.Queue(_installMutexTask);
         }
 
-        private PackageActivities PlanInstallable(IUpdateItem component, Dictionary<IUpdateItem, UpdateItemDownloadTask> downloadLookup)
+        private PackageActivities PlanInstallable(IUpdateItem updateItem, Dictionary<IUpdateItem, UpdateItemDownloadTask> downloadLookup)
         {
             PackageActivities packageActivities = null;
-            if (component != null)
+            if (updateItem != null)
             {
-                var isPresent = component.CurrentState == CurrentState.Installed;
+                var isPresent = updateItem.CurrentState == CurrentState.Installed;
 
-                if (component.RequiredAction == UpdateAction.Update || component.RequiredAction == UpdateAction.Keep)
+                if (updateItem.RequiredAction == UpdateAction.Update || updateItem.RequiredAction == UpdateAction.Keep)
                 {
                     // TODO: Debug this and check if everything is correct!!!!
-                    packageActivities = CreateDownloadInstallActivities(component, component.RequiredAction, isPresent);
+                    packageActivities = CreateDownloadInstallActivities(updateItem, updateItem.RequiredAction, isPresent);
                     if (packageActivities.Install != null)
-                        _componentsToInstall.Add(packageActivities.Install);
+                        _itemsToInstall.Add(packageActivities.Install);
                     if (packageActivities.Download != null)
-                        downloadLookup[component] = packageActivities.Download;
+                        downloadLookup[updateItem] = packageActivities.Download;
                 }
 
-                if (component.RequiredAction == UpdateAction.Delete)
+                if (updateItem.RequiredAction == UpdateAction.Delete)
                 {
-                    packageActivities = CreateDownloadInstallActivities(component, component.RequiredAction, isPresent);
+                    packageActivities = CreateDownloadInstallActivities(updateItem, updateItem.RequiredAction, isPresent);
                     if (packageActivities.Download != null)
-                        downloadLookup[component] = packageActivities.Download;
+                        downloadLookup[updateItem] = packageActivities.Download;
                 }
             }
             return packageActivities;
         }
 
-        private PackageActivities CreateDownloadInstallActivities(IUpdateItem component, UpdateAction action, bool isPresent)
+        private PackageActivities CreateDownloadInstallActivities(IUpdateItem updateItem, UpdateAction action, bool isPresent)
         {
-            UpdateItemDownloadTask downloadComponent;
+            UpdateItemDownloadTask downloadTask;
             UpdateItemInstallTask install;
 
-            if (DownloadRequired(action, component))
+            if (DownloadRequired(action, updateItem))
             {
-                downloadComponent = new UpdateItemDownloadTask(null, component);
-                downloadComponent.Canceled += (_, __) => _linkedCancellationTokenSource?.Cancel();
-                install = new UpdateItemInstallTask(null, component, action, downloadComponent, isPresent);
+                downloadTask = new UpdateItemDownloadTask(null, updateItem);
+                downloadTask.Canceled += (_, __) => _linkedCancellationTokenSource?.Cancel();
+                install = new UpdateItemInstallTask(null, updateItem, action, downloadTask, isPresent);
             }
             else
             {
-                downloadComponent = null;
-                install = new UpdateItemInstallTask(null, component, action, isPresent);
+                downloadTask = null;
+                install = new UpdateItemInstallTask(null, updateItem, action, isPresent);
             }
             
             return new PackageActivities
             {
-                Download = downloadComponent,
+                Download = downloadTask,
                 Install = install
             };
         }
 
-        private bool DownloadRequired(UpdateAction action, IUpdateItem component)
+        private bool DownloadRequired(UpdateAction action, IUpdateItem updateItem)
         {
             if (action != UpdateAction.Update)
                 return false;
 
-            if (component.CurrentState == CurrentState.Downloaded && UpdateItemDownloadPathStorage.Instance.TryGetValue(component, out _))
+            if (updateItem.CurrentState == CurrentState.Downloaded && UpdateItemDownloadPathStorage.Instance.TryGetValue(updateItem, out _))
                 return false;
 
 

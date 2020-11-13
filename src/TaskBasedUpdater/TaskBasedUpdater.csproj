@@ -108,7 +108,7 @@
     <Compile Include="Restart\IRestoreOptions.cs" />
     <Compile Include="Restart\IUpdateOptions.cs" />
     <Compile Include="Restart\PendingHandledResult.cs" />
-    <Compile Include="Restart\HandlePendingComponentsStatus.cs" />
+    <Compile Include="Restart\HandlePendingItemStatus.cs" />
     <Compile Include="Restart\ILockingProcessInfo.cs" />
     <Compile Include="Restart\ILockingProcessManager.cs" />
     <Compile Include="Restart\LockedFilesWatcher.cs" />
