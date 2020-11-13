@@ -8,8 +8,8 @@ using FocLauncher.UpdateMetadata;
 using FocLauncherHost.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TaskBasedUpdater;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Restart;
+using TaskBasedUpdater.UpdateItem;
 
 namespace FocLauncher.Updater.Tests
 {
@@ -37,7 +37,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Update;
+            const UpdateAction expected = UpdateAction.Update;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -54,7 +54,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Update;
+            const UpdateAction expected = UpdateAction.Update;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -71,7 +71,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Update;
+            const UpdateAction expected = UpdateAction.Update;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -88,7 +88,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Update;
+            const UpdateAction expected = UpdateAction.Update;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -105,7 +105,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Keep;
+            const UpdateAction expected = UpdateAction.Keep;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -123,7 +123,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Keep;
+            const UpdateAction expected = UpdateAction.Keep;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -141,7 +141,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Keep;
+            const UpdateAction expected = UpdateAction.Keep;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -159,7 +159,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Update;
+            const UpdateAction expected = UpdateAction.Update;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -176,7 +176,7 @@ namespace FocLauncher.Updater.Tests
 
             var component = CatalogExtensions.DependencyToComponent(dependency);
 
-            const ComponentAction expected = ComponentAction.Update;
+            const UpdateAction expected = UpdateAction.Update;
             await _updateManager.CalculateComponentStatusAsync(component);
 
             Assert.AreEqual(expected, component.RequiredAction);
@@ -188,9 +188,9 @@ namespace FocLauncher.Updater.Tests
             {
             }
 
-            protected override Task<IEnumerable<IComponent>> GetCatalogComponentsAsync(Stream catalogStream, CancellationToken token)
+            protected override Task<IEnumerable<IUpdateItem>> GetCatalogComponentsAsync(Stream catalogStream, CancellationToken token)
             {
-                return Task.FromResult(Enumerable.Empty<IComponent>());
+                return Task.FromResult(Enumerable.Empty<IUpdateItem>());
             }
 
             protected override Task<bool> ValidateCatalogStreamAsync(Stream inputStream)
@@ -198,7 +198,7 @@ namespace FocLauncher.Updater.Tests
                 return Task.FromResult(true);
             }
 
-            protected override IRestartOptions CreateRestartOptions(IReadOnlyCollection<IComponent>? components = null)
+            protected override IRestartOptions CreateRestartOptions(IReadOnlyCollection<IUpdateItem>? components = null)
             {
                 throw new NotImplementedException();
             }

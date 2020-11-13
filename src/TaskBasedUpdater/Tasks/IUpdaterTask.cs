@@ -1,5 +1,5 @@
 ﻿using SimplePipeline;
-using TaskBasedUpdater.Component;
+using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater.Tasks
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TaskBasedUpdater.Component
+namespace TaskBasedUpdater.UpdateItem
 {
     public class UpdateItemIdentityComparer : IEqualityComparer<IUpdateItem>, IComparer<IUpdateItem>
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using TaskBasedUpdater.Component;
+using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater.Download
 {

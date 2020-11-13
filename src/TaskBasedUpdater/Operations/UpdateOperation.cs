@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
 using SimplePipeline.Tasks;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.Restart;
 using TaskBasedUpdater.Tasks;
+using TaskBasedUpdater.UpdateItem;
 using Validation;
 
 namespace TaskBasedUpdater.Operations

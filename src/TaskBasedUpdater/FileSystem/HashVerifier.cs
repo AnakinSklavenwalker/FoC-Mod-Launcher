@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using TaskBasedUpdater.Component;
+using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater.FileSystem
 {

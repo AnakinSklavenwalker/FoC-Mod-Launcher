@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater.Download
 {

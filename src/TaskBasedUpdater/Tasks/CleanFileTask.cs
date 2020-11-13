@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using SimplePipeline.Tasks;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater.Tasks
 {

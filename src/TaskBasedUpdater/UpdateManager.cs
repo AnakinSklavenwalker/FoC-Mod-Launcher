@@ -7,12 +7,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.FileSystem;
 using TaskBasedUpdater.Operations;
 using TaskBasedUpdater.Restart;
+using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater
 {
@@ -206,7 +206,7 @@ namespace TaskBasedUpdater
 
                 Logger.LogInformation($"File marked to get deleted: {file.FullName}");
 
-                var updateItem = new UpdateItem
+                var updateItem = new UpdateItem.UpdateItem
                 {
                     Name = file.Name,
                     DiskSize = file.Length,

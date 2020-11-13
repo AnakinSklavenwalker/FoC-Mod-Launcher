@@ -1,16 +1,16 @@
 ﻿using System;
 using FocLauncher.UpdateMetadata;
-using TaskBasedUpdater.Component;
+using TaskBasedUpdater.UpdateItem;
 
 namespace FocLauncherHost.Utilities
 {
     public static class CatalogExtensions
     {
-        public static IComponent? DependencyToComponent(Dependency dependency)
+        public static IUpdateItem? DependencyToComponent(Dependency dependency)
         {
             if (string.IsNullOrEmpty(dependency.Name) || string.IsNullOrEmpty(dependency.Destination))
                 return null;
-            var component = new Component
+            var component = new UpdateItem()
             {
                 Name = dependency.Name,
                 Destination = GetRealDependencyDestination(dependency)

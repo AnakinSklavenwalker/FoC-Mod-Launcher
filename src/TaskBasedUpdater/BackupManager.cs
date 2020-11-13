@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater
 {
@@ -27,17 +27,17 @@ namespace TaskBasedUpdater
 
         public void CreateBackup(IUpdateItem updateItem)
         {
-            ValidateComponent(updateItem);
+            ValidateItem(updateItem);
             var backupPath = GetBackupPath(updateItem);
             ValidateHasAccess(backupPath);
             if (_backupLookup.ContainsKey(updateItem))
                 return;
             string? backupFilePath;
-            var componentFilePath = updateItem.GetFilePath();
-            if (File.Exists(componentFilePath))
+            var itemFilePath = updateItem.GetFilePath();
+            if (File.Exists(itemFilePath))
             {
                 backupFilePath = CreateBackupFilePath(updateItem, backupPath);
-                FileSystemExtensions.CopyFileWithRetry(componentFilePath, backupFilePath);
+                FileSystemExtensions.CopyFileWithRetry(itemFilePath, backupFilePath);
             }
             else
             {
@@ -50,8 +50,8 @@ namespace TaskBasedUpdater
         public void RestoreAllBackups()
         {
             var keys = _backupLookup.Keys.ToList();
-            foreach (var component in keys)
-                RestoreBackup(component);
+            foreach (var updateItem in keys)
+                RestoreBackup(updateItem);
         }
         
         public void RestoreBackup(IUpdateItem updateItem)
@@ -118,10 +118,10 @@ namespace TaskBasedUpdater
             }
         }
         
-        public bool TryGetValue(IUpdateItem component, out string? value)
+        public bool TryGetValue(IUpdateItem updateItem, out string? value)
         {
             lock (_syncObject)
-                return _backupLookup.TryGetValue(component, out value);
+                return _backupLookup.TryGetValue(updateItem, out value);
         }
 
         public void Flush()
@@ -139,12 +139,12 @@ namespace TaskBasedUpdater
             return GetEnumerator();
         }
 
-        internal static void ValidateComponent(IUpdateItem updateItem)
+        internal static void ValidateItem(IUpdateItem updateItem)
         {
             if (updateItem == null)
                 throw new ArgumentNullException(nameof(updateItem));
             if (string.IsNullOrEmpty(updateItem.Destination))
-                throw new IOException("Unable to resolve the component's file path");
+                throw new IOException("Unable to resolve the updateItem's file path");
         }
 
         internal static void ValidateHasAccess(string path)

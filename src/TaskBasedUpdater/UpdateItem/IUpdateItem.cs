@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TaskBasedUpdater.Component
+namespace TaskBasedUpdater.UpdateItem
 {
     public interface IUpdateItem : IEquatable<IUpdateItem>
     {
