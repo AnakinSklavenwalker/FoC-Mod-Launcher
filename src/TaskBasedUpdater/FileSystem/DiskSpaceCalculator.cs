@@ -16,7 +16,9 @@ namespace TaskBasedUpdater.FileSystem
             CalculatedDiskSizes = new Dictionary<string, DriveSpaceData>(StringComparer.OrdinalIgnoreCase);
 
             var destinationRoot = FileSystemExtensions.GetPathRoot(updateItem.Destination);
-            var backupRoot = FileSystemExtensions.GetPathRoot(UpdateConfiguration.Instance.BackupPath);
+            // TODO: split-projects
+            var backupRoot = string.Empty;
+            //var backupRoot = FileSystemExtensions.GetPathRoot(UpdateConfiguration.Instance.BackupPath);
 
             if (string.IsNullOrEmpty(backupRoot)) 
                 backupRoot = destinationRoot;

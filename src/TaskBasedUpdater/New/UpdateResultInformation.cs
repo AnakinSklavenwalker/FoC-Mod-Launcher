@@ -1,6 +1,8 @@
-﻿namespace TaskBasedUpdater
+﻿using TaskBasedUpdater.New;
+
+namespace TaskBasedUpdater
 {
-    public class UpdateInformation
+    public class UpdateResultInformation : IUpdateResultInformation
     {
         public UpdateResult Result { get; set; }
 

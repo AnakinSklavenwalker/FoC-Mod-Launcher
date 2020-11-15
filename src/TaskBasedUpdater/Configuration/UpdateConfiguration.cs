@@ -1,11 +1,7 @@
 ﻿namespace TaskBasedUpdater.Configuration
 {
-    public class UpdateConfiguration
+    public class UpdateConfiguration : IUpdateConfiguration
     {
-        private static UpdateConfiguration? _instance;
-
-        public static UpdateConfiguration Instance => _instance ??= new UpdateConfiguration();
-
         public string? BackupPath { get; set; }
 
         public BackupPolicy BackupPolicy { get; set; }
@@ -33,9 +29,5 @@
         public string? ExternalElevatorPath { get; set; }
 
         public bool RequiredElevationCancelsUpdate { get; set; }
-
-        private UpdateConfiguration()
-        {
-        }
     }
 }

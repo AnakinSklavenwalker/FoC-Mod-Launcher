@@ -153,8 +153,9 @@ namespace TaskBasedUpdater.Operations
             _logger.LogInformation($"Elevation requested: {e.Exception.Message}");
             RequiredProcessElevation = true;
             _elevationRequests.Add(e);
-            if (UpdateConfiguration.Instance.RequiredElevationCancelsUpdate)
-                _linkedCancellationTokenSource?.Cancel();
+            // TODO: split-projects
+            //if (UpdateConfiguration.Instance.RequiredElevationCancelsUpdate)
+            //    _linkedCancellationTokenSource?.Cancel();
         }
 
         internal void Schedule()

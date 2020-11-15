@@ -16,10 +16,12 @@ using Newtonsoft.Json;
 using TaskBasedUpdater;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Restart;
+using TaskBasedUpdater.UpdateItem;
 using ApplicationType = FocLauncher.ApplicationType;
 
 namespace FocLauncherHost
 {
+    /*
     internal class FocLauncherUpdaterManager : UpdateManager
     {
         protected override IEnumerable<string> FileDeleteIgnoreFilter => new List<string> {".Theme.dll"};
@@ -52,7 +54,7 @@ namespace FocLauncherHost
                 file.Name.Equals(x.Name) && x.Destination.Equals(LauncherConstants.ApplicationBasePath));
         }
 
-        protected override async Task<IEnumerable<IComponent>?> GetCatalogComponentsAsync(Stream catalogStream, CancellationToken token)
+        protected override async Task<IEnumerable<IUpdateItem>?> GetCatalogComponentsAsync(Stream catalogStream, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
             var products = await Catalogs.TryDeserializeAsync(catalogStream);
@@ -61,7 +63,7 @@ namespace FocLauncherHost
             return GetCatalogComponents(products, catalogs => catalogs.FirstOrDefault(x => x.ApplicationType == ApplicationType.Stable));
         }
 
-        protected IEnumerable<IComponent>? GetCatalogComponents(Catalogs catalogs, Func<IEnumerable<ProductCatalog>, ProductCatalog> fallbackAction)
+        protected IEnumerable<IUpdateItem>? GetCatalogComponents(Catalogs catalogs, Func<IEnumerable<ProductCatalog>, ProductCatalog> fallbackAction)
         {
             try
             {
@@ -69,7 +71,7 @@ namespace FocLauncherHost
                 if (product == null)
                     return null;
 
-                var result = new HashSet<IComponent>(ComponentIdentityComparer.Default);
+                var result = new HashSet<IUpdateItem>(UpdateItemIdentityComparer.Default);
                 foreach (var component in product.Dependencies.Select(CatalogExtensions.DependencyToComponent)
                     .Where(component => component != null))
                     result.Add(component);
@@ -88,7 +90,7 @@ namespace FocLauncherHost
             return await Task.FromResult(validator.Validate(inputStream));
         }
 
-        protected override IRestartOptions CreateRestartOptions(IReadOnlyCollection<IComponent>? components = null)
+        protected override IRestartOptions CreateRestartOptions(IReadOnlyCollection<IUpdateItem>? components = null)
         {
             var options = new LauncherRestartOptions
             {
@@ -116,7 +118,7 @@ namespace FocLauncherHost
         }
         
         protected override async Task<PendingHandledResult> HandleLockedComponentsCoreAsync(
-            ICollection<IComponent> pendingComponents, ILockingProcessManager lockingProcessManager,
+            ICollection<IUpdateItem> pendingComponents, ILockingProcessManager lockingProcessManager,
             bool ignoreSelfLocked, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
@@ -167,7 +169,7 @@ namespace FocLauncherHost
             return new PendingHandledResult(HandlePendingItemStatus.Restart);
         }
         
-        protected override Version? GetComponentVersion(IComponent component)
+        protected override Version? GetComponentVersion(IUpdateItem component)
         {
             try
             {
@@ -179,7 +181,7 @@ namespace FocLauncherHost
             }
         }
 
-        protected override void OnRestoreFailed(Exception ex, UpdateInformation updateInformation)
+        protected override void OnRestoreFailed(Exception ex, UpdateResultInformation updateInformation)
         {
             base.OnRestoreFailed(ex, updateInformation);
             Clean().Wait();
@@ -243,7 +245,7 @@ namespace FocLauncherHost
             return processes.Where(x => !x.Id.Equals(processId));
         }
 
-        private IEnumerable<LauncherUpdaterItem> GetUpdaterItems(IEnumerable<IComponent> components)
+        private IEnumerable<LauncherUpdaterItem> GetUpdaterItems(IEnumerable<IUpdateItem> components)
         {
             if (components is null)
                 throw new ArgumentNullException(nameof(components));
@@ -293,4 +295,5 @@ namespace FocLauncherHost
             return Convert.ToBase64String(plainTextBytes);
         }
     }
+    */
 }

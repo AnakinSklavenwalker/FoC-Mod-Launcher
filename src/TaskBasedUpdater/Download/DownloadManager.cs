@@ -52,7 +52,8 @@ namespace TaskBasedUpdater.Download
             AddDownloadEngine(new WebClientDownloader(null));
             AddDownloadEngine(new FileDownloader());
             DefaultEngines = _allEngines.Select(e => e.Name);
-            SleepDurationBetweenRetries = UpdateConfiguration.Instance.DownloadRetryDelay;
+            // TODO: split-projects
+            //SleepDurationBetweenRetries = UpdateConfiguration.Instance.DownloadRetryDelay;
         }
 
         public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken,
@@ -112,7 +113,8 @@ namespace TaskBasedUpdater.Download
                                 status.BitRate));
                         }, cancellationToken,
                         updateItem);
-                    if (outputStream.Length == 0 && !UpdateConfiguration.Instance.AllowEmptyFileDownload)
+                    // TODO: split-projects
+                    if (outputStream.Length == 0 /*&& !UpdateConfiguration.Instance.AllowEmptyFileDownload*/)
                     {
                         var exception = new UpdaterException($"Empty file downloaded on '{uri}'.");
                         _logger?.LogError(exception, exception.Message);
@@ -123,19 +125,21 @@ namespace TaskBasedUpdater.Download
                     {
                         if (updateItem is null)
                         {
-                            if (UpdateConfiguration.Instance.ValidationPolicy == ValidationPolicy.Enforce)
-                                throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
-                                    "Unable to get necessary validation data because download context is null.");
+                            // TODO: split-projects
+                            //if (UpdateConfiguration.Instance.ValidationPolicy == ValidationPolicy.Enforce)
+                            //    throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
+                            //        "Unable to get necessary validation data because download context is null.");
                         }
                         else
                         {
                             var validationContext = updateItem.OriginInfo?.ValidationContext;
                             var valid = validationContext?.Verify();
 
-                            if ((!valid.HasValue || !valid.Value) && UpdateConfiguration.Instance.ValidationPolicy ==
-                                ValidationPolicy.Enforce)
-                                throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
-                                    $"Update Item'{updateItem.Name}' is missing or has an invalid ValidationInfo");
+                            // TODO: split-projects
+                            //if ((!valid.HasValue || !valid.Value) && UpdateConfiguration.Instance.ValidationPolicy ==
+                            //    ValidationPolicy.Enforce)
+                            //    throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
+                            //        $"Update Item'{updateItem.Name}' is missing or has an invalid ValidationInfo");
 
                             if (valid.HasValue && valid.Value)
                             {

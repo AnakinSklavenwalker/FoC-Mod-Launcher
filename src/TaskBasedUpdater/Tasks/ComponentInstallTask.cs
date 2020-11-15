@@ -70,8 +70,9 @@ namespace TaskBasedUpdater.Tasks
                 {
                     ValidateEnoughDiskSpaceAvailable(UpdateItem);
 
-                    if (UpdateConfiguration.Instance.BackupPolicy != BackupPolicy.Disable)
-                        BackupItem();
+                    // TODO: split-projects
+                    //if (UpdateConfiguration.Instance.BackupPolicy != BackupPolicy.Disable)
+                    //    BackupItem();
 
                     if (Action == UpdateAction.Update)
                     {
@@ -119,8 +120,9 @@ namespace TaskBasedUpdater.Tasks
             var option = DiskSpaceCalculator.CalculationOption.All;
             if (updateItem.CurrentState == CurrentState.Downloaded)
                 option &= ~DiskSpaceCalculator.CalculationOption.Download;
-            if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Disable)
-                option &= ~DiskSpaceCalculator.CalculationOption.Backup;
+            // TODO: split-projects
+            //if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Disable)
+            //    option &= ~DiskSpaceCalculator.CalculationOption.Backup;
             DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(updateItem, AdditionalSizeBuffer, option);
         }
 
@@ -133,11 +135,12 @@ namespace TaskBasedUpdater.Tasks
             catch (Exception ex)
             {
                 Logger.LogWarning(ex, $"Creating backup of {UpdateItem.Name} failed.");
-                if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Required)
-                {
-                    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
-                    throw;
-                }
+                // TODO: split-projects
+                //if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Required)
+                //{
+                //    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
+                //    throw;
+                //}
             }
         }
     }

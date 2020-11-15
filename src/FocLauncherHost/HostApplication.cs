@@ -8,6 +8,7 @@ using FocLauncherHost.Dialogs;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
+using TaskBasedUpdater.New;
 
 namespace FocLauncherHost
 {
@@ -54,12 +55,12 @@ namespace FocLauncherHost
                     SetWhenWaitDialogIsShownAsync(WaitProgressDelay, SplashScreen.CancellationToken).Forget();
                     var cts = CancellationTokenSource.CreateLinkedTokenSource(SplashScreen.CancellationToken);
                     
-                    UpdateInformation? updateInformation = null;
+                    //UpdateResultInformation? updateInformation = null;
                     try
                     {
-                        var updateManager = new FocLauncherUpdaterManager(LauncherConstants.UpdateMetadataPath);
-                        updateInformation = await updateManager.CheckAndPerformUpdateAsync(cts.Token);
-                        Logger.Info($"Finished automatic update with result {updateInformation}");
+                        //var updateManager = new FocLauncherUpdaterManager(LauncherConstants.UpdateMetadataPath);
+                        //updateInformation = await updateManager.CheckAndPerformUpdateAsync(cts.Token);
+                        //Logger.Info($"Finished automatic update with result {updateInformation}");
                     }
                     catch (OperationCanceledException)
                     {
@@ -71,7 +72,7 @@ namespace FocLauncherHost
                         cts.Dispose();
                     }
 
-                    ReportUpdateResult(updateInformation);
+                    //ReportUpdateResult(updateInformation);
                 });
             }
             catch (Exception e)
@@ -92,7 +93,7 @@ namespace FocLauncherHost
             SplashScreen.IsProgressVisible = true;
         }
 
-        private void ReportUpdateResult(UpdateInformation updateInformation)
+        private void ReportUpdateResult(IUpdateResultInformation updateInformation)
         {
             if (updateInformation != null)
             {

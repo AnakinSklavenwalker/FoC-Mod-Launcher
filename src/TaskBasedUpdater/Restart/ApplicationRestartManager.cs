@@ -15,14 +15,17 @@ namespace TaskBasedUpdater.Restart
 
         public static void RestartApplication(IRestartOptions restartOptions, bool elevated)
         {
-            if (!UpdateConfiguration.Instance.SupportsRestart)
-                throw new RestartDeniedOrFailedException("Application restart is not supported.");
+            // TODO: split-projects
+            //if (!UpdateConfiguration.Instance.SupportsRestart)
+            //    throw new RestartDeniedOrFailedException("Application restart is not supported.");
 
             if (restartOptions is null)
                 throw new ArgumentNullException(nameof(restartOptions));
 
-            var updaterTool = UpdateConfiguration.Instance.ExternalUpdaterPath;
-            if (string.IsNullOrEmpty(updaterTool) || !File.Exists(updaterTool))
+            // TODO: split-projects
+            var updaterTool = string.Empty;
+            //var updaterTool = UpdateConfiguration.Instance.ExternalUpdaterPath;
+            //if (string.IsNullOrEmpty(updaterTool) || !File.Exists(updaterTool))
                 throw new RestartDeniedOrFailedException("External updater tool not found");
 
             var startInfo = new ProcessStartInfo(updaterTool)

@@ -86,13 +86,13 @@ namespace TaskBasedUpdater
             await CalculateRemovableUpdateItemsAsync(ApplicationPath);
         }
 
-        public virtual async Task<UpdateInformation> CheckAndPerformUpdateAsync(CancellationToken cancellation)
+        public virtual async Task<UpdateResultInformation> CheckAndPerformUpdateAsync(CancellationToken cancellation)
         {
             cancellation.ThrowIfCancellationRequested();
             Logger?.LogInformation("Start automatic check and update...");
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
 
-            var updateInformation = new UpdateInformation();
+            var updateInformation = new UpdateResultInformation();
             var finalCleanUp = true;
 
             try
@@ -242,36 +242,36 @@ namespace TaskBasedUpdater
             BackupManager.Instance.RestoreAllBackups();
         }
 
-        protected void NoUpdateInformation(UpdateInformation updateInformation, bool userNotification = false)
+        protected void NoUpdateInformation(UpdateResultInformation updateResultInformation, bool userNotification = false)
         {
             Logger?.LogDebug("No update was required");
-            updateInformation.Result = UpdateResult.NoUpdate;
-            updateInformation.Message = "No update was required";
-            updateInformation.RequiresUserNotification = userNotification;
+            updateResultInformation.Result = UpdateResult.NoUpdate;
+            updateResultInformation.Message = "No update was required";
+            updateResultInformation.RequiresUserNotification = userNotification;
         }
 
-        protected void SuccessInformation(UpdateInformation updateInformation, string message, bool requiresRestart = false, bool userNotification = true)
+        protected void SuccessInformation(UpdateResultInformation updateResultInformation, string message, bool requiresRestart = false, bool userNotification = true)
         {
             Logger?.LogDebug("Update was completed sucessfully");
-            updateInformation.Result = requiresRestart ? UpdateResult.SuccessRestartRequired : UpdateResult.Success;
-            updateInformation.Message = message;
-            updateInformation.RequiresUserNotification = userNotification;
+            updateResultInformation.Result = requiresRestart ? UpdateResult.SuccessRestartRequired : UpdateResult.Success;
+            updateResultInformation.Message = message;
+            updateResultInformation.RequiresUserNotification = userNotification;
         }
 
-        protected void ErrorInformation(UpdateInformation updateInformation, string errorMessage, bool userNotification = true)
+        protected void ErrorInformation(UpdateResultInformation updateResultInformation, string errorMessage, bool userNotification = true)
         {
             Logger?.LogDebug($"Update failed with message: {errorMessage}");
-            updateInformation.Result = UpdateResult.Failed;
-            updateInformation.Message = errorMessage;
-            updateInformation.RequiresUserNotification = userNotification;
+            updateResultInformation.Result = UpdateResult.Failed;
+            updateResultInformation.Message = errorMessage;
+            updateResultInformation.RequiresUserNotification = userNotification;
         }
 
-        protected void CancelledInformation(UpdateInformation updateInformation, bool userNotification = false)
+        protected void CancelledInformation(UpdateResultInformation updateResultInformation, bool userNotification = false)
         {
             Logger?.LogDebug("Operation was cancelled by user request");
-            updateInformation.Result = UpdateResult.Cancelled;
-            updateInformation.Message = "Operation cancelled by user request";
-            updateInformation.RequiresUserNotification = userNotification;
+            updateResultInformation.Result = UpdateResult.Cancelled;
+            updateResultInformation.Message = "Operation cancelled by user request";
+            updateResultInformation.RequiresUserNotification = userNotification;
         }
 
         protected abstract Task<IEnumerable<IUpdateItem>?> GetCatalogItemsAsync(Stream catalogStream, CancellationToken token);
@@ -308,9 +308,9 @@ namespace TaskBasedUpdater
             return false;
         }
 
-        protected virtual void OnRestoreFailed(Exception ex, UpdateInformation updateInformation)
+        protected virtual void OnRestoreFailed(Exception ex, UpdateResultInformation updateResultInformation)
         {
-            ErrorInformation(updateInformation, ex.Message);
+            ErrorInformation(updateResultInformation, ex.Message);
         }
 
         protected Task Clean()
@@ -450,7 +450,7 @@ namespace TaskBasedUpdater
             return Task.FromResult(result);
         }
 
-        private void HandleElevationRequest(ElevationRequireException e, UpdateInformation updateInformation)
+        private void HandleElevationRequest(ElevationRequireException e, UpdateResultInformation updateResultInformation)
         {
             var restoreBackup = true;
             try
@@ -462,13 +462,13 @@ namespace TaskBasedUpdater
                 switch (lockedResult.Status)
                 {
                     case HandlePendingItemStatus.Declined:
-                        ErrorInformation(updateInformation, lockedResult.Message);
+                        ErrorInformation(updateResultInformation, lockedResult.Message);
                         return;
                 }
 
                 if (!PermitElevationRequest())
                 {
-                    ErrorInformation(updateInformation, "The update was stopped because the process needs to be elevated");
+                    ErrorInformation(updateResultInformation, "The update was stopped because the process needs to be elevated");
                     return;
                 }
 
@@ -483,7 +483,7 @@ namespace TaskBasedUpdater
                     if (!(ex is Win32Exception && ex.HResult == -2147467259))
                         throw;
                     // The elevation was not accepted by the user
-                    CancelledInformation(updateInformation);
+                    CancelledInformation(updateResultInformation);
                 }
             }
             finally

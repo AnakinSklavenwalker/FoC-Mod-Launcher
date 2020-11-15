@@ -97,8 +97,9 @@ namespace TaskBasedUpdater
                         throw new IOException($"Unable to restore the backup file '{backupFile}'. Please restart your computer!");
                     }
 
-                    if (UpdateConfiguration.Instance.DownloadOnlyMode)
-                        UpdateItemDownloadPathStorage.Instance.Remove(updateItem);
+                    // TODO: split-projects
+                    //if (UpdateConfiguration.Instance.DownloadOnlyMode)
+                    //    UpdateItemDownloadPathStorage.Instance.Remove(updateItem);
 
                     try
                     {
@@ -164,10 +165,12 @@ namespace TaskBasedUpdater
 
         private static string GetBackupPath(IUpdateItem updateItem)
         {
-            var backupPath = UpdateConfiguration.Instance.BackupPath;
-            if (string.IsNullOrEmpty(backupPath))
-                backupPath = updateItem.Destination;
-            return backupPath!;
+            // TODO: split-projects
+            return string.Empty;
+            //var backupPath = UpdateConfiguration.Instance.BackupPath;
+            //if (string.IsNullOrEmpty(backupPath))
+            //    backupPath = updateItem.Destination;
+            //return backupPath!;
         }
     }
 }
