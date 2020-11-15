@@ -5,13 +5,80 @@ using System.Windows;
 using FocLauncher;
 using FocLauncher.Threading;
 using FocLauncherHost.Dialogs;
+using Microsoft;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
+using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
 
 namespace FocLauncherHost
 {
+
+    internal class UpdaterServiceFactory
+    {
+        public IServiceProvider CreateServiceProvider(IServiceProvider services)
+        {
+            Requires.NotNull(services, nameof(services));
+            var serviceCollection = new ServiceCollection();
+
+            return serviceCollection.BuildServiceProvider();
+        }
+    }
+
+
+    internal class FocLauncherUpdater : IDisposable
+    {
+        private readonly IServiceProvider _services;
+        private IUpdateCatalog? _updateCatalog;
+        private IUpdateManager? _updateManager;
+
+        public FocLauncherUpdater(IServiceProvider services)
+        {
+            Requires.NotNull(services, nameof(services));
+            _services = services;
+        }
+
+        public IUpdateResultInformation CheckAndUpdate(CancellationToken token)
+        {
+            if (!IsUpdateAvailable(token))
+                return UpdateResultInformation.NoUpdate;
+            if (_updateCatalog is null)
+                return new UpdateResultInformation
+                {
+                    Result = UpdateResult.NoUpdate,
+                    Message = "Unable to find update manifest."
+                };
+            return Update(token);
+        }
+
+        private IUpdateResultInformation Update(CancellationToken token)
+        {
+            var updater =
+                new NewUpdateManager(new ServiceCollection().BuildServiceProvider(), new UpdateConfiguration());
+
+            if (_updateCatalog is null)
+                throw new InvalidOperationException("Catalog cannot be null");
+
+            updater.Update(_updateCatalog, token);
+
+            return UpdateResultInformation.Success;
+        }
+
+        private bool IsUpdateAvailable(CancellationToken token)
+        {
+            return false;
+        }
+
+        public void Dispose()
+        {
+            _updateManager.Dispose();
+        }
+    }
+
+
+
     public class HostApplication : Application
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -55,12 +122,24 @@ namespace FocLauncherHost
                     SetWhenWaitDialogIsShownAsync(WaitProgressDelay, SplashScreen.CancellationToken).Forget();
                     var cts = CancellationTokenSource.CreateLinkedTokenSource(SplashScreen.CancellationToken);
                     
-                    //UpdateResultInformation? updateInformation = null;
+                    IUpdateResultInformation? updateInformation = null;
                     try
                     {
-                        //var updateManager = new FocLauncherUpdaterManager(LauncherConstants.UpdateMetadataPath);
-                        //updateInformation = await updateManager.CheckAndPerformUpdateAsync(cts.Token);
-                        //Logger.Info($"Finished automatic update with result {updateInformation}");
+                        var emptyServices = new ServiceCollection().BuildServiceProvider();
+
+                        var updateManager = new NewUpdateManager(emptyServices,
+                            new UpdateConfiguration());
+
+
+                        var t = await Task.Run(() =>
+                        {
+                            var s = new UpdaterServiceFactory();
+                            var u = new FocLauncherUpdater(emptyServices);
+                            return u.CheckAndUpdate(cts.Token);
+
+                        }, CancellationToken.None);
+
+                        Logger.Info($"Finished automatic update with result {updateInformation}");
                     }
                     catch (OperationCanceledException)
                     {
@@ -72,7 +151,7 @@ namespace FocLauncherHost
                         cts.Dispose();
                     }
 
-                    //ReportUpdateResult(updateInformation);
+                    ReportUpdateResult(updateInformation);
                 });
             }
             catch (Exception e)

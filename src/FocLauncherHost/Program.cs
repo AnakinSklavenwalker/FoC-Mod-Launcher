@@ -47,7 +47,7 @@ namespace FocLauncherHost
             if (update)
                 ShowSplashScreen();
 #endif
-
+            ShowSplashScreen();
 
             StartLauncher();
             LogManager.Shutdown();

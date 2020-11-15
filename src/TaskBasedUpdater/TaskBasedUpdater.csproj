@@ -44,11 +44,9 @@
     <Compile Include="Configuration\IUpdateConfiguration.cs" />
     <Compile Include="FileSystem\ValidationResult.cs" />
     <Compile Include="New\IUpdateManager.cs" />
-    <Compile Include="New\IUpdateCatalog.cs" />
     <Compile Include="New\IUpdateCatalogFactory.cs" />
     <Compile Include="New\IUpdateResultInformation.cs" />
     <Compile Include="New\NewUpdateManager.cs" />
-    <Compile Include="New\UpdateCatalog.cs" />
     <Compile Include="Restart\LockingProcessManagerUtilities.cs" />
     <Compile Include="Tasks\IUpdaterTask.cs" />
     <Compile Include="UpdateItemDownloadPathStorage.cs" />

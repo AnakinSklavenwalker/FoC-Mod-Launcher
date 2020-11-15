@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TaskBasedUpdater.Configuration;
 using Validation;
@@ -88,7 +89,8 @@ namespace TaskBasedUpdater.New
 
         public IUpdateResultInformation Update(IUpdateCatalog updateCatalog, CancellationToken cancellation)
         {
-            throw new NotImplementedException();
+            Task.Run(async () => await Task.Delay(10000, cancellation), cancellation).Wait(cancellation);
+            return null;
         }
 
         protected virtual void Dispose(bool disposing)

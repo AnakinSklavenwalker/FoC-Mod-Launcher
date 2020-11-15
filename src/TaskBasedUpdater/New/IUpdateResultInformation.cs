@@ -4,8 +4,8 @@
     {
         UpdateResult Result { get; }
 
-        public bool RequiresUserNotification { get; set; }
+        public bool RequiresUserNotification { get; }
 
-        public string? Message { get; set; }
+        public string? Message { get; }
     }
 }
