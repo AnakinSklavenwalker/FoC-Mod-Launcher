@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net48;net5.0</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -17,12 +17,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="System.Threading.AccessControl" Version="5.0.0" />
     <PackageReference Include="Validation" Version="2.4.22" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Security.Principal.Windows">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.0\System.Security.Principal.Windows.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

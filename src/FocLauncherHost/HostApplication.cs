@@ -1,4 +1,7 @@
 ﻿using System;
+using System.ComponentModel.Design;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,26 +26,77 @@ namespace FocLauncherHost
             Requires.NotNull(services, nameof(services));
             var serviceCollection = new ServiceCollection();
 
+            serviceCollection.AddSingleton<ILauncherProductService>(new LauncherProductService());
+
             return serviceCollection.BuildServiceProvider();
+        }
+    }
+
+    internal interface ILauncherProductService
+    {
+        IInstalledProduct GetCurrentInstance();
+
+        void UpdateCurrentInstance(IInstalledProduct product);
+
+        IProductReference CreateProductReference(Version? newVersion, ProductReleaseType newReleaseType);
+    }
+
+    internal class LauncherProductService : ILauncherProductService
+    {
+        private IInstalledProduct? _installedProduct;
+
+
+        public IInstalledProduct GetCurrentInstance()
+        {
+            return _installedProduct ??= BuildLauncherProduct();
+        }
+
+        public IProductReference CreateProductReference(Version? newVersion = null,
+            ProductReleaseType newReleaseType = ProductReleaseType.Stable)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateCurrentInstance(IInstalledProduct product)
+        {
+            throw new NotImplementedException();
+        }
+
+        private InstalledProduct BuildLauncherProduct()
+        {
+            return new InstalledProduct
+            {
+                Name = "FocLauncher",
+                ReleaseType = ProductReleaseType.Stable,
+                InstallationPath = Directory.GetCurrentDirectory(),
+            };
         }
     }
 
 
     internal class FocLauncherUpdater : IDisposable
     {
+        private readonly IInstalledProduct _product;
         private readonly IServiceProvider _services;
         private IUpdateCatalog? _updateCatalog;
         private IUpdateManager? _updateManager;
 
-        public FocLauncherUpdater(IServiceProvider services)
+        public IUpdateConfiguration UpdateConfiguration { get; }
+
+        public FocLauncherUpdater(IInstalledProduct product, IUpdateConfiguration updateConfiguration, IServiceProvider services)
         {
+            Requires.NotNull(product, nameof(product));
             Requires.NotNull(services, nameof(services));
+            Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
+            _product = product;
             _services = services;
+            UpdateConfiguration = updateConfiguration;
         }
 
-        public IUpdateResultInformation CheckAndUpdate(CancellationToken token)
+        public IUpdateResultInformation CheckAndUpdate(IUpdateRequest updateRequest, CancellationToken token)
         {
-            if (!IsUpdateAvailable(token))
+            Requires.NotNull(updateRequest, nameof(updateRequest));
+            if (!IsUpdateAvailable(updateRequest, token))
                 return UpdateResultInformation.NoUpdate;
             if (_updateCatalog is null)
                 return new UpdateResultInformation
@@ -56,7 +110,7 @@ namespace FocLauncherHost
         private IUpdateResultInformation Update(CancellationToken token)
         {
             var updater =
-                new NewUpdateManager(new ServiceCollection().BuildServiceProvider(), new UpdateConfiguration());
+                new NewUpdateManager(new ServiceCollection().BuildServiceProvider(), UpdateConfiguration);
 
             if (_updateCatalog is null)
                 throw new InvalidOperationException("Catalog cannot be null");
@@ -66,9 +120,21 @@ namespace FocLauncherHost
             return UpdateResultInformation.Success;
         }
 
-        private bool IsUpdateAvailable(CancellationToken token)
+        private bool IsUpdateAvailable(IUpdateRequest updateRequest, CancellationToken token)
         {
-            return false;
+            IProductProviderService productProviderService = null;
+
+            var i = productProviderService.GetInstalledProductCatalog(_product);
+            var a = productProviderService.GetAvailableProductCatalog(updateRequest);
+
+            IUpdateCatalogBuilder b = null;
+
+            var u = b.Build(i, a);
+
+            if (!u.Items.Any())
+                return false;
+            _updateCatalog = u;
+            return true;
         }
 
         public void Dispose()
@@ -93,10 +159,15 @@ namespace FocLauncherHost
 
         internal SplashScreen SplashScreen { get; }
 
+        private readonly IServiceProvider _services;
+
         internal HostApplication()
         {
             MainWindow = SplashScreen = new SplashScreen();
             SplashScreen.Launcher = FocLauncherInformation.Instance;
+
+            _services = new UpdaterServiceFactory().CreateServiceProvider(
+                new ServiceCollection().BuildServiceProvider());
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -125,17 +196,21 @@ namespace FocLauncherHost
                     IUpdateResultInformation? updateInformation = null;
                     try
                     {
-                        var emptyServices = new ServiceCollection().BuildServiceProvider();
-
-                        var updateManager = new NewUpdateManager(emptyServices,
-                            new UpdateConfiguration());
-
-
-                        var t = await Task.Run(() =>
+                        
+                        updateInformation = await Task.Run(() =>
                         {
-                            var s = new UpdaterServiceFactory();
-                            var u = new FocLauncherUpdater(emptyServices);
-                            return u.CheckAndUpdate(cts.Token);
+                            var p = _services.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
+
+                            var u = new FocLauncherUpdater(p, new UpdateConfiguration(), _services);
+
+                            var r = new UpdateRequest
+                            {
+                                Product = new LauncherProductService().CreateProductReference(),
+                                RequestedAction = UpdateRequestAction.Repair | UpdateRequestAction.Update,
+                                UpdateManifestPath = string.Empty
+                            };
+
+                            return u.CheckAndUpdate(r, cts.Token);
 
                         }, CancellationToken.None);
 

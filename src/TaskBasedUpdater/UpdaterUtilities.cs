@@ -125,7 +125,11 @@ namespace TaskBasedUpdater
                 var mutexSecurity = new MutexSecurity();
                 var rule = new MutexAccessRule(securityIdentifier, MutexRights.FullControl, AccessControlType.Allow);
                 mutexSecurity.AddAccessRule(rule);
-                mutex = new Mutex(false, name, out _, mutexSecurity);
+#if NET
+                return MutexAcl.Create(false, name, out _, mutexSecurity);
+#else
+            return new Mutex(false, name, out _, mutexSecurity);
+#endif
             }
 
             bool mutexAbandoned;

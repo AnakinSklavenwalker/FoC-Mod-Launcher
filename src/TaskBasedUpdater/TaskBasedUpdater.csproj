@@ -1,158 +1,28 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0855D868-8864-47A4-AAD2-D89056AD536F}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TaskBasedUpdater</RootNamespace>
-    <AssemblyName>TaskBasedUpdater</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <TargetFrameworks>net48;net5.0</TargetFrameworks>
     <Nullable>enable</Nullable>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>8</LangVersion>
+
+  <PropertyGroup>
+    <Authors>Anakin Sklavenwalker</Authors>
+    <Company>Republic at War Modding Team</Company>
+    <Copyright>Copyright © 2020 Anakin Sklavenwalker</Copyright>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>8</LangVersion>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="WindowsBase" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
+    <PackageReference Include="System.Threading.AccessControl" Version="5.0.0" />
+    <PackageReference Include="Validation" Version="2.4.22" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="BackupManager.cs" />
-    <Compile Include="Configuration\IUpdateConfiguration.cs" />
-    <Compile Include="FileSystem\ValidationResult.cs" />
-    <Compile Include="New\IUpdateManager.cs" />
-    <Compile Include="New\IUpdateCatalogFactory.cs" />
-    <Compile Include="New\IUpdateResultInformation.cs" />
-    <Compile Include="New\NewUpdateManager.cs" />
-    <Compile Include="Restart\LockingProcessManagerUtilities.cs" />
-    <Compile Include="Tasks\IUpdaterTask.cs" />
-    <Compile Include="UpdateItemDownloadPathStorage.cs" />
-    <Compile Include="UpdateItemFailedException.cs" />
-    <Compile Include="UpdateItem\UpdateItem.cs" />
-    <Compile Include="UpdateItem\UpdateAction.cs" />
-    <Compile Include="UpdateItem\UpdateItemIdentityComparer.cs" />
-    <Compile Include="UpdateItem\CurrentState.cs" />
-    <Compile Include="UpdateItem\HashType.cs" />
-    <Compile Include="UpdateItem\IUpdateItem.cs" />
-    <Compile Include="UpdateItem\OriginInfo.cs" />
-    <Compile Include="UpdateItem\ValidationContext.cs" />
-    <Compile Include="Configuration\BackupPolicy.cs" />
-    <Compile Include="Configuration\UpdateConfiguration.cs" />
-    <Compile Include="Configuration\ValidationPolicy.cs" />
-    <Compile Include="Download\DownloadEngineBase.cs" />
-    <Compile Include="Download\DownloadFailureException.cs" />
-    <Compile Include="Download\DownloadFailureInformation.cs" />
-    <Compile Include="Download\DownloadHelpers.cs" />
-    <Compile Include="Download\DownloadManager.cs" />
-    <Compile Include="Download\DownloadResult.cs" />
-    <Compile Include="Download\DownloadSource.cs" />
-    <Compile Include="Download\DownloadSummary.cs" />
-    <Compile Include="Download\FileDownloader.cs" />
-    <Compile Include="Download\IDownloadEngine.cs" />
-    <Compile Include="Download\IDownloadManager.cs" />
-    <Compile Include="Download\NoSuitableEngineException.cs" />
-    <Compile Include="Download\PreferredDownloadEngines.cs" />
-    <Compile Include="Download\ProxyResolution.cs" />
-    <Compile Include="Download\ValidationFailedException.cs" />
-    <Compile Include="Download\WebClientDownloader.cs" />
-    <Compile Include="Download\WrappedWebException.cs" />
-    <Compile Include="Elevation\ElevationRequestData.cs" />
-    <Compile Include="Elevation\ElevationRequireException.cs" />
-    <Compile Include="Elevation\ElevationUtilities.cs" />
-    <Compile Include="Elevation\Elevator.cs" />
-    <Compile Include="Elevation\ProcessIntegrity.cs" />
-    <Compile Include="Elevation\SafeTokenHandle.cs" />
-    <Compile Include="Elevation\SidAndAttributes.cs" />
-    <Compile Include="Elevation\TokenMandatoryLabel.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="FileInstaller.cs" />
-    <Compile Include="FileSystem\DiskSpaceCalculator.cs" />
-    <Compile Include="FileSystem\DriveSpaceData.cs" />
-    <Compile Include="FileSystem\FileSystemExtensions.cs" />
-    <Compile Include="FileSystem\HashVerifier.cs" />
-    <Compile Include="FileSystem\LockedFileLogger.cs" />
-    <Compile Include="FileSystem\OutOfDiskspaceException.cs" />
-    <Compile Include="InstallAction.cs" />
-    <Compile Include="InstallResult.cs" />
-    <Compile Include="IProduct.cs" />
-    <Compile Include="NativeMethods\Advapi32.cs" />
-    <Compile Include="NativeMethods\Kernel32.cs" />
-    <Compile Include="NativeMethods\RestartMgr.cs" />
-    <Compile Include="Operations\CleanOperation.cs" />
-    <Compile Include="Operations\UpdateOperation.cs" />
-    <Compile Include="ProgressUpdateCallback.cs" />
-    <Compile Include="ProgressUpdateStatus.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Restart\ApplicationRestartManager.cs" />
-    <Compile Include="Restart\ApplicationStatus.cs" />
-    <Compile Include="Restart\ApplicationType.cs" />
-    <Compile Include="Restart\IRestartOptions.cs" />
-    <Compile Include="Restart\IRestoreOptions.cs" />
-    <Compile Include="Restart\IUpdateOptions.cs" />
-    <Compile Include="Restart\PendingHandledResult.cs" />
-    <Compile Include="Restart\HandlePendingItemStatus.cs" />
-    <Compile Include="Restart\ILockingProcessInfo.cs" />
-    <Compile Include="Restart\ILockingProcessManager.cs" />
-    <Compile Include="Restart\LockedFilesWatcher.cs" />
-    <Compile Include="Restart\LockingProcessInfo.cs" />
-    <Compile Include="Restart\LockingProcessManager.cs" />
-    <Compile Include="Restart\LockingProcessManagerFactory.cs" />
-    <Compile Include="Restart\RestartDeniedOrFailedException.cs" />
-    <Compile Include="Restart\WindowsRestartManagerShutdown.cs" />
-    <Compile Include="RestoreFailedException.cs" />
-    <Compile Include="Tasks\CleanFileTask.cs" />
-    <Compile Include="Tasks\ComponentDownloadTask.cs" />
-    <Compile Include="Tasks\ComponentInstallTask.cs" />
-    <Compile Include="New\UpdateResultInformation.cs" />
-    <Compile Include="UpdateManager.cs" />
-    <Compile Include="UpdateResult.cs" />
-    <Compile Include="UpdaterException.cs" />
-    <Compile Include="UpdaterUtilities.cs" />
-    <Compile Include="WindowsException.cs" />
+    <ProjectReference Include="..\SimplePipeline\SimplePipeline.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SimplePipeline\SimplePipeline.csproj">
-      <Project>{fc3b1a80-76fc-46e3-b59d-62bcb460dec7}</Project>
-      <Name>SimplePipeline</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection">
-      <Version>5.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
-      <Version>5.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions">
-      <Version>5.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="System.IO.Abstractions">
-      <Version>12.2.21</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>
