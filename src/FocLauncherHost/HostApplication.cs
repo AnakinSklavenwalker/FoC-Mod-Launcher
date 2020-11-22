@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,6 +14,7 @@ using NLog;
 using TaskBasedUpdater;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
+using TaskBasedUpdater.UpdateItem;
 
 namespace FocLauncherHost
 {
@@ -43,18 +43,24 @@ namespace FocLauncherHost
 
     internal class LauncherProductService : ILauncherProductService
     {
+        private bool _isInitialized;
         private IInstalledProduct? _installedProduct;
-
 
         public IInstalledProduct GetCurrentInstance()
         {
-            return _installedProduct ??= BuildLauncherProduct();
+            Initialize();
+            return _installedProduct!;
         }
 
         public IProductReference CreateProductReference(Version? newVersion = null,
             ProductReleaseType newReleaseType = ProductReleaseType.Stable)
         {
-            throw new NotImplementedException();
+            Initialize();
+            return new InstalledProduct(_installedProduct!.Name, _installedProduct.InstallationPath)
+            {
+                Version = newVersion,
+                ReleaseType = newReleaseType
+            };
         }
 
         public void UpdateCurrentInstance(IInstalledProduct product)
@@ -62,14 +68,32 @@ namespace FocLauncherHost
             throw new NotImplementedException();
         }
 
-        private InstalledProduct BuildLauncherProduct()
+        private void Initialize()
         {
-            return new InstalledProduct
+            if (_isInitialized)
+                return;
+            _installedProduct ??= BuildLauncherProduct();
+            _isInitialized = true;
+        }
+
+        private static InstalledProduct BuildLauncherProduct()
+        {
+            var name = GetProductName();
+            var path = GetInstallationPath();
+            return new InstalledProduct(name, path)
             {
-                Name = "FocLauncher",
-                ReleaseType = ProductReleaseType.Stable,
-                InstallationPath = Directory.GetCurrentDirectory(),
+                ReleaseType = ProductReleaseType.Stable
             };
+        }
+
+        private static string GetProductName()
+        {
+            return LauncherConstants.ProductName;
+        }
+
+        private static string GetInstallationPath()
+        {
+            return Directory.GetCurrentDirectory();
         }
     }
 
@@ -89,7 +113,7 @@ namespace FocLauncherHost
             Requires.NotNull(services, nameof(services));
             Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
             _product = product;
-            _services = services;
+            _services = new AggregatedServiceProvider(services, InitializeServices);
             UpdateConfiguration = updateConfiguration;
         }
 
@@ -122,14 +146,14 @@ namespace FocLauncherHost
 
         private bool IsUpdateAvailable(IUpdateRequest updateRequest, CancellationToken token)
         {
-            IProductProviderService productProviderService = null;
+            var productProviderService = _services.GetRequiredService<IProductCatalogService>();
 
             var i = productProviderService.GetInstalledProductCatalog(_product);
             var a = productProviderService.GetAvailableProductCatalog(updateRequest);
 
-            IUpdateCatalogBuilder b = null;
+            IUpdateCatalogBuilder b = _services.GetRequiredService<IUpdateCatalogBuilder>();
 
-            var u = b.Build(i, a);
+            var u = b.Build(i, a, updateRequest.RequestedAction);
 
             if (!u.Items.Any())
                 return false;
@@ -137,9 +161,44 @@ namespace FocLauncherHost
             return true;
         }
 
+        private IServiceCollection InitializeServices()
+        {
+            var sc =  new ServiceCollection();
+            sc.AddTransient<IProductCatalogService>(provider => new LauncherCatalogService(_services));
+            sc.AddTransient<IUpdateCatalogBuilder>(provider => new UpdateCatalogBuilder());
+            return sc;
+        }
+
         public void Dispose()
         {
             _updateManager.Dispose();
+        }
+    }
+
+    internal class LauncherCatalogService : IProductCatalogService
+    {
+        private readonly IServiceProvider _serviceProvider;
+
+        public LauncherCatalogService(IServiceProvider serviceProvider)
+        {
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceProvider = serviceProvider;
+        }
+
+        public IInstalledProductCatalog GetInstalledProductCatalog(IInstalledProduct product)
+        {
+            var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
+            if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, product))
+                throw new InvalidOperationException("Not compatible product");
+            return new InstalledProductCatalog(product, new IUpdateItem[0]);
+        }
+
+        public IAvailableProductCatalog? GetAvailableProductCatalog(IUpdateRequest request)
+        {
+            var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
+            if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, request.Product))
+                throw new InvalidOperationException("Not compatible product");
+            return new AvailableProductCatalog(request.Product, new IUpdateItem[00]);
         }
     }
 
@@ -199,13 +258,14 @@ namespace FocLauncherHost
                         
                         updateInformation = await Task.Run(() =>
                         {
-                            var p = _services.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
+                            var ps = _services.GetRequiredService<ILauncherProductService>();
+                            var p = ps.GetCurrentInstance();
 
                             var u = new FocLauncherUpdater(p, new UpdateConfiguration(), _services);
 
                             var r = new UpdateRequest
                             {
-                                Product = new LauncherProductService().CreateProductReference(),
+                                Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
                                 RequestedAction = UpdateRequestAction.Repair | UpdateRequestAction.Update,
                                 UpdateManifestPath = string.Empty
                             };

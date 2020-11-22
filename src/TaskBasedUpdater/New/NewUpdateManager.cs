@@ -31,7 +31,7 @@ namespace TaskBasedUpdater.New
         {
             Requires.NotNull(serviceType, nameof(serviceType));
             var service = _current.Value?.GetService(serviceType);
-            return service != null ? serviceType : _aggregated.GetService(serviceType);
+            return service ?? _aggregated.GetService(serviceType);
         }
 
         public void Dispose()
