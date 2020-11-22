@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TaskBasedUpdater.New.Product
 {
@@ -9,6 +10,7 @@ namespace TaskBasedUpdater.New.Product
         public static ProductReferenceEqualityComparer Default = new(true, true);
         public static ProductReferenceEqualityComparer VersionAware = new(true, false);
         public static ProductReferenceEqualityComparer ReleaseAware = new(true, true);
+        public static ProductReferenceEqualityComparer NameOnly = new(false, false);
 
 
         private ProductReferenceEqualityComparer(bool compareVersion, bool compareRelease)

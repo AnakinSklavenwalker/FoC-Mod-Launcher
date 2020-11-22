@@ -17,6 +17,15 @@ namespace TaskBasedUpdater.UpdateItem
         public OriginInfo? OriginInfo { get; set; }
 
         public long? DiskSize { get; set; }
+
+        public UpdateItem()
+        {
+        }
+
+        public UpdateItem(IUpdateItem updateItem)
+        {
+            throw new NotImplementedException();
+        }
         
         public override string ToString()
         {

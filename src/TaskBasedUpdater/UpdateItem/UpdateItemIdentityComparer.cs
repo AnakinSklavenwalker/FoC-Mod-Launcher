@@ -5,8 +5,8 @@ namespace TaskBasedUpdater.UpdateItem
 {
     public class UpdateItemIdentityComparer : IEqualityComparer<IUpdateItem>, IComparer<IUpdateItem>
     {
-        public static readonly UpdateItemIdentityComparer Default = new UpdateItemIdentityComparer();
-        public static readonly UpdateItemIdentityComparer VersionIndependent = new UpdateItemIdentityComparer(true);
+        public static readonly UpdateItemIdentityComparer Default = new();
+        public static readonly UpdateItemIdentityComparer VersionIndependent = new(true);
 
         private readonly bool _excludeVersion;
         private readonly StringComparison _comparisonType;
