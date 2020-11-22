@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.New;
 using TaskBasedUpdater.Operations;
 using TaskBasedUpdater.Restart;
 using TaskBasedUpdater.UpdateItem;

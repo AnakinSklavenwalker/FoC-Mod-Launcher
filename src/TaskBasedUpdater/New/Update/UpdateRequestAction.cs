@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update
 {
     [Flags]
     public enum UpdateRequestAction

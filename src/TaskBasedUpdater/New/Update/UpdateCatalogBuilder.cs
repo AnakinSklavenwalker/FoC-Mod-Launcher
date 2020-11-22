@@ -2,7 +2,7 @@
 using TaskBasedUpdater.New.Product;
 using Validation;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update
 {
     public class UpdateCatalogBuilder : IUpdateCatalogBuilder
     {

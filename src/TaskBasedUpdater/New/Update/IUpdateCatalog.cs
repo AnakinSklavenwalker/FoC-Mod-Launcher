@@ -2,7 +2,7 @@
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.UpdateItem;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update
 {
     public interface IUpdateCatalog : ICatalog
     {

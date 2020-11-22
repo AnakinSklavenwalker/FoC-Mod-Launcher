@@ -1,6 +1,4 @@
-﻿using TaskBasedUpdater.New;
-
-namespace TaskBasedUpdater
+﻿namespace TaskBasedUpdater.New
 {
     public class UpdateResultInformation : IUpdateResultInformation
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using TaskBasedUpdater.Configuration;
+using TaskBasedUpdater.New.Update;
 
 namespace TaskBasedUpdater.New
 {

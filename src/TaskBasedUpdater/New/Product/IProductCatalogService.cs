@@ -1,4 +1,6 @@
-﻿namespace TaskBasedUpdater.New.Product
+﻿using TaskBasedUpdater.New.Update;
+
+namespace TaskBasedUpdater.New.Product
 {
     public interface IProductCatalogService
     {

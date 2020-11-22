@@ -14,6 +14,7 @@ using NLog;
 using TaskBasedUpdater;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
+using TaskBasedUpdater.New.Update;
 using TaskBasedUpdater.UpdateItem;
 
 namespace FocLauncherHost

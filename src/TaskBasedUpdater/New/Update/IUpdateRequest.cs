@@ -1,6 +1,6 @@
 ﻿using TaskBasedUpdater.New.Product;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update
 {
     public interface IUpdateRequest
     {
