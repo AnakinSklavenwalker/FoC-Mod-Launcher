@@ -8,7 +8,7 @@ namespace TaskBasedUpdater.UpdateItem
 
         public HashType HashType { get; set; }
 
-        public bool Verify()
+        internal bool Verify()
         {
             var hashLength = Hash.Length;
             var expected = GetHashSizeBytes(HashType);

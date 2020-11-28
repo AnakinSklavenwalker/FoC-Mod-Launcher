@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TaskBasedUpdater.UpdateItem
 {
-    public class UpdateItemIdentityComparer : IEqualityComparer<IUpdateItem>, IComparer<IUpdateItem>
+    public class UpdateItemIdentityComparer : IEqualityComparer<IUpdateItem>
     {
         public static readonly UpdateItemIdentityComparer Default = new();
         public static readonly UpdateItemIdentityComparer VersionIndependent = new(true);
@@ -36,37 +36,36 @@ namespace TaskBasedUpdater.UpdateItem
             }
         }
 
-        public bool Equals(IUpdateItem x, IUpdateItem y)
+        public bool Equals(IUpdateItem? x, IUpdateItem? y)
         {
-            return Compare(x, y) == 0;
+            if (x == y)
+                return true;
+            if (x == null || y == null)
+                return false;
+
+            var flag = x.Name.Equals(y.Name) && x.Destination.Equals(y.Destination);
+            if (!flag)
+                return false;
+
+            if (_excludeVersion)
+                return true;
+
+            if (x.CurrentVersion == y.CurrentVersion)
+                return true;
+            return x.CurrentVersion is not null && x.CurrentVersion.Equals(y.CurrentVersion);
         }
 
         public int GetHashCode(IUpdateItem? obj)
         {
+            if (obj is null)
+                return 0;
             var num = 0;
-            if (obj?.Name != null)
-                num ^= _comparer.GetHashCode(obj.Name);
+
+            num ^= _comparer.GetHashCode(obj.Name);
+            num ^= _comparer.GetHashCode(obj.Destination);
+
             if (!_excludeVersion && obj?.CurrentVersion != null)
                 num ^= obj.CurrentVersion.GetHashCode();
-            return num;
-        }
-
-        public int Compare(IUpdateItem? x, IUpdateItem? y)
-        {
-            if (x == y)
-                return 0;
-            if (x == null)
-                return -1;
-            if (y == null)
-                return 1;
-            var num = string.Compare(x.Name, y.Name, _comparisonType);
-            if (num != 0)
-                return num;
-            if (!_excludeVersion)
-            {
-                var version = x.CurrentVersion;
-                num = version != null ? version.CompareTo(y.CurrentVersion) : y.CurrentVersion == null ? 0 : -1;
-            }
             return num;
         }
     }

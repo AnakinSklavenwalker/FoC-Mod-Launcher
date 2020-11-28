@@ -73,8 +73,39 @@ namespace TaskBasedUpdater.Tests
             };
         }
 
+        public static IEnumerable<object[]> SameComponents()
+        {
+
+            var current = new UpdateItem.UpdateItem
+            {
+                Name = "A",
+                Destination = "D"
+            };
+            var avail = new UpdateItem.UpdateItem
+            {
+                Name = "A",
+                Destination = "D"
+            };
+
+            var expected = new UpdateItem.UpdateItem
+            {
+                Name = "A",
+                Destination = "D",
+                RequiredAction = UpdateAction.Keep
+            };
+
+            yield return new object[]
+            {
+                UpdateRequestAction.Update,
+                new InstalledProductCatalog(Product, new []{current}),
+                new AvailableProductCatalog(Product, new []{avail}),
+                new UpdateCatalogStub(new []{expected})
+            };
+        }
+
         [Theory]
-        [MemberData(nameof(BothEmpty))]
+        //[MemberData(nameof(BothEmpty))]
+        [MemberData(nameof(SameComponents))]
         public void Test(
             UpdateRequestAction updateRequest,
             IInstalledProductCatalog installedProductCatalog,

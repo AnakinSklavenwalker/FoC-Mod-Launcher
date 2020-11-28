@@ -18,8 +18,8 @@ namespace TaskBasedUpdater.New.Update
             if (!ProductReferenceEqualityComparer.Default.Equals(installedCatalog.Product, availableCatalog.Product))
                 throw new InvalidOperationException("Cannot build update catalog from different products.");
 
-            var currentItems = installedCatalog.Items.ToHashSet(UpdateItemIdentityComparer.Default);
-            var availableItems = installedCatalog.Items.ToHashSet(UpdateItemIdentityComparer.Default);
+            var currentItems = installedCatalog.Items.ToHashSet(UpdateItemIdentityComparer.VersionIndependent);
+            var availableItems = availableCatalog.Items.ToHashSet(UpdateItemIdentityComparer.VersionIndependent);
 
             if (!currentItems.Any() && !availableItems.Any())
                 return new UpdateCatalog(availableCatalog.Product, new IUpdateItem[0], action);
@@ -33,6 +33,7 @@ namespace TaskBasedUpdater.New.Update
             var catalogItems = new List<IUpdateItem>();
             foreach (var availableItem in availableItems)
             {
+                IUpdateItem updateItem = null;
                 // TODO: Implement a real check
                 if (!currentItems.TryGetValue(availableItem, out var current))
                 {
@@ -44,8 +45,8 @@ namespace TaskBasedUpdater.New.Update
                     currentItems.Remove(current);
                     if (!action.HasFlag(UpdateRequestAction.Repair))
                     {
-                        // availableItem.RequiredAction = UpdateAction.Keep;
-                        catalogItems.Add(availableItem);
+                        //updateItem = availableItem with{ RequiredAction = UpdateAction.Keep};
+                        catalogItems.Add(updateItem);
                     }
                     else
                     {
@@ -73,12 +74,13 @@ namespace TaskBasedUpdater.New.Update
         private static IUpdateCatalog ShallowCatalogWithAction(IProductReference product, ICatalog catalog,
             UpdateAction updateAction, UpdateRequestAction requestAction)
         {
-            return new UpdateCatalog(product,
-                catalog.Items.Select(x =>
-                {
-                    var copy = new UpdateItem.UpdateItem(x) {RequiredAction = updateAction};
-                    return copy;
-                }), requestAction);
+            return null;
+            //return new UpdateCatalog(product,
+            //    catalog.Items.Select(x =>
+            //    {
+            //        var copy = new UpdateItem.UpdateItem(x) {RequiredAction = updateAction};
+            //        return copy;
+            //    }), requestAction);
 
         }
     }

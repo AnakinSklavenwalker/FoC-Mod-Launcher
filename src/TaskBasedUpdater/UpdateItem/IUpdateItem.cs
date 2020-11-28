@@ -4,18 +4,18 @@ namespace TaskBasedUpdater.UpdateItem
 {
     public interface IUpdateItem : IEquatable<IUpdateItem>
     {
-        string Destination { get; set; }
+        string Destination { get; }
 
-        string Name { get; set; }
+        string Name { get; }
 
-        UpdateAction RequiredAction { get; set; }
+        UpdateAction RequiredAction { get; init; }
 
         CurrentState CurrentState { get; set; }
 
         Version? CurrentVersion { get; set; }
 
-        OriginInfo? OriginInfo { get; set; }
+        OriginInfo? OriginInfo { get; }
 
-        long? DiskSize { get; set; }
+        long? DiskSize { get; }
     }
 }

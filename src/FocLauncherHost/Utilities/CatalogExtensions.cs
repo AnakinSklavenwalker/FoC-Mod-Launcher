@@ -10,7 +10,7 @@ namespace FocLauncherHost.Utilities
         {
             if (string.IsNullOrEmpty(dependency.Name) || string.IsNullOrEmpty(dependency.Destination))
                 return null;
-            var component = new UpdateItem()
+            var component = new UpdateItem(null)
             {
                 Name = dependency.Name,
                 Destination = GetRealDependencyDestination(dependency)
