@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TaskBasedUpdater.ProductComponent
+namespace TaskBasedUpdater.Component
 {
-    public class UpdateItemIdentityComparer : IEqualityComparer<IUpdateItem>
+    public class ComponentIdentityComparer : IEqualityComparer<Component>
     {
-        public static readonly UpdateItemIdentityComparer Default = new();
-        public static readonly UpdateItemIdentityComparer VersionIndependent = new(true);
+        public static readonly ComponentIdentityComparer Default = new();
+        public static readonly ComponentIdentityComparer VersionIndependent = new(true);
 
         private readonly bool _excludeVersion;
         private readonly StringComparison _comparisonType;
         private readonly StringComparer _comparer;
 
-        public UpdateItemIdentityComparer(bool excludeVersion = false, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+        public ComponentIdentityComparer(bool excludeVersion = false, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
         {
             _excludeVersion = excludeVersion;
             _comparisonType = comparisonType;
@@ -36,7 +36,7 @@ namespace TaskBasedUpdater.ProductComponent
             }
         }
 
-        public bool Equals(IUpdateItem? x, IUpdateItem? y)
+        public bool Equals(Component? x, Component? y)
         {
             if (x == y)
                 return true;
@@ -55,7 +55,7 @@ namespace TaskBasedUpdater.ProductComponent
             return x.CurrentVersion is not null && x.CurrentVersion.Equals(y.CurrentVersion);
         }
 
-        public int GetHashCode(IUpdateItem? obj)
+        public int GetHashCode(Component? obj)
         {
             if (obj is null)
                 return 0;

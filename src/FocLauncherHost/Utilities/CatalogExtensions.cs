@@ -1,6 +1,6 @@
 ﻿using System;
 using FocLauncher.UpdateMetadata;
-using TaskBasedUpdater.ProductComponent;
+using TaskBasedUpdater.Component;
 
 namespace FocLauncherHost.Utilities
 {

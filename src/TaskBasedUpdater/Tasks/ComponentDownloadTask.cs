@@ -4,11 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.FileSystem;
-using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater.Tasks
 {

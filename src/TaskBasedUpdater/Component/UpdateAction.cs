@@ -1,4 +1,4 @@
-﻿namespace TaskBasedUpdater.ProductComponent
+﻿namespace TaskBasedUpdater.Component
 {
     public enum UpdateAction
     {

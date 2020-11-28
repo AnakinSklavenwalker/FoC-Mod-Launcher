@@ -1,5 +1,4 @@
 ﻿using System;
-using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater.Elevation
 {

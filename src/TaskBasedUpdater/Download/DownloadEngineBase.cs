@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading;
-using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater.Download
 {

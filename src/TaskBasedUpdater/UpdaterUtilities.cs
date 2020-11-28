@@ -8,7 +8,7 @@ using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Threading;
-using TaskBasedUpdater.ProductComponent;
+using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater
 {

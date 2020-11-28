@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using TaskBasedUpdater.Configuration;
-using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater.FileSystem
 {

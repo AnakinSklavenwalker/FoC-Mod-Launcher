@@ -3,9 +3,9 @@ using System.IO;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
-using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater.Tasks
 {

@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace TaskBasedUpdater.ProductComponent
+namespace TaskBasedUpdater.Component
 {
     // TODO: init
-    public record UpdateItem : IUpdateItem
+    public record ProductComponent
     {
         public string Destination { get; init; }
 
@@ -22,7 +22,7 @@ namespace TaskBasedUpdater.ProductComponent
         // TODO: init
         public long? DiskSize { get; set; }
 
-        public UpdateItem(string name, string destination)
+        public ProductComponent(string name, string destination)
         {
             Name = name;
             Destination = destination;
@@ -33,7 +33,7 @@ namespace TaskBasedUpdater.ProductComponent
             return !string.IsNullOrEmpty(Name) ? $"{Name}, destination='{Destination}'" : base.ToString();
         }
 
-        public bool Equals(IUpdateItem other)
+        public bool Equals(ProductComponent? other)
         {
             return UpdateItemIdentityComparer.Default.Equals(this, other);
         }

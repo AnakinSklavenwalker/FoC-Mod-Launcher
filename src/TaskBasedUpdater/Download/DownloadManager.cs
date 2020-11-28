@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
-using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater.Download
 {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
-using TaskBasedUpdater.ProductComponent;
 using Validation;
 
 namespace TaskBasedUpdater.New.Update

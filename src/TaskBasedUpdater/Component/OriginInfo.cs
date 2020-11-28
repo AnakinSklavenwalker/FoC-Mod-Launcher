@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TaskBasedUpdater.ProductComponent
+namespace TaskBasedUpdater.Component
 {
     public class OriginInfo
     {

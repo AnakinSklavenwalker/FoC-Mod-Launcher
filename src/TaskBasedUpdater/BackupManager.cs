@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
-using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater
 {
