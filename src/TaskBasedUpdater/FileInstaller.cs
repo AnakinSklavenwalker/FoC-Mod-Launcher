@@ -6,8 +6,8 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.ProductComponent;
 using TaskBasedUpdater.Restart;
-using TaskBasedUpdater.UpdateItem;
 using Validation;
 
 namespace TaskBasedUpdater

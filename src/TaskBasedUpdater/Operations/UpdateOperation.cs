@@ -9,9 +9,9 @@ using SimplePipeline.Tasks;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
+using TaskBasedUpdater.ProductComponent;
 using TaskBasedUpdater.Restart;
 using TaskBasedUpdater.Tasks;
-using TaskBasedUpdater.UpdateItem;
 using Validation;
 
 namespace TaskBasedUpdater.Operations

@@ -16,7 +16,7 @@ using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Update;
-using TaskBasedUpdater.UpdateItem;
+using TaskBasedUpdater.ProductComponent;
 
 namespace FocLauncherHost
 {

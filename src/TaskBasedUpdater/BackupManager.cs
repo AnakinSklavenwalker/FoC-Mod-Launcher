@@ -6,7 +6,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
-using TaskBasedUpdater.UpdateItem;
+using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater
 {

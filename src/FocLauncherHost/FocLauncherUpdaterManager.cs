@@ -16,7 +16,6 @@ using Newtonsoft.Json;
 using TaskBasedUpdater;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Restart;
-using TaskBasedUpdater.UpdateItem;
 using ApplicationType = FocLauncher.ApplicationType;
 
 namespace FocLauncherHost

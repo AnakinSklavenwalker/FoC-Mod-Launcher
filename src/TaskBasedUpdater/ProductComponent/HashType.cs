@@ -1,4 +1,4 @@
-﻿namespace TaskBasedUpdater.UpdateItem
+﻿namespace TaskBasedUpdater.ProductComponent
 {
     public enum HashType
     {

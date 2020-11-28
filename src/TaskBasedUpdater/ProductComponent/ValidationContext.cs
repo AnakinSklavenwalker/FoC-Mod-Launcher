@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TaskBasedUpdater.UpdateItem
+namespace TaskBasedUpdater.ProductComponent
 {
     public class ValidationContext
     {

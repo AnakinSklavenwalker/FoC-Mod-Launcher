@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Update;
-using TaskBasedUpdater.UpdateItem;
 using Xunit;
 
 namespace TaskBasedUpdater.Tests

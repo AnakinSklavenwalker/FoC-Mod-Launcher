@@ -12,8 +12,8 @@ using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.FileSystem;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.Operations;
+using TaskBasedUpdater.ProductComponent;
 using TaskBasedUpdater.Restart;
-using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater
 {
@@ -207,7 +207,7 @@ namespace TaskBasedUpdater
 
                 Logger.LogInformation($"File marked to get deleted: {file.FullName}");
 
-                var updateItem = new UpdateItem.UpdateItem
+                var updateItem = new UpdateItem
                 {
                     Name = file.Name,
                     DiskSize = file.Length,

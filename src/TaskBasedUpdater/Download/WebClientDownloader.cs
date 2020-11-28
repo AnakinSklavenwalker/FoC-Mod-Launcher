@@ -5,7 +5,7 @@ using System.Net.Cache;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TaskBasedUpdater.UpdateItem;
+using TaskBasedUpdater.ProductComponent;
 using Validation;
 
 namespace TaskBasedUpdater.Download

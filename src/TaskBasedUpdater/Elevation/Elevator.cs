@@ -1,6 +1,6 @@
 ﻿using System;
+using TaskBasedUpdater.ProductComponent;
 using TaskBasedUpdater.Restart;
-using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater.Elevation
 {

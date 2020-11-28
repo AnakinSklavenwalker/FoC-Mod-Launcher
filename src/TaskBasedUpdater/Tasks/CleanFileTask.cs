@@ -2,7 +2,7 @@
 using System.Threading;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.FileSystem;
-using TaskBasedUpdater.UpdateItem;
+using TaskBasedUpdater.ProductComponent;
 using Validation;
 
 namespace TaskBasedUpdater.Tasks

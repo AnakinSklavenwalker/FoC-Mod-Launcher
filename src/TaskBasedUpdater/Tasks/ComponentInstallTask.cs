@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
-using TaskBasedUpdater.UpdateItem;
+using TaskBasedUpdater.ProductComponent;
 
 namespace TaskBasedUpdater.Tasks
 {

@@ -7,8 +7,8 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
+using TaskBasedUpdater.ProductComponent;
 using TaskBasedUpdater.Tasks;
-using TaskBasedUpdater.UpdateItem;
 
 namespace TaskBasedUpdater.Operations
 {
