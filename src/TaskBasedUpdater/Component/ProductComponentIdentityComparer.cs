@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 namespace TaskBasedUpdater.Component
 {
-    public class ComponentIdentityComparer : IEqualityComparer<Component>
+    public class ProductComponentIdentityComparer : IEqualityComparer<ProductComponent>
     {
-        public static readonly ComponentIdentityComparer Default = new();
-        public static readonly ComponentIdentityComparer VersionIndependent = new(true);
+        public static readonly ProductComponentIdentityComparer Default = new();
+        public static readonly ProductComponentIdentityComparer VersionIndependent = new(true);
 
         private readonly bool _excludeVersion;
         private readonly StringComparison _comparisonType;
         private readonly StringComparer _comparer;
 
-        public ComponentIdentityComparer(bool excludeVersion = false, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+        public ProductComponentIdentityComparer(bool excludeVersion = false, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
         {
             _excludeVersion = excludeVersion;
             _comparisonType = comparisonType;
@@ -36,9 +36,9 @@ namespace TaskBasedUpdater.Component
             }
         }
 
-        public bool Equals(Component? x, Component? y)
+        public bool Equals(ProductComponent? x, ProductComponent? y)
         {
-            if (x == y)
+            if (ReferenceEquals(x, y))
                 return true;
             if (x == null || y == null)
                 return false;
@@ -55,7 +55,7 @@ namespace TaskBasedUpdater.Component
             return x.CurrentVersion is not null && x.CurrentVersion.Equals(y.CurrentVersion);
         }
 
-        public int GetHashCode(Component? obj)
+        public int GetHashCode(ProductComponent? obj)
         {
             if (obj is null)
                 return 0;
@@ -64,7 +64,7 @@ namespace TaskBasedUpdater.Component
             num ^= _comparer.GetHashCode(obj.Name);
             num ^= _comparer.GetHashCode(obj.Destination);
 
-            if (!_excludeVersion && obj?.CurrentVersion != null)
+            if (!_excludeVersion && obj.CurrentVersion != null)
                 num ^= obj.CurrentVersion.GetHashCode();
             return num;
         }

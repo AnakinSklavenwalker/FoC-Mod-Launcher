@@ -17,6 +17,7 @@ using TaskBasedUpdater.Restart;
 
 namespace TaskBasedUpdater
 {
+    /*
     public abstract class UpdateManager
     {
         protected readonly ILogger? Logger;
@@ -504,4 +505,5 @@ namespace TaskBasedUpdater
             return UpdateItems.Concat(RemovableUpdateItems).FirstOrDefault(x => x.GetFilePath().Equals(file));
         }
     }
+    */
 }

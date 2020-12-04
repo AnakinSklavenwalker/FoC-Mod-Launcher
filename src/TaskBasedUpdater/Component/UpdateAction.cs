@@ -1,6 +1,6 @@
 ﻿namespace TaskBasedUpdater.Component
 {
-    public enum UpdateAction
+    public enum ComponentAction
     {
         Keep,
         Update,
