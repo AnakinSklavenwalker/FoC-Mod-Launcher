@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TaskBasedUpdater.Configuration;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
 
 namespace TaskBasedUpdater.Download
@@ -56,7 +56,7 @@ namespace TaskBasedUpdater.Download
         }
 
         public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken,
-            IUpdateItem? updateItem = default, bool verify = false)
+            ProductComponent? productComponent = default, bool verify = false)
         {
             _logger?.LogTrace($"Download requested: {uri.AbsoluteUri}");
             if (outputStream == null)
@@ -83,7 +83,7 @@ namespace TaskBasedUpdater.Download
             {
                 var engines = GetSuitableEngines(_defaultEngines, uri);
                 return Task.Factory.StartNew(() => DownloadWithRetry(engines, uri, outputStream, progress,
-                        cancellationToken, updateItem, verify), cancellationToken,
+                        cancellationToken, productComponent, verify), cancellationToken,
                     TaskCreationOptions.LongRunning, TaskScheduler.Default);
             }
             catch (Exception ex)
@@ -94,7 +94,7 @@ namespace TaskBasedUpdater.Download
         }
 
         private DownloadSummary DownloadWithRetry(IDownloadEngine[] engines, Uri uri, Stream outputStream,
-            ProgressUpdateCallback progress, CancellationToken cancellationToken, IUpdateItem? updateItem = null,
+            ProgressUpdateCallback progress, CancellationToken cancellationToken, ProductComponent? productComponent = null,
             bool verify = false)
         {
             var failureList = new List<DownloadFailureInformation>();
@@ -111,7 +111,7 @@ namespace TaskBasedUpdater.Download
                             progress?.Invoke(new ProgressUpdateStatus(engine.Name, status.BytesRead, status.TotalBytes,
                                 status.BitRate));
                         }, cancellationToken,
-                        updateItem);
+                        productComponent);
                     // TODO: split-projects
                     if (outputStream.Length == 0 /*&& !UpdateConfiguration.Instance.AllowEmptyFileDownload*/)
                     {
@@ -122,7 +122,7 @@ namespace TaskBasedUpdater.Download
 
                     if (verify && outputStream.Length != 0)
                     {
-                        if (updateItem is null)
+                        if (productComponent is null)
                         {
                             // TODO: split-projects
                             //if (UpdateConfiguration.Instance.ValidationPolicy == ValidationPolicy.Enforce)
@@ -131,7 +131,7 @@ namespace TaskBasedUpdater.Download
                         }
                         else
                         {
-                            var validationContext = updateItem.OriginInfo?.ValidationContext;
+                            var validationContext = productComponent.OriginInfo?.ValidationContext;
                             var valid = validationContext?.Verify();
 
                             // TODO: split-projects
@@ -154,7 +154,7 @@ namespace TaskBasedUpdater.Download
                             }
                             else
                                 _logger.LogTrace(
-                                    $"Skipping validation because validation context of Update Item {updateItem.Name} is not valid.");
+                                    $"Skipping validation because validation context of Update Item {productComponent.Name} is not valid.");
                         }
                     }
 

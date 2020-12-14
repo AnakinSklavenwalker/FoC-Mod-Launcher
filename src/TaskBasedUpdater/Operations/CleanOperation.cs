@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Tasks;
 
 namespace TaskBasedUpdater.Operations
@@ -94,7 +95,7 @@ namespace TaskBasedUpdater.Operations
             }
         }
 
-        private static IEnumerable<KeyValuePair<IUpdateItem, string?>> GetFiles()
+        private static IEnumerable<KeyValuePair<ProductComponent, string?>> GetFiles()
         {
             var backupsFiles = BackupManager.Instance;
             var downloadFiles = UpdateItemDownloadPathStorage.Instance;

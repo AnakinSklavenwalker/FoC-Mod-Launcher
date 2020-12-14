@@ -8,20 +8,20 @@ namespace TaskBasedUpdater.New.Update
 {
     public class UpdateCatalog : IUpdateCatalog
     {
-        public IEnumerable<IUpdateItem> Items { get; }
+        public IEnumerable<ProductComponent> Items { get; }
         public IProductReference Product { get; }
         public UpdateRequestAction RequestAction { get; }
-        public IEnumerable<IUpdateItem> ItemsToInstall => Items.Where(x => x.RequiredAction == UpdateAction.Update);
-        public IEnumerable<IUpdateItem> ItemsToKeep => Items.Where(x => x.RequiredAction == UpdateAction.Keep);
-        public IEnumerable<IUpdateItem> ItemsToDelete => Items.Where(x => x.RequiredAction == UpdateAction.Delete);
+        public IEnumerable<ProductComponent> ComponentsToInstall => Items.Where(x => x.RequiredAction == ComponentAction.Update);
+        public IEnumerable<ProductComponent> ComponentsToKeep => Items.Where(x => x.RequiredAction == ComponentAction.Keep);
+        public IEnumerable<ProductComponent> ComponentsToDelete => Items.Where(x => x.RequiredAction == ComponentAction.Delete);
 
-        public UpdateCatalog(IProductReference product, IEnumerable<IUpdateItem> items, UpdateRequestAction requestAction)
+        public UpdateCatalog(IProductReference product, IEnumerable<ProductComponent> components, UpdateRequestAction requestAction)
         {
             Requires.NotNull(product, nameof(product));
-            Requires.NotNull(items, nameof(items));
+            Requires.NotNull(components, nameof(components));
             Product = product;
             RequestAction = requestAction;
-            Items = items;
+            Items = components;
         }
     }
 }

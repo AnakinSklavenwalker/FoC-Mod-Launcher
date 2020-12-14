@@ -5,6 +5,7 @@ using System.Net.Cache;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TaskBasedUpdater.Component;
 using Validation;
 
 namespace TaskBasedUpdater.Download
@@ -31,7 +32,7 @@ namespace TaskBasedUpdater.Download
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IUpdateItem? updateItem)
+            CancellationToken cancellationToken, ProductComponent? productComponent)
         {
             var summary = new DownloadSummary();
 

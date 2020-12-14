@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Update;
 using Xunit;
@@ -31,8 +32,8 @@ namespace TaskBasedUpdater.Tests
         {
             var p1 = CreateProduct("A");
             var p2 = CreateProduct("B");
-            var available = new AvailableProductCatalog(p1, new IUpdateItem[0]);
-            var installed = new InstalledProductCatalog(p2, new IUpdateItem[0]);
+            var available = new AvailableProductCatalog(p1, new ProductComponent[0]);
+            var installed = new InstalledProductCatalog(p2, new ProductComponent[0]);
 
             Assert.Throws<InvalidOperationException>(() =>
                 _builder.Build(installed, available, UpdateRequestAction.Repair));
@@ -50,47 +51,37 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 UpdateRequestAction.Update,
-                new InstalledProductCatalog(Product, new IUpdateItem[0]),
-                new AvailableProductCatalog(Product, new IUpdateItem[0]),
-                new UpdateCatalogStub(new IUpdateItem[0])
+                new InstalledProductCatalog(Product, new ProductComponent[0]),
+                new AvailableProductCatalog(Product, new ProductComponent[0]),
+                new UpdateCatalogStub(new ProductComponent[0])
             };
 
             yield return new object[]
             {
                 UpdateRequestAction.Repair,
-                new InstalledProductCatalog(Product, new IUpdateItem[0]),
-                new AvailableProductCatalog(Product, new IUpdateItem[0]),
-                new UpdateCatalogStub(new IUpdateItem[0])
+                new InstalledProductCatalog(Product, new ProductComponent[0]),
+                new AvailableProductCatalog(Product, new ProductComponent[0]),
+                new UpdateCatalogStub(new ProductComponent[0])
             };
 
             yield return new object[]
             {
                 UpdateRequestAction.Update | UpdateRequestAction.Repair,
-                new InstalledProductCatalog(Product, new IUpdateItem[0]),
-                new AvailableProductCatalog(Product, new IUpdateItem[0]),
-                new UpdateCatalogStub(new IUpdateItem[0])
+                new InstalledProductCatalog(Product, new ProductComponent[0]),
+                new AvailableProductCatalog(Product, new ProductComponent[0]),
+                new UpdateCatalogStub(new ProductComponent[0])
             };
         }
 
         public static IEnumerable<object[]> SameComponents()
         {
 
-            var current = new UpdateItem.UpdateItem
-            {
-                Name = "A",
-                Destination = "D"
-            };
-            var avail = new UpdateItem.UpdateItem
-            {
-                Name = "A",
-                Destination = "D"
-            };
+            var current = new ProductComponent("A", "D");
+            var avail = new ProductComponent("A", "D");
 
-            var expected = new UpdateItem.UpdateItem
+            var expected = new ProductComponent("A", "D")
             {
-                Name = "A",
-                Destination = "D",
-                RequiredAction = UpdateAction.Keep
+                RequiredAction = ComponentAction.Keep
             };
 
             yield return new object[]
@@ -125,14 +116,14 @@ namespace TaskBasedUpdater.Tests
             {
                 switch (item.RequiredAction)
                 {
-                    case UpdateAction.Keep:
-                        Assert.Contains(catalog.ItemsToKeep, x => x.Name.Equals(item.Name));
+                    case ComponentAction.Keep:
+                        Assert.Contains(catalog.ComponentsToKeep, x => x.Name.Equals(item.Name));
                         break;
-                    case UpdateAction.Update:
-                        Assert.Contains(catalog.ItemsToInstall, x => x.Name.Equals(item.Name));
+                    case ComponentAction.Update:
+                        Assert.Contains(catalog.ComponentsToInstall, x => x.Name.Equals(item.Name));
                         break;
-                    case UpdateAction.Delete:
-                        Assert.Contains(catalog.ItemsToDelete, x => x.Name.Equals(item.Name));
+                    case ComponentAction.Delete:
+                        Assert.Contains(catalog.ComponentsToDelete, x => x.Name.Equals(item.Name));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -156,12 +147,12 @@ namespace TaskBasedUpdater.Tests
         { 
             public IProductReference Product { get; }
             public UpdateRequestAction RequestAction { get; }
-            public IEnumerable<IUpdateItem> ItemsToInstall { get; }
-            public IEnumerable<IUpdateItem> ItemsToKeep { get; }
-            public IEnumerable<IUpdateItem> ItemsToDelete { get; }
-            public IEnumerable<IUpdateItem> Items { get; }
+            public IEnumerable<ProductComponent> ComponentsToInstall { get; }
+            public IEnumerable<ProductComponent> ComponentsToKeep { get; }
+            public IEnumerable<ProductComponent> ComponentsToDelete { get; }
+            public IEnumerable<ProductComponent> Items { get; }
 
-            public UpdateCatalogStub(IEnumerable<IUpdateItem> items)
+            public UpdateCatalogStub(IEnumerable<ProductComponent> items)
             {
                 Items = items;
             }

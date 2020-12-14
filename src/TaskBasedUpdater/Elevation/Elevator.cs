@@ -1,4 +1,5 @@
 ﻿using System;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Restart;
 
 namespace TaskBasedUpdater.Elevation
@@ -19,11 +20,11 @@ namespace TaskBasedUpdater.Elevation
         {
         }
 
-        public bool RequestElevation(UnauthorizedAccessException accessException, IUpdateItem updateItem)
+        public bool RequestElevation(UnauthorizedAccessException accessException, ProductComponent productComponent)
         {
             if (IsElevated())
                 return false;
-            var data = new ElevationRequestData(accessException, updateItem);
+            var data = new ElevationRequestData(accessException, productComponent);
             OnElevationRequested(data);
             return true;
         }

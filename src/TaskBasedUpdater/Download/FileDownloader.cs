@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater.Download
 {
@@ -11,7 +12,7 @@ namespace TaskBasedUpdater.Download
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IUpdateItem? updateItem)
+            CancellationToken cancellationToken, ProductComponent? productComponent)
         {
             if (!uri.IsFile && !uri.IsUnc)
                 throw new ArgumentException("Expected file or UNC path", nameof(uri));

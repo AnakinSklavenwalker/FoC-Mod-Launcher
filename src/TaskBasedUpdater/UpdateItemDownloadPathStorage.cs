@@ -1,15 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater
 {
-    public class UpdateItemDownloadPathStorage : IEnumerable<KeyValuePair<IUpdateItem, string>>
+    public class UpdateItemDownloadPathStorage : IEnumerable<KeyValuePair<ProductComponent, string>>
     {
         private static UpdateItemDownloadPathStorage? _instance;
 
-        private readonly IDictionary<IUpdateItem, string> _downloadLookup =
-            new ConcurrentDictionary<IUpdateItem, string>();
+        private readonly IDictionary<ProductComponent, string> _downloadLookup =
+            new ConcurrentDictionary<ProductComponent, string>();
 
         public static UpdateItemDownloadPathStorage Instance => _instance ??= new UpdateItemDownloadPathStorage();
 
@@ -17,22 +18,22 @@ namespace TaskBasedUpdater
         {
         }
 
-        public void Add(IUpdateItem item, string downloadPath)
+        public void Add(ProductComponent component, string downloadPath)
         {
-            if (_downloadLookup.ContainsKey(item))
-                _downloadLookup[item] = downloadPath;
+            if (_downloadLookup.ContainsKey(component))
+                _downloadLookup[component] = downloadPath;
             else
-                _downloadLookup.Add(item, downloadPath);
+                _downloadLookup.Add(component, downloadPath);
         }
 
-        public bool TryGetValue(IUpdateItem item, out string value)
+        public bool TryGetValue(ProductComponent component, out string value)
         {
-            return _downloadLookup.TryGetValue(item, out value);
+            return _downloadLookup.TryGetValue(component, out value);
         }
 
-        public bool Remove(IUpdateItem item)
+        public bool Remove(ProductComponent component)
         {
-            return _downloadLookup.Remove(item);
+            return _downloadLookup.Remove(component);
         }
 
         public void Clear()
@@ -40,7 +41,7 @@ namespace TaskBasedUpdater
             _downloadLookup.Clear();
         }
 
-        public IEnumerator<KeyValuePair<IUpdateItem, string>> GetEnumerator()
+        public IEnumerator<KeyValuePair<ProductComponent, string>> GetEnumerator()
         {
             return _downloadLookup.GetEnumerator();
         }

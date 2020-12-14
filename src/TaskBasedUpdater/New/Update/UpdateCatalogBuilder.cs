@@ -18,22 +18,22 @@ namespace TaskBasedUpdater.New.Update
             if (!ProductReferenceEqualityComparer.Default.Equals(installedCatalog.Product, availableCatalog.Product))
                 throw new InvalidOperationException("Cannot build update catalog from different products.");
 
-            var currentItems = installedCatalog.Items.ToHashSet(UpdateItemIdentityComparer.VersionIndependent);
-            var availableItems = availableCatalog.Items.ToHashSet(UpdateItemIdentityComparer.VersionIndependent);
+            var currentItems = installedCatalog.Items.ToHashSet(ProductComponentIdentityComparer.VersionIndependent);
+            var availableItems = availableCatalog.Items.ToHashSet(ProductComponentIdentityComparer.VersionIndependent);
 
             if (!currentItems.Any() && !availableItems.Any())
-                return new UpdateCatalog(availableCatalog.Product, new IUpdateItem[0], action);
+                return new UpdateCatalog(availableCatalog.Product, new ProductComponent[0], action);
 
             if (!availableItems.Any())
-                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, UpdateAction.Delete, action);
+                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, ComponentAction.Delete, action);
 
             if (!currentItems.Any())
-                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, UpdateAction.Update, action);
+                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, ComponentAction.Update, action);
 
-            var catalogItems = new List<IUpdateItem>();
+            var catalogItems = new List<ProductComponent>();
             foreach (var availableItem in availableItems)
             {
-                IUpdateItem updateItem = null;
+                ProductComponent component = null;
                 // TODO: Implement a real check
                 if (!currentItems.TryGetValue(availableItem, out var current))
                 {
@@ -46,7 +46,7 @@ namespace TaskBasedUpdater.New.Update
                     if (!action.HasFlag(UpdateRequestAction.Repair))
                     {
                         //updateItem = availableItem with{ RequiredAction = UpdateAction.Keep};
-                        catalogItems.Add(updateItem);
+                        catalogItems.Add(component);
                     }
                     else
                     {
@@ -66,13 +66,13 @@ namespace TaskBasedUpdater.New.Update
             return new UpdateCatalog(availableCatalog.Product, catalogItems, action);
         }
 
-        private static IUpdateItem Compare(IUpdateItem current, IUpdateItem available)
+        private static ProductComponent Compare(ProductComponent current, ProductComponent available)
         {
             return current;
         }
 
         private static IUpdateCatalog ShallowCatalogWithAction(IProductReference product, ICatalog catalog,
-            UpdateAction updateAction, UpdateRequestAction requestAction)
+            ComponentAction updateAction, UpdateRequestAction requestAction)
         {
             return null;
             //return new UpdateCatalog(product,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater.Download
 {
@@ -11,6 +12,6 @@ namespace TaskBasedUpdater.Download
         bool IsSupported(DownloadSource source);
 
         DownloadSummary Download(Uri uri, Stream outputStream, ProgressUpdateCallback progress, 
-            CancellationToken cancellationToken, IUpdateItem? updateItem);
+            CancellationToken cancellationToken, ProductComponent? productComponent);
     }
 }

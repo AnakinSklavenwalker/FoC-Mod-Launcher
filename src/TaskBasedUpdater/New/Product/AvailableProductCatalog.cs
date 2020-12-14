@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TaskBasedUpdater.Component;
 using Validation;
 
 namespace TaskBasedUpdater.New.Product
@@ -7,7 +8,7 @@ namespace TaskBasedUpdater.New.Product
     {
         public IProductReference Product { get; }
 
-        public AvailableProductCatalog(IProductReference product, IEnumerable<IUpdateItem> updateItems) : base(updateItems)
+        public AvailableProductCatalog(IProductReference product, IEnumerable<ProductComponent> components) : base(components)
         {
             Requires.NotNull(product, nameof(product));
             Product = product;

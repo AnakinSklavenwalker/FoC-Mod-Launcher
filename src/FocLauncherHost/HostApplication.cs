@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
@@ -191,7 +192,7 @@ namespace FocLauncherHost
             var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
             if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, product))
                 throw new InvalidOperationException("Not compatible product");
-            return new InstalledProductCatalog(product, new IUpdateItem[0]);
+            return new InstalledProductCatalog(product, new ProductComponent[0]);
         }
 
         public IAvailableProductCatalog? GetAvailableProductCatalog(IUpdateRequest request)
@@ -199,7 +200,7 @@ namespace FocLauncherHost
             var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
             if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, request.Product))
                 throw new InvalidOperationException("Not compatible product");
-            return new AvailableProductCatalog(request.Product, new IUpdateItem[00]);
+            return new AvailableProductCatalog(request.Product, new ProductComponent[00]);
         }
     }
 

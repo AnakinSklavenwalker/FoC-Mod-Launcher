@@ -5,19 +5,18 @@ using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using TaskBasedUpdater.Component;
-using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.FileSystem;
 
 namespace TaskBasedUpdater
 {
-    public class BackupManager : IEnumerable<KeyValuePair<IUpdateItem, string?>>
+    public class BackupManager : IEnumerable<KeyValuePair<ProductComponent, string?>>
     {
         //private const string NonExistentSource = "SOURCE_ORIGINALLY_MISSING";
 
         private static BackupManager? _instance;
 
-        private readonly object _syncObject = new object();
-        private readonly Dictionary<IUpdateItem, string?> _backupLookup = new Dictionary<IUpdateItem, string?>();
+        private readonly object _syncObject = new();
+        private readonly Dictionary<ProductComponent, string?> _backupLookup = new();
 
         public static BackupManager Instance => _instance ??= new BackupManager();
 
@@ -25,18 +24,18 @@ namespace TaskBasedUpdater
         {
         }
 
-        public void CreateBackup(IUpdateItem updateItem)
+        public void CreateBackup(ProductComponent productComponent)
         {
-            ValidateItem(updateItem);
-            var backupPath = GetBackupPath(updateItem);
+            ValidateItem(productComponent);
+            var backupPath = GetBackupPath(productComponent);
             ValidateHasAccess(backupPath);
-            if (_backupLookup.ContainsKey(updateItem))
+            if (_backupLookup.ContainsKey(productComponent))
                 return;
             string? backupFilePath;
-            var itemFilePath = updateItem.GetFilePath();
+            var itemFilePath = productComponent.GetFilePath();
             if (File.Exists(itemFilePath))
             {
-                backupFilePath = CreateBackupFilePath(updateItem, backupPath);
+                backupFilePath = CreateBackupFilePath(productComponent, backupPath);
                 FileSystemExtensions.CopyFileWithRetry(itemFilePath, backupFilePath);
             }
             else
@@ -44,22 +43,22 @@ namespace TaskBasedUpdater
                 backupFilePath = null;
             }
             lock (_syncObject)
-                _backupLookup.Add(updateItem, backupFilePath);
+                _backupLookup.Add(productComponent, backupFilePath);
         }
 
         public void RestoreAllBackups()
         {
             var keys = _backupLookup.Keys.ToList();
-            foreach (var updateItem in keys)
-                RestoreBackup(updateItem);
+            foreach (var productComponent in keys)
+                RestoreBackup(productComponent);
         }
         
-        public void RestoreBackup(IUpdateItem updateItem)
+        public void RestoreBackup(ProductComponent productComponent)
         {
-            if (!_backupLookup.ContainsKey(updateItem))
+            if (!_backupLookup.ContainsKey(productComponent))
                 return;
-            var backupFile = _backupLookup[updateItem];
-            var updateItemFile = updateItem.GetFilePath();
+            var backupFile = _backupLookup[productComponent];
+            var componentFile = productComponent.GetFilePath();
 
             var remove = true;
 
@@ -67,9 +66,9 @@ namespace TaskBasedUpdater
             {
                 if (string.IsNullOrEmpty(backupFile))
                 {
-                    if (!File.Exists(updateItemFile))
+                    if (!File.Exists(componentFile))
                         return;
-                    var success = FileSystemExtensions.DeleteFileWithRetry(updateItemFile, out _);
+                    var success = FileSystemExtensions.DeleteFileWithRetry(componentFile, out _);
                     if (success) 
                         return;
                     remove = false;
@@ -80,7 +79,7 @@ namespace TaskBasedUpdater
                     if (!File.Exists(backupFile))
                         return;
 
-                    if (File.Exists(updateItemFile))
+                    if (File.Exists(componentFile))
                     {
                         var backupHash = UpdaterUtilities.GetFileHash(backupFile!, HashType.Sha256);
                         var fileHash = UpdaterUtilities.GetFileHash(backupFile!, HashType.Sha256);
@@ -90,7 +89,7 @@ namespace TaskBasedUpdater
                             return;
                         }
                     }
-                    var success = FileSystemExtensions.MoveFile(backupFile, updateItem.GetFilePath(), true);
+                    var success = FileSystemExtensions.MoveFile(backupFile, productComponent.GetFilePath(), true);
                     if (!success)
                     {
                         remove = false;
@@ -115,14 +114,14 @@ namespace TaskBasedUpdater
             {
                 if (remove)
                     lock (_syncObject)
-                        _backupLookup.Remove(updateItem);
+                        _backupLookup.Remove(productComponent);
             }
         }
         
-        public bool TryGetValue(IUpdateItem updateItem, out string? value)
+        public bool TryGetValue(ProductComponent productComponent, out string? value)
         {
             lock (_syncObject)
-                return _backupLookup.TryGetValue(updateItem, out value);
+                return _backupLookup.TryGetValue(productComponent, out value);
         }
 
         public void Flush()
@@ -130,7 +129,7 @@ namespace TaskBasedUpdater
             _backupLookup.Clear();
         }
 
-        public IEnumerator<KeyValuePair<IUpdateItem, string?>> GetEnumerator()
+        public IEnumerator<KeyValuePair<ProductComponent, string?>> GetEnumerator()
         {
             return _backupLookup.GetEnumerator();
         }
@@ -140,11 +139,11 @@ namespace TaskBasedUpdater
             return GetEnumerator();
         }
 
-        internal static void ValidateItem(IUpdateItem updateItem)
+        internal static void ValidateItem(ProductComponent productComponent)
         {
-            if (updateItem == null)
-                throw new ArgumentNullException(nameof(updateItem));
-            if (string.IsNullOrEmpty(updateItem.Destination))
+            if (productComponent == null)
+                throw new ArgumentNullException(nameof(productComponent));
+            if (string.IsNullOrEmpty(productComponent.Destination))
                 throw new IOException("Unable to resolve the updateItem's file path");
         }
 
@@ -156,14 +155,14 @@ namespace TaskBasedUpdater
                 throw new InvalidOperationException($"No Read/Write access to the backup directory: {path}");
         }
 
-        private static string CreateBackupFilePath(IUpdateItem updateItem, string backupPath)
+        private static string CreateBackupFilePath(ProductComponent productComponent, string backupPath)
         {
             var randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
-            var backupFileName = $"{updateItem.Name}.{randomFileName}.bak";
+            var backupFileName = $"{productComponent.Name}.{randomFileName}.bak";
             return Path.Combine(backupPath, backupFileName);
         }
 
-        private static string GetBackupPath(IUpdateItem updateItem)
+        private static string GetBackupPath(ProductComponent productComponent)
         {
             // TODO: split-projects
             return string.Empty;

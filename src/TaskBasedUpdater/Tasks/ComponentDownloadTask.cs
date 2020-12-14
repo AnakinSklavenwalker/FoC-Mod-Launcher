@@ -5,14 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
-using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
-using TaskBasedUpdater.Elevation;
-using TaskBasedUpdater.FileSystem;
 
 namespace TaskBasedUpdater.Tasks
 {
-    internal sealed class UpdateItemDownloadTask : SynchronizedPipelineTask, IUpdaterTask
+    internal sealed class ComponentDownloadTask : SynchronizedPipelineTask, IUpdaterTask
     {
         public const string NewFileExtension = ".new";
         internal static readonly long AdditionalSizeBuffer = 20000000;
@@ -23,29 +20,29 @@ namespace TaskBasedUpdater.Tasks
 
         public Uri Uri { get; }
 
-        public IUpdateItem UpdateItem { get; }
+        public ProductComponent ProductComponent { get; }
 
         public string DownloadPath { get; private set; }
 
-        public UpdateItemDownloadTask(IServiceProvider serviceProvider, IUpdateItem updateItem) 
+        public ComponentDownloadTask(IServiceProvider serviceProvider, ProductComponent productComponent) 
             : base(serviceProvider)
         {
-            UpdateItem = updateItem ?? throw new ArgumentNullException(nameof(updateItem));
-            if (updateItem.OriginInfo?.Origin == null)
+            ProductComponent = productComponent ?? throw new ArgumentNullException(nameof(productComponent));
+            if (productComponent.OriginInfo?.Origin == null)
                 throw new ArgumentNullException(nameof(OriginInfo));
-            Uri = updateItem.OriginInfo.Origin;
+            Uri = productComponent.OriginInfo.Origin;
         }
 
         public override string ToString()
         {
-            return $"Downloading item '{UpdateItem.Name}' form \"{Uri}\"";
+            return $"Downloading item '{ProductComponent.Name}' form \"{Uri}\"";
         }
 
         protected override void SynchronizedInvoke(CancellationToken token)
         {
             if (token.IsCancellationRequested)
                 return;
-            var destination = UpdateItem.Destination;
+            var destination = ProductComponent.Destination;
 
             if (!Path.IsPathRooted(destination))
             {
@@ -78,11 +75,11 @@ namespace TaskBasedUpdater.Tasks
         {
             try
             {
-                BackupManager.Instance.CreateBackup(UpdateItem);
+                BackupManager.Instance.CreateBackup(ProductComponent);
             }
             catch (Exception ex)
             {
-                Logger.LogWarning(ex, $"Creating backup of {UpdateItem.Name} failed.");
+                Logger.LogWarning(ex, $"Creating backup of {ProductComponent.Name} failed.");
                 // TODO: split-projects
                 //if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Required)
                 //{
@@ -169,7 +166,7 @@ namespace TaskBasedUpdater.Tasks
             //}
 
             var randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
-            var backupFileName = $"{UpdateItem.Name}.{randomFileName}{NewFileExtension}";
+            var backupFileName = $"{ProductComponent.Name}.{randomFileName}{NewFileExtension}";
 
             // TODO: split-projects
             //if (!string.IsNullOrEmpty(UpdateConfiguration.Instance.AlternativeDownloadPath))
@@ -177,7 +174,7 @@ namespace TaskBasedUpdater.Tasks
             //    Directory.CreateDirectory(UpdateConfiguration.Instance.AlternativeDownloadPath);
             //    return Path.Combine(UpdateConfiguration.Instance.AlternativeDownloadPath, backupFileName);
             //}
-            return Path.Combine(UpdateItem.Destination, backupFileName);
+            return Path.Combine(ProductComponent.Destination, backupFileName);
         }
 
         private async Task DownloadAndVerifyAsync(IDownloadManager downloadManager, string destination, CancellationToken token)
@@ -185,7 +182,7 @@ namespace TaskBasedUpdater.Tasks
             try
             {
                 using var file = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-                await downloadManager.DownloadAsync(Uri, file, status => _progress?.Invoke(status), token, UpdateItem, true);
+                await downloadManager.DownloadAsync(Uri, file, status => _progress?.Invoke(status), token, ProductComponent, true);
             }
             catch (OperationCanceledException)
             {
@@ -203,7 +200,7 @@ namespace TaskBasedUpdater.Tasks
         }
 
         // TODO: This has to be a precheck, because of parallel download tasks
-        private static void ValidateEnoughDiskSpaceAvailable(IUpdateItem updateItem)
+        private static void ValidateEnoughDiskSpaceAvailable(ProductComponent productComponent)
         {
             // TODO: split-projects
             //var option = DiskSpaceCalculator.CalculationOption.Download;

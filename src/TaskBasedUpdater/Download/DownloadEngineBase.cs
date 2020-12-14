@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading;
+using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater.Download
 {
@@ -28,9 +29,9 @@ namespace TaskBasedUpdater.Download
         }
 
         public DownloadSummary Download(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IUpdateItem? updateItem)
+            CancellationToken cancellationToken, ProductComponent? productComponent)
         {
-            return DownloadWithBitRate(uri, outputStream, progress, cancellationToken, updateItem);
+            return DownloadWithBitRate(uri, outputStream, progress, cancellationToken, productComponent);
         }
 
         public void Dispose()
@@ -39,13 +40,13 @@ namespace TaskBasedUpdater.Download
         }
 
         protected abstract DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
-            CancellationToken cancellationToken, IUpdateItem? updateItem);
+            CancellationToken cancellationToken, ProductComponent? productComponent);
 
         protected virtual void DisposeResources()
         {
         }
 
-        private DownloadSummary DownloadWithBitRate(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken, IUpdateItem? updateItem)
+        private DownloadSummary DownloadWithBitRate(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken, ProductComponent? productComponent)
         {
             var now = DateTime.Now;
             var lastProgressUpdate = now;
@@ -59,7 +60,7 @@ namespace TaskBasedUpdater.Download
                     progress(new ProgressUpdateStatus(p.BytesRead, p.TotalBytes, bitRate));
                     lastProgressUpdate = now2;
                 };
-            var downloadSummary = DownloadCore(uri, outputStream, wrappedProgress, cancellationToken, updateItem);
+            var downloadSummary = DownloadCore(uri, outputStream, wrappedProgress, cancellationToken, productComponent);
             downloadSummary.DownloadTime = DateTime.Now - now;
             downloadSummary.BitRate = 8.0 * downloadSummary.DownloadedSize / downloadSummary.DownloadTime.TotalSeconds;
             return downloadSummary;

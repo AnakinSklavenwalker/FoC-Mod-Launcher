@@ -12,7 +12,8 @@ namespace TaskBasedUpdater.Component
         private readonly StringComparison _comparisonType;
         private readonly StringComparer _comparer;
 
-        public ProductComponentIdentityComparer(bool excludeVersion = false, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+        public ProductComponentIdentityComparer(bool excludeVersion = false, 
+            StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
         {
             _excludeVersion = excludeVersion;
             _comparisonType = comparisonType;

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
 
 namespace TaskBasedUpdater.New.Update
@@ -7,8 +8,8 @@ namespace TaskBasedUpdater.New.Update
     {
         IProductReference Product { get; }
         UpdateRequestAction RequestAction { get; }
-        IEnumerable<IUpdateItem> ItemsToInstall { get; }
-        IEnumerable<IUpdateItem> ItemsToKeep { get; }
-        IEnumerable<IUpdateItem> ItemsToDelete { get; }
+        IEnumerable<ProductComponent> ComponentsToInstall { get; }
+        IEnumerable<ProductComponent> ComponentsToKeep { get; }
+        IEnumerable<ProductComponent> ComponentsToDelete { get; }
     }
 }

@@ -4,9 +4,9 @@ namespace TaskBasedUpdater.Component
 {
     public record ProductComponent
     {
-        public string Destination { get; init; }
+        public string Destination { get; }
 
-        public string Name { get; init; }
+        public string Name { get; }
 
         public ComponentAction RequiredAction { get; init; }
 

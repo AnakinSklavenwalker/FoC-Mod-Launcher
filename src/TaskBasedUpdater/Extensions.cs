@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater
 {
@@ -43,11 +44,11 @@ namespace TaskBasedUpdater
             return result == InstallResult.Failure || result == InstallResult.FailureException;
         }
 
-        internal static string GetFailureSignature(this IUpdateItem updateItem, string action, string result)
+        internal static string GetFailureSignature(this ProductComponent component, string action, string result)
         {
             var stringBuilder = new StringBuilder();
-            if (!string.IsNullOrEmpty(updateItem.Name)) 
-                stringBuilder.Append("Item=" + updateItem.Name);
+            if (!string.IsNullOrEmpty(component.Name)) 
+                stringBuilder.Append("Item=" + component.Name);
             if (!string.IsNullOrEmpty(action))
             {
                 if (stringBuilder.Length > 0) 

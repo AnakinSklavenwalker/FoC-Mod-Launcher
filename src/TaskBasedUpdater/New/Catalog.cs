@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
+using TaskBasedUpdater.Component;
 using Validation;
 
 namespace TaskBasedUpdater.New
 {
     public abstract class Catalog : ICatalog
     {
-        public IEnumerable<IUpdateItem> Items { get; }
+        public IEnumerable<ProductComponent> Items { get; }
 
-        protected Catalog(IEnumerable<IUpdateItem> updateItems)
+        protected Catalog(IEnumerable<ProductComponent> components)
         {
-            Requires.NotNull(updateItems, nameof(updateItems));
-            Items = updateItems;
+            Requires.NotNull(components, nameof(components));
+            Items = components;
         }
     }
 }

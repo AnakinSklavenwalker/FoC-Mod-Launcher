@@ -1,24 +1,25 @@
 ﻿using System;
+using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater.Elevation
 {
     public class ElevationRequestData : IEquatable<ElevationRequestData>
     {
-        public IUpdateItem UpdateItem { get; }
+        public ProductComponent ProductComponent { get; }
 
         public Exception Exception { get; }
 
-        public ElevationRequestData(Exception exception, IUpdateItem updateItem)
+        public ElevationRequestData(Exception exception, ProductComponent productComponent)
         {
             Exception = exception;
-            UpdateItem = updateItem;
+            ProductComponent = productComponent;
         }
 
         public bool Equals(ElevationRequestData? other)
         {
             if (other is null)
                 return false;
-            return ReferenceEquals(this, other) || UpdateItem.Equals(other.UpdateItem);
+            return ReferenceEquals(this, other) || ProductComponent.Equals(other.ProductComponent);
         }
 
         public override bool Equals(object? obj)
@@ -32,7 +33,7 @@ namespace TaskBasedUpdater.Elevation
 
         public override int GetHashCode()
         {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode(UpdateItem);
+            return StringComparer.OrdinalIgnoreCase.GetHashCode(ProductComponent);
         }
     }
 }

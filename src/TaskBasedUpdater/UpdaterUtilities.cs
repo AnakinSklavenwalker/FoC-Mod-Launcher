@@ -29,13 +29,13 @@ namespace TaskBasedUpdater
         }
 
 
-        public static string GetFilePath(this IUpdateItem updateItem)
+        public static string GetFilePath(this ProductComponent component)
         {
-            if (string.IsNullOrEmpty(updateItem.Name))
+            if (string.IsNullOrEmpty(component.Name))
                 throw new InvalidOperationException();
-            if (string.IsNullOrEmpty(updateItem.Destination))
+            if (string.IsNullOrEmpty(component.Destination))
                 throw new InvalidOperationException();
-            return Path.Combine(updateItem.Destination, updateItem.Name);
+            return Path.Combine(component.Destination, component.Name);
         }
 
         internal static byte[] GetFileHash(string file, HashType hashType)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using SimplePipeline.Tasks;
+using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
 using Validation;
 
@@ -10,15 +11,16 @@ namespace TaskBasedUpdater.Tasks
     {
         internal string File { get; set; }
 
-        public IUpdateItem UpdateItem { get; }
+        public ProductComponent ProductComponent { get; }
 
-        public CleanFileTask(IServiceProvider serviceProvider, IUpdateItem updateItem, string filePath) 
+        public CleanFileTask(IServiceProvider serviceProvider, ProductComponent productComponent , string filePath) 
             : base(serviceProvider)
         {
-            Requires.NotNull(updateItem, nameof(updateItem));
-            UpdateItem = updateItem;
+            Requires.NotNull(productComponent, nameof(productComponent));
+            ProductComponent = productComponent;
             File = filePath;
 
+            // TODO: split-projects
             // TODO: 1. Get download/backup location from UpdateItem (form serviceProvider).
             // TODO: 2. Delete them if they exist
             // TODO: 3. Remove filePath from ctor
