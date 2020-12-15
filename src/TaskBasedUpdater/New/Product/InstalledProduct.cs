@@ -15,5 +15,10 @@ namespace TaskBasedUpdater.New.Product
             Requires.NotNullOrEmpty(installationPath, nameof(installationPath));
             InstallationPath = installationPath;
         }
+
+        public override string ToString()
+        {
+            return $"Product '{Name}:{Version}:{ReleaseType}' at {InstallationPath}";
+        }
     }
 }

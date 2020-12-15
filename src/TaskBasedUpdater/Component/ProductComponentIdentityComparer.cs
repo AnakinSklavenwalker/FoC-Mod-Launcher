@@ -41,7 +41,7 @@ namespace TaskBasedUpdater.Component
         {
             if (ReferenceEquals(x, y))
                 return true;
-            if (x == null || y == null)
+            if (x is null || y is null)
                 return false;
 
             var flag = x.Name.Equals(y.Name) && x.Destination.Equals(y.Destination);

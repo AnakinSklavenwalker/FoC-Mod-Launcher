@@ -2,22 +2,10 @@
 
 namespace TaskBasedUpdater.Component
 {
-    public class OriginInfo
+    public sealed record OriginInfo(Uri Origin)
     {
-        public Uri Origin { get; }
+        public long? Size { get; init; }
 
-        public Version? Version { get; }
-
-        public long? Size { get; }
-
-        public ValidationContext? ValidationContext { get; }
-
-        public OriginInfo(Uri origin, Version? version = null, long? size = null, ValidationContext? validationContext = null)
-        {
-            Origin = origin ?? throw new ArgumentNullException(nameof(origin));
-            Version = version;
-            Size = size;
-            ValidationContext = validationContext;
-        }
+        public ValidationContext? ValidationContext { get; init; }
     }
 }

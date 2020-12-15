@@ -4,7 +4,6 @@ namespace TaskBasedUpdater.New.Update
 {
     public interface IUpdateCatalogBuilder
     {
-        IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, IAvailableProductCatalog availableCatalog,
-            UpdateRequestAction action);
+        IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, IAvailableProductCatalog availableCatalog);
     }
 }

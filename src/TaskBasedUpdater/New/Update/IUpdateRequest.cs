@@ -6,8 +6,6 @@ namespace TaskBasedUpdater.New.Update
     {
         string UpdateManifestPath { get; }
         
-        UpdateRequestAction RequestedAction { get; }
-
         IProductReference Product { get; }
     }
 }

@@ -142,7 +142,7 @@ namespace TaskBasedUpdater.Download
 
                             if (valid.HasValue && valid.Value)
                             {
-                                var validationResult = HashVerifier.Verify(outputStream, validationContext);
+                                var validationResult = HashVerifier.Verify(outputStream, validationContext!);
                                 engineSummary.ValidationResult = validationResult;
                                 if (validationResult == ValidationResult.HashMismatch)
                                 {

@@ -2,12 +2,8 @@
 
 namespace TaskBasedUpdater.Component
 {
-    public class ValidationContext
+    public sealed record ValidationContext(byte[] Hash, HashType HashType)
     {
-        public byte[] Hash { get; set; }
-
-        public HashType HashType { get; set; }
-
         internal bool Verify()
         {
             var hashLength = Hash.Length;

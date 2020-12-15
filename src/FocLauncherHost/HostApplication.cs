@@ -155,7 +155,7 @@ namespace FocLauncherHost
 
             IUpdateCatalogBuilder b = _services.GetRequiredService<IUpdateCatalogBuilder>();
 
-            var u = b.Build(i, a, updateRequest.RequestedAction);
+            var u = b.Build(i, a);
 
             if (!u.Items.Any())
                 return false;

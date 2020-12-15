@@ -15,8 +15,14 @@ namespace TaskBasedUpdater.FileSystem
             stream.Seek(0L, SeekOrigin.Begin);
             if (!validationContext.Verify())
                 return ValidationResult.ValidationContextError;
+#if NET48
             var hash = GetHashOfStream(stream, GetAlgorithmName(validationContext.HashType));
             var expected = validationContext.Hash;
+#else
+            var hash = GetHashOfStream(stream, GetAlgorithmName(validationContext.HashType)).AsSpan();
+            var expected = validationContext.Hash;
+#endif
+
             return hash.SequenceEqual(expected) ? ValidationResult.Success : ValidationResult.HashMismatch;
         }
 

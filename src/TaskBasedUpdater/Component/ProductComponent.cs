@@ -1,8 +1,9 @@
 ﻿using System;
+using Validation;
 
 namespace TaskBasedUpdater.Component
 {
-    public record ProductComponent
+    public sealed record ProductComponent
     {
         public string Destination { get; }
 
@@ -16,20 +17,24 @@ namespace TaskBasedUpdater.Component
 
         public OriginInfo? OriginInfo { get; init; }
 
+        public ValidationContext? ValidationContext { get; init; }
+
         public long? DiskSize { get; init; }
 
         public ProductComponent(string name, string destination)
         {
+            Requires.NotNullOrEmpty(name, nameof(name));
+            Requires.NotNullOrEmpty(destination, nameof(destination));
             Name = name;
             Destination = destination;
         }
 
         public override string ToString()
         {
-            return !string.IsNullOrEmpty(Name) ? $"{Name}, destination='{Destination}'" : base.ToString();
+            return $"{Name}, destination='{Destination}'";
         }
 
-        public virtual bool Equals(ProductComponent? other)
+        public bool Equals(ProductComponent? other)
         {
             return ProductComponentIdentityComparer.Default.Equals(this, other);
         }

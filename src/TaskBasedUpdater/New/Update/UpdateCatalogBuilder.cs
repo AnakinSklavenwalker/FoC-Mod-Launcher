@@ -9,8 +9,13 @@ namespace TaskBasedUpdater.New.Update
 {
     public class UpdateCatalogBuilder : IUpdateCatalogBuilder
     {
-        public IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, IAvailableProductCatalog availableCatalog,
-            UpdateRequestAction action)
+        public IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, IAvailableProductCatalog availableCatalog)
+        {
+            return Build(installedCatalog, availableCatalog, GetComponentAction);
+        }
+
+        public IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, 
+            IAvailableProductCatalog availableCatalog, CompareComponentDelegate compareComponents)
         {
             Requires.NotNull(installedCatalog, nameof(installedCatalog));
             Requires.NotNull(availableCatalog, nameof(availableCatalog));
@@ -22,66 +27,76 @@ namespace TaskBasedUpdater.New.Update
             var availableItems = availableCatalog.Items.ToHashSet(ProductComponentIdentityComparer.VersionIndependent);
 
             if (!currentItems.Any() && !availableItems.Any())
-                return new UpdateCatalog(availableCatalog.Product, new ProductComponent[0], action);
+                return new UpdateCatalog(availableCatalog.Product, new ProductComponent[0]);
 
             if (!availableItems.Any())
-                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, ComponentAction.Delete, action);
+                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, ComponentAction.Delete);
 
             if (!currentItems.Any())
-                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, ComponentAction.Update, action);
+                return ShallowCatalogWithAction(availableCatalog.Product, availableCatalog, ComponentAction.Update);
 
             var catalogItems = new List<ProductComponent>();
             foreach (var availableItem in availableItems)
             {
-                ProductComponent component = null;
-                // TODO: Implement a real check
+                if (availableItem.OriginInfo is null)
+                    throw new ComponentFailedException("Update Catalog Component must have origin data information.");
+
                 if (!currentItems.TryGetValue(availableItem, out var current))
                 {
-                    //availableItem.RequiredAction = UpdateAction.Update;
-                    catalogItems.Add(availableItem);
+                    ProductComponent component = availableItem with { RequiredAction = ComponentAction.Update };
+                    catalogItems.Add(component);
                 }
                 else
                 {
                     currentItems.Remove(current);
-                    if (!action.HasFlag(UpdateRequestAction.Repair))
-                    {
-                        //updateItem = availableItem with{ RequiredAction = UpdateAction.Keep};
-                        catalogItems.Add(component);
-                    }
-                    else
-                    {
-                        // TODO: Check whether to keep or update
-                        var item = Compare(current, availableItem);
-                        catalogItems.Add(item);
-                    }
+                    var componentAction = compareComponents(current, availableItem);
+                    var component = availableItem with { RequiredAction = componentAction };
+                    catalogItems.Add(component);
                 }
             }
 
+            // Remove deprecated components
             foreach (var currentItem in currentItems)
             {
-                //updateItem.RequiredAction = UpdateAction.Delete;
-                catalogItems.Add(currentItem);
+                var component = currentItem with { RequiredAction = ComponentAction.Delete };
+                catalogItems.Add(component);
             }
 
-            return new UpdateCatalog(availableCatalog.Product, catalogItems, action);
+            return new UpdateCatalog(availableCatalog.Product, catalogItems);
+        }
+        
+        public virtual ComponentAction GetComponentAction(ProductComponent current, ProductComponent available)
+        {
+            if (!ProductComponentIdentityComparer.VersionIndependent.Equals(current, available))
+                throw new InvalidOperationException(
+                    $"Cannot get action from not-matching product components {current.Name}:{available.Name}");
+            if (available.OriginInfo is null)
+                throw new ComponentFailedException("Update Catalog Component must have origin data information.");
+
+            if (available.CurrentVersion is null && available.OriginInfo is null && available.DiskSize is null)
+                return ComponentAction.Keep;
+
+            if (available.CurrentVersion is not null && 
+                !ProductComponentIdentityComparer.Default.Equals(current, available))
+                return ComponentAction.Update;
+
+            if (available.OriginInfo!.Size is not null && current.DiskSize is not null &&
+                !current.DiskSize.Value.Equals(available.OriginInfo.Size.Value))
+                return ComponentAction.Update;
+
+            if (available.OriginInfo.ValidationContext is not null &&
+                !available.OriginInfo.ValidationContext.Equals(current.ValidationContext))
+                return ComponentAction.Update;
+            
+            return ComponentAction.Keep;
         }
 
-        private static ProductComponent Compare(ProductComponent current, ProductComponent available)
-        {
-            return current;
-        }
 
-        private static IUpdateCatalog ShallowCatalogWithAction(IProductReference product, ICatalog catalog,
-            ComponentAction updateAction, UpdateRequestAction requestAction)
+        private static IUpdateCatalog ShallowCatalogWithAction(IProductReference product, 
+            ICatalog catalog, ComponentAction updateAction)
         {
-            return null;
-            //return new UpdateCatalog(product,
-            //    catalog.Items.Select(x =>
-            //    {
-            //        var copy = new UpdateItem.UpdateItem(x) {RequiredAction = updateAction};
-            //        return copy;
-            //    }), requestAction);
-
+            return new UpdateCatalog(product,
+                catalog.Items.Select(c => c with { RequiredAction = updateAction}));
         }
     }
 }
