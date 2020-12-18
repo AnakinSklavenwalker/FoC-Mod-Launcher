@@ -1,24 +1,24 @@
 ﻿namespace TaskBasedUpdater.New
 {
-    public class UpdateResultInformation : IUpdateResultInformation
+    public record UpdateResultInformation
     {
-        public static IUpdateResultInformation NoUpdate = new UpdateResultInformation
+        public static UpdateResultInformation NoUpdate = new()
         {
             Result = UpdateResult.NoUpdate,
             Message = "No update required."
         };
 
-        public static IUpdateResultInformation Success = new UpdateResultInformation
+        public static UpdateResultInformation Success = new()
         {
             Result = UpdateResult.Success,
             Message = "Update successful."
         };
 
-        public UpdateResult Result { get; set; }
+        public UpdateResult Result { get; init; }
 
-        public bool RequiresUserNotification { get; set; }
+        public bool RequiresUserNotification { get; init; }
 
-        public string? Message { get; set; }
+        public string? Message { get; init; }
 
         public override string ToString()
         {

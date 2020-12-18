@@ -1,10 +1,13 @@
 ﻿using System;
+using System.IO;
 using Validation;
 
 namespace TaskBasedUpdater.Component
 {
     public sealed record ProductComponent
     {
+        private string? _realPath;
+        
         public string Destination { get; }
 
         public string Name { get; }
@@ -20,11 +23,11 @@ namespace TaskBasedUpdater.Component
         public ValidationContext? ValidationContext { get; init; }
 
         public long? DiskSize { get; init; }
-
+        
         public ProductComponent(string name, string destination)
         {
             Requires.NotNullOrEmpty(name, nameof(name));
-            Requires.NotNullOrEmpty(destination, nameof(destination));
+            Requires.NotNull(destination, nameof(destination));
             Name = name;
             Destination = destination;
         }
@@ -42,6 +45,16 @@ namespace TaskBasedUpdater.Component
         public override int GetHashCode()
         {
             return ProductComponentIdentityComparer.Default.GetHashCode(this);
+        }
+
+        public string GetFilePath()
+        {
+            if (_realPath is null)
+            {
+                var explodedDestination = Environment.ExpandEnvironmentVariables(Destination);
+                _realPath = Path.Combine(explodedDestination, Name);
+            }
+            return _realPath;
         }
     }
 }

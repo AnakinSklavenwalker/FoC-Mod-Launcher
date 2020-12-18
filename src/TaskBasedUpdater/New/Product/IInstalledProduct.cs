@@ -6,10 +6,16 @@ namespace TaskBasedUpdater.New.Product
     {
         string InstallationPath { get; }
 
+        IInstalledProductManifest ProductManifest { get; }
+
         string? Author { get; }
 
         DateTime? UpdateDate { get; }
 
         DateTime? InstallDate { get; }
+    }
+
+    public interface IInstalledProductManifest : ICatalog
+    {
     }
 }

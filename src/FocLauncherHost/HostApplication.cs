@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -9,6 +11,8 @@ using FocLauncher.Threading;
 using FocLauncherHost.Dialogs;
 using Microsoft;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
@@ -20,7 +24,6 @@ using TaskBasedUpdater.New.Update;
 
 namespace FocLauncherHost
 {
-
     internal class UpdaterServiceFactory
     {
         public IServiceProvider CreateServiceProvider(IServiceProvider services)
@@ -58,7 +61,7 @@ namespace FocLauncherHost
             ProductReleaseType newReleaseType = ProductReleaseType.Stable)
         {
             Initialize();
-            return new InstalledProduct(_installedProduct!.Name, _installedProduct.InstallationPath)
+            return new ProductReference(_installedProduct!.Name)
             {
                 Version = newVersion,
                 ReleaseType = newReleaseType
@@ -82,10 +85,16 @@ namespace FocLauncherHost
         {
             var name = GetProductName();
             var path = GetInstallationPath();
-            return new InstalledProduct(name, path)
+            var manifest = GetManifest();
+            return new InstalledProduct(name, path, manifest)
             {
                 ReleaseType = ProductReleaseType.Stable
             };
+        }
+
+        private static IInstalledProductManifest GetManifest()
+        {
+            return new LauncherManifest();
         }
 
         private static string GetProductName()
@@ -96,6 +105,29 @@ namespace FocLauncherHost
         private static string GetInstallationPath()
         {
             return Directory.GetCurrentDirectory();
+        }
+    }
+
+    internal class LauncherManifest : IInstalledProductManifest
+    {
+        public IEnumerable<ProductComponent> Items
+        {
+            get
+            {
+                yield return new(LauncherConstants.LauncherFileName, "");
+                
+                yield return new(LauncherConstants.UpdaterFileName,
+                    $"%{LauncherConstants.ApplicationBaseVariable}%");
+                
+                yield return new(LauncherConstants.LauncherDllFileName,
+                    $"%{LauncherConstants.ApplicationBaseVariable}%");
+                
+                yield return new(LauncherConstants.LauncherThemeFileName,
+                    $"%{LauncherConstants.ApplicationBaseVariable}%");
+                
+                yield return new(LauncherConstants.LauncherThreadingFileName,
+                    $"%{LauncherConstants.ApplicationBaseVariable}%");
+            }
         }
     }
 
@@ -119,21 +151,33 @@ namespace FocLauncherHost
             UpdateConfiguration = updateConfiguration;
         }
 
-        public IUpdateResultInformation CheckAndUpdate(IUpdateRequest updateRequest, CancellationToken token)
+        public UpdateResultInformation CheckAndUpdate(IUpdateRequest updateRequest, CancellationToken token)
         {
             Requires.NotNull(updateRequest, nameof(updateRequest));
-            if (!IsUpdateAvailable(updateRequest, token))
-                return UpdateResultInformation.NoUpdate;
-            if (_updateCatalog is null)
+            try
+            {
+                if (!IsUpdateAvailable(updateRequest))
+                    return UpdateResultInformation.NoUpdate;
+                if (_updateCatalog is null)
+                    return new UpdateResultInformation
+                    {
+                        Result = UpdateResult.NoUpdate,
+                        Message = "Unable to find update manifest."
+                    };
+                token.ThrowIfCancellationRequested();
+                return Update(token);
+            }
+            catch (OperationCanceledException)
+            {
                 return new UpdateResultInformation
                 {
-                    Result = UpdateResult.NoUpdate,
-                    Message = "Unable to find update manifest."
+                    Result = UpdateResult.Cancelled,
+                    Message = "Update cancelled by user request."
                 };
-            return Update(token);
+            }
         }
 
-        private IUpdateResultInformation Update(CancellationToken token)
+        private UpdateResultInformation Update(CancellationToken token)
         {
             var updater =
                 new NewUpdateManager(new ServiceCollection().BuildServiceProvider(), UpdateConfiguration);
@@ -146,34 +190,33 @@ namespace FocLauncherHost
             return UpdateResultInformation.Success;
         }
 
-        private bool IsUpdateAvailable(IUpdateRequest updateRequest, CancellationToken token)
+        private bool IsUpdateAvailable(IUpdateRequest updateRequest)
         {
             var productProviderService = _services.GetRequiredService<IProductCatalogService>();
 
-            var i = productProviderService.GetInstalledProductCatalog(_product);
-            var a = productProviderService.GetAvailableProductCatalog(updateRequest);
+            var currentCatalog = productProviderService.GetInstalledProductCatalog(_product);
+            var availableCatalog = productProviderService.GetAvailableProductCatalog(updateRequest);
 
-            IUpdateCatalogBuilder b = _services.GetRequiredService<IUpdateCatalogBuilder>();
+            IUpdateCatalogBuilder builder = _services.GetRequiredService<IUpdateCatalogBuilder>();
+            var updateCatalog = builder.Build(currentCatalog, availableCatalog);
 
-            var u = b.Build(i, a);
-
-            if (!u.Items.Any())
+            if (!updateCatalog.Items.Any())
                 return false;
-            _updateCatalog = u;
+            _updateCatalog = updateCatalog;
             return true;
         }
 
         private IServiceCollection InitializeServices()
         {
             var sc =  new ServiceCollection();
-            sc.AddTransient<IProductCatalogService>(provider => new LauncherCatalogService(_services));
-            sc.AddTransient<IUpdateCatalogBuilder>(provider => new UpdateCatalogBuilder());
+            sc.AddTransient<IProductCatalogService>(_ => new LauncherCatalogService(_services));
+            sc.AddTransient<IUpdateCatalogBuilder>(_ => new UpdateCatalogBuilder());
             return sc;
         }
 
         public void Dispose()
         {
-            _updateManager.Dispose();
+            _updateManager?.Dispose();
         }
     }
 
@@ -192,15 +235,65 @@ namespace FocLauncherHost
             var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
             if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, product))
                 throw new InvalidOperationException("Not compatible product");
-            return new InstalledProductCatalog(product, new ProductComponent[0]);
+
+            var installedComponents = FindInstalledComponents(launcherProduct);
+            return new InstalledProductCatalog(product, installedComponents);
         }
 
-        public IAvailableProductCatalog? GetAvailableProductCatalog(IUpdateRequest request)
+        public IAvailableProductCatalog GetAvailableProductCatalog(IUpdateRequest request)
         {
             var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
             if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, request.Product))
                 throw new InvalidOperationException("Not compatible product");
-            return new AvailableProductCatalog(request.Product, new ProductComponent[00]);
+            
+            return new AvailableProductCatalog(request.Product, new ProductComponent[0]);
+        }
+
+        internal IEnumerable<ProductComponent> FindInstalledComponents(IInstalledProduct product)
+        {
+            if (product.ProductManifest is null)
+                throw new InvalidOperationException("Product manifest cannot be null.");
+
+            foreach (var component in product.ProductManifest.Items)
+            {
+                var path = component.GetFilePath();
+
+                FileInfo fileInfo = Path.IsPathRooted(path)
+                    ? new FileInfo(path)
+                    : new FileInfo(Path.Combine(product.InstallationPath, path));
+
+                var installedComponent = ComponentFileFactory.FromFile(component, new PhysicalFileInfo(fileInfo),
+                    LauncherVersionUtilities.GetFileVersionSafe, HashType.Sha256);
+
+                if (installedComponent.CurrentState == CurrentState.Installed)
+                    yield return installedComponent;
+            }
+        }
+    }
+
+    internal static class LauncherVersionUtilities
+    {
+        public static Version? GetFileVersionSafe(IFileInfo file)
+        {
+            try
+            {
+                return GetFileVersion(file);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static Version GetFileVersion(IFileInfo file)
+        {
+            Requires.NotNull(file, nameof(file));
+            if (file.IsDirectory)
+                throw new IOException("Cannot get version from directory");
+            if (file.PhysicalPath is null)
+                throw new IOException("Cannot get physical path from file");
+            var existingVersionString = FileVersionInfo.GetVersionInfo(file.PhysicalPath).FileVersion;
+            return Version.Parse(existingVersionString);
         }
     }
 
@@ -214,9 +307,9 @@ namespace FocLauncherHost
 
         private int _shouldShowSplashScreen = 1;
 
-        private readonly AsyncManualResetEvent _canCloseApplicationEvent = new AsyncManualResetEvent(false, true);
+        private readonly AsyncManualResetEvent _canCloseApplicationEvent = new(false, true);
 
-        internal static ManualResetEvent SplashVisibleResetEvent { get; } = new ManualResetEvent(false);
+        internal static ManualResetEvent SplashVisibleResetEvent { get; } = new(false);
 
         internal SplashScreen SplashScreen { get; }
 
@@ -254,7 +347,7 @@ namespace FocLauncherHost
                     SetWhenWaitDialogIsShownAsync(WaitProgressDelay, SplashScreen.CancellationToken).Forget();
                     var cts = CancellationTokenSource.CreateLinkedTokenSource(SplashScreen.CancellationToken);
                     
-                    IUpdateResultInformation? updateInformation = null;
+                    UpdateResultInformation? updateInformation = null;
                     try
                     {
                         
@@ -268,7 +361,6 @@ namespace FocLauncherHost
                             var r = new UpdateRequest
                             {
                                 Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
-                                RequestedAction = UpdateRequestAction.Repair | UpdateRequestAction.Update,
                                 UpdateManifestPath = string.Empty
                             };
 
@@ -309,7 +401,7 @@ namespace FocLauncherHost
             SplashScreen.IsProgressVisible = true;
         }
 
-        private void ReportUpdateResult(IUpdateResultInformation updateInformation)
+        private void ReportUpdateResult(UpdateResultInformation? updateInformation)
         {
             if (updateInformation != null)
             {

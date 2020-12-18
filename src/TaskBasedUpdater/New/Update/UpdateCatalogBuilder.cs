@@ -39,7 +39,7 @@ namespace TaskBasedUpdater.New.Update
             foreach (var availableItem in availableItems)
             {
                 if (availableItem.OriginInfo is null)
-                    throw new ComponentFailedException("Update Catalog Component must have origin data information.");
+                    throw new ComponentException("Update Catalog Component must have origin data information.");
 
                 if (!currentItems.TryGetValue(availableItem, out var current))
                 {
@@ -71,7 +71,7 @@ namespace TaskBasedUpdater.New.Update
                 throw new InvalidOperationException(
                     $"Cannot get action from not-matching product components {current.Name}:{available.Name}");
             if (available.OriginInfo is null)
-                throw new ComponentFailedException("Update Catalog Component must have origin data information.");
+                throw new ComponentException("Update Catalog Component must have origin data information.");
 
             if (available.CurrentVersion is null && available.OriginInfo is null && available.DiskSize is null)
                 return ComponentAction.Keep;

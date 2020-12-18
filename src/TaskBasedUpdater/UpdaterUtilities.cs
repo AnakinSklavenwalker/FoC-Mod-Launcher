@@ -4,11 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
-using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Threading;
-using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater
 {
@@ -27,50 +26,7 @@ namespace TaskBasedUpdater
             var version = FileVersionInfo.GetVersionInfo(file).FileVersion;
             return Version.Parse(version);
         }
-
-
-        public static string GetFilePath(this ProductComponent component)
-        {
-            if (string.IsNullOrEmpty(component.Name))
-                throw new InvalidOperationException();
-            if (string.IsNullOrEmpty(component.Destination))
-                throw new InvalidOperationException();
-            return Path.Combine(component.Destination, component.Name);
-        }
-
-        internal static byte[] GetFileHash(string file, HashType hashType)
-        {
-            if (!File.Exists(file))
-                throw new FileNotFoundException(nameof(file));
-
-            switch (hashType)
-            {
-                case HashType.MD5:
-                    return GetFileHash(file, HashAlgorithmName.MD5);
-                case HashType.Sha1:
-                    return GetFileHash(file, HashAlgorithmName.SHA1);
-                case HashType.Sha256:
-                    return GetFileHash(file, HashAlgorithmName.SHA256);
-                case HashType.Sha512:
-                    return GetFileHash(file, HashAlgorithmName.SHA512);
-                default:
-                    throw new InvalidOperationException("Unable to find a hashing algorithm");
-            }
-        }
-
-        private static byte[] GetFileHash(string file, HashAlgorithmName algorithm)
-        {
-            if (!File.Exists(file))
-                return null;
-            using var hash = HashAlgorithm.Create(algorithm.Name);
-            if (hash == null)
-                throw new CryptographicException($"Could not find hashing provider of name: {algorithm}");
-            var fileInfo = new FileInfo(file);
-            using var fs = fileInfo.OpenRead();
-            fs.Position = 0;
-            return hash.ComputeHash(fs);
-        }
-
+        
         // https://stackoverflow.com/a/9995303
         internal static byte[] HexToArray(string input)
         {
@@ -113,6 +69,10 @@ namespace TaskBasedUpdater
 
         internal static Mutex? EnsureMutex(string name, TimeSpan timeout)
         {
+#if NET
+            if (!OperatingSystem.IsWindows())
+                throw new NotSupportedException("Creating a mutex is only supported on windows.");
+#endif
             name ??= UpdaterMutex;
             Mutex mutex;
             try
@@ -128,7 +88,7 @@ namespace TaskBasedUpdater
 #if NET
                 return MutexAcl.Create(false, name, out _, mutexSecurity);
 #else
-            return new Mutex(false, name, out _, mutexSecurity);
+                return new Mutex(false, name, out _, mutexSecurity);
 #endif
             }
 

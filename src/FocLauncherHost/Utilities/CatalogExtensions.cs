@@ -20,8 +20,12 @@ namespace FocLauncherHost.Utilities
 
             ValidationContext? validationContext = null;
             if (hash != null)
-                validationContext = new ValidationContext { Hash = hash, HashType = HashType.Sha256 };
-            var originInfo = new OriginInfo(new Uri(dependency.Origin, UriKind.Absolute), size, validationContext);
+                validationContext = new ValidationContext(hash, HashType.Sha256);
+            var originInfo = new OriginInfo(new Uri(dependency.Origin, UriKind.Absolute))
+            {
+                Size = size,
+                ValidationContext = validationContext
+            };
 
             return new ProductComponent(dependency.Name, GetRealDependencyDestination(dependency))
             {

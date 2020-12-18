@@ -20,6 +20,8 @@ namespace TaskBasedUpdater
 
         public static BackupManager Instance => _instance ??= new BackupManager();
 
+        private FileHasher _hasher = new FileHasher();
+
         private BackupManager()
         {
         }
@@ -81,8 +83,8 @@ namespace TaskBasedUpdater
 
                     if (File.Exists(componentFile))
                     {
-                        var backupHash = UpdaterUtilities.GetFileHash(backupFile!, HashType.Sha256);
-                        var fileHash = UpdaterUtilities.GetFileHash(backupFile!, HashType.Sha256);
+                        var backupHash = _hasher.GetFileHash(backupFile!, HashType.Sha256);
+                        var fileHash = _hasher.GetFileHash(componentFile!, HashType.Sha256);
                         if (backupHash.SequenceEqual(fileHash))
                         {
                             remove = false;

@@ -6,6 +6,6 @@ namespace TaskBasedUpdater.New.Product
     {
         IInstalledProductCatalog GetInstalledProductCatalog(IInstalledProduct product);
 
-        IAvailableProductCatalog? GetAvailableProductCatalog(IUpdateRequest product);
+        IAvailableProductCatalog GetAvailableProductCatalog(IUpdateRequest product);
     }
 }

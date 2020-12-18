@@ -373,7 +373,7 @@ namespace TaskBasedUpdater.Tests
             Version? version = null, 
             ProductReleaseType releaseType = ProductReleaseType.Stable)
         {
-            return new InstalledProduct(name, "usr/")
+            return new InstalledProduct(name, "usr/", new Manifest())
             {
                 Version = version,
                 ReleaseType = releaseType
@@ -406,6 +406,11 @@ namespace TaskBasedUpdater.Tests
             {
                 Items = items;
             }
+        }
+        
+        private class Manifest : IInstalledProductManifest
+        {
+            public IEnumerable<string> Components => Enumerable.Empty<string>();
         }
     }
 }
