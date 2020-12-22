@@ -91,10 +91,9 @@ namespace TaskBasedUpdater.Tasks
 
         private void DownloadAction(CancellationToken token, out Exception? lastException)
         {
-            lastException = null;
-            var downloadManager = DownloadManager.Instance;
-
+            lastException = null; 
             // TODO: split-projects
+            //var downloadManager = DownloadManager.Instance;
             //for (var i = 0; i <= UpdateConfiguration.Instance.DownloadRetryCount; i++)
             //{
             //    if (token.IsCancellationRequested)

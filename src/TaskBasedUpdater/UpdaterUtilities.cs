@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
@@ -15,18 +13,6 @@ namespace TaskBasedUpdater
     {
         internal static readonly string UpdaterMutex = $"Global\\{Process.GetCurrentProcess().ProcessName}";
 
-        public static Version GetAssemblyVersion(string file)
-        {
-            var assembly = AssemblyName.GetAssemblyName(file);
-            return assembly.Version;
-        }
-
-        public static Version GetAssemblyFileVersion(string file)
-        {
-            var version = FileVersionInfo.GetVersionInfo(file).FileVersion;
-            return Version.Parse(version);
-        }
-        
         // https://stackoverflow.com/a/9995303
         internal static byte[] HexToArray(string input)
         {
@@ -35,7 +21,7 @@ namespace TaskBasedUpdater
             input = input.ToLower();
             var arr = new byte[input.Length >> 1];
             for (var i = 0; i < input.Length >> 1; ++i)
-                arr[i] = (byte)((GetHexVal(input[i << 1]) << 4) + (GetHexVal(input[(i << 1) + 1])));
+                arr[i] = (byte) ((GetHexVal(input[i << 1]) << 4) + (GetHexVal(input[(i << 1) + 1])));
             return arr;
         }
 
@@ -49,7 +35,7 @@ namespace TaskBasedUpdater
 
         private static int GetHexVal(char hex)
         {
-            var val = (int)hex;
+            var val = (int) hex;
             return val - (val < 58 ? 48 : 87);
         }
 
@@ -101,30 +87,8 @@ namespace TaskBasedUpdater
             {
                 mutexAbandoned = true;
             }
-            return mutexAbandoned ? mutex : null;
-        }
 
-        public static long CopyFileToStream(string filePath, Stream outStream, ProgressUpdateCallback progress, CancellationToken cancellationToken)
-        {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException(nameof(filePath));
-            var downloadSize = 0L;
-            var array = new byte[32768];
-            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var readSize = fileStream.Read(array, 0, array.Length);
-                cancellationToken.ThrowIfCancellationRequested();
-                if (readSize <= 0)
-                    break;
-                outStream.Write(array, 0, readSize);
-                downloadSize += readSize;
-                progress?.Invoke(new ProgressUpdateStatus(downloadSize, fileStream.Length, 0.0));
-            }
-            if (downloadSize != fileStream.Length)
-                throw new IOException("Internal error copying streams. Total read bytes does not match stream Length.");
-            return downloadSize;
+            return mutexAbandoned ? mutex : null;
         }
     }
 }

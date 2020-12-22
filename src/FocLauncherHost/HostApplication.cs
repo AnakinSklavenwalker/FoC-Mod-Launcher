@@ -64,16 +64,9 @@ namespace FocLauncherHost.Product
             return Directory.GetCurrentDirectory();
         }
     }
-
+    
     internal class LauncherComponentBuilder : IProductComponentBuilder
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        public LauncherComponentBuilder(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
-        
         public HashType HashType => HashType.Sha256;
         
         public Version? GetVersion(IFileInfo file)
@@ -81,7 +74,7 @@ namespace FocLauncherHost.Product
             return LauncherVersionUtilities.GetFileVersionSafe(file);
         }
     }
-
+    
     internal class LauncherManifest : IInstalledProductManifest
     {
         public LauncherManifest(IProductReference product)
@@ -179,7 +172,7 @@ namespace FocLauncherHost
                             var r = new UpdateRequest
                             {
                                 Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
-                                UpdateManifestPath = new Uri("file://path/file.txt", UriKind.Absolute)
+                                UpdateManifestPath = new Uri("file://c:/Test/text.xml", UriKind.Absolute)
                             };
 
                             return u.CheckAndUpdate(r, cts.Token);

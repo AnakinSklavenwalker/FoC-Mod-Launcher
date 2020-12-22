@@ -174,8 +174,9 @@ namespace TaskBasedUpdater.Operations
 
         private void Initialize()
         {
-            if (_downloadManager == null)
-                _downloadManager = DownloadManager.Instance;
+            // TODO: split-project
+            //if (_downloadManager == null)
+            //    _downloadManager = DownloadManager.Instance;
 
             if (_elevator == null)
             {

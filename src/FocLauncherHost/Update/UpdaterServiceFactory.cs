@@ -12,7 +12,7 @@ namespace FocLauncherHost.Update
         {
             Requires.NotNull(services, nameof(services));
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton<IProductService>(sp => new LauncherProductService(new LauncherComponentBuilder(services), services));
+            serviceCollection.AddSingleton<IProductService>(sp => new LauncherProductService(new LauncherComponentBuilder(), services));
             return serviceCollection.BuildServiceProvider();
         }
     }

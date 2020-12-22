@@ -31,7 +31,7 @@ namespace TaskBasedUpdater.Download
             _helper = new DownloadHelpers(serviceProvider);
         }
 
-        protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
+        protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,
             CancellationToken cancellationToken, ProductComponent? productComponent)
         {
             var summary = new DownloadSummary();

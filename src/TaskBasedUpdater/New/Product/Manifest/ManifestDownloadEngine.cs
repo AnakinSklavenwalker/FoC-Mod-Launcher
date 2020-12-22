@@ -42,7 +42,7 @@ namespace TaskBasedUpdater.New.Product.Manifest
 
             var tempFile = fileSystem.Path.GetTempFileName();
             using var file = fileSystem.File.Create(tempFile);
-            await DownloadManager.Instance.DownloadAsync(manifestUri, file, null, token);
+            await new DownloadManager(_serviceProvider).DownloadAsync(manifestUri, file, null, token);
             
             return fileSystem.FileInfo.FromFileName(tempFile);
         }

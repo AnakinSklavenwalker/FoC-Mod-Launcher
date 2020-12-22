@@ -6,7 +6,7 @@ using TaskBasedUpdater.Component;
 
 namespace TaskBasedUpdater.Download
 {
-    public abstract class DownloadEngineBase : IDownloadEngine, IDisposable
+    public abstract class DownloadEngineBase : DisposableObject, IDownloadEngine
     {
         private readonly DownloadSource[] _supportedSources;
 
@@ -17,40 +17,26 @@ namespace TaskBasedUpdater.Download
             Name = name;
             _supportedSources = supportedSources;
         }
-
-        ~DownloadEngineBase()
-        {
-            Dispose(false);
-        }
-
+        
         public bool IsSupported(DownloadSource source)
         {
             return _supportedSources.Contains(source);
         }
 
-        public DownloadSummary Download(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
+        public DownloadSummary Download(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,
             CancellationToken cancellationToken, ProductComponent? productComponent)
         {
             return DownloadWithBitRate(uri, outputStream, progress, cancellationToken, productComponent);
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected abstract DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
+        protected abstract DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,
             CancellationToken cancellationToken, ProductComponent? productComponent);
 
-        protected virtual void DisposeResources()
-        {
-        }
-
-        private DownloadSummary DownloadWithBitRate(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken, ProductComponent? productComponent)
+        private DownloadSummary DownloadWithBitRate(Uri uri, Stream outputStream, ProgressUpdateCallback? progress, CancellationToken cancellationToken, ProductComponent? productComponent)
         {
             var now = DateTime.Now;
             var lastProgressUpdate = now;
-            ProgressUpdateCallback wrappedProgress = null;
+            ProgressUpdateCallback? wrappedProgress = null;
             if (progress != null)
                 wrappedProgress = p =>
                 {
@@ -64,13 +50,6 @@ namespace TaskBasedUpdater.Download
             downloadSummary.DownloadTime = DateTime.Now - now;
             downloadSummary.BitRate = 8.0 * downloadSummary.DownloadedSize / downloadSummary.DownloadTime.TotalSeconds;
             return downloadSummary;
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposing)
-                return;
-            DisposeResources();
         }
     }
 }

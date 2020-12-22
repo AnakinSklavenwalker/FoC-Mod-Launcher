@@ -5,6 +5,7 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
+using TaskBasedUpdater.FileSystem;
 using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.New.Update;
 using Validation;
@@ -72,6 +73,11 @@ namespace TaskBasedUpdater.New.Product
                 Logger?.LogError(e, e.Message);
                 throw;
             }
+            finally
+            {
+                var fileSystem = _serviceProvider.GetRequiredService<IFileSystem>();
+                fileSystem.DeleteFileIfInTemp(manifestFile);
+            }
             return new AvailableProductCatalog(manifest.Product, manifest.Items);
         }
 
@@ -81,7 +87,7 @@ namespace TaskBasedUpdater.New.Product
             {
                 var path = component.GetFilePath();
                 path = Path.IsPathRooted(path) ? path : Path.Combine(installationPath, path);
-                yield return ComponentFileFactory.FromFile(component, path, ComponentBuilder);
+                yield return new ComponentFileFactory(_serviceProvider).FromFile(component, path, ComponentBuilder);
             }
         }
 

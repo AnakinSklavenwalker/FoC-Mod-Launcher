@@ -1,14 +1,27 @@
 ﻿using System;
 using System.IO;
+using System.IO.Abstractions;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using TaskBasedUpdater.NativeMethods;
+using Validation;
 
 namespace TaskBasedUpdater.FileSystem
 {
     internal static class FileSystemExtensions
     {
+        public static void DeleteFileIfInTemp(this IFileSystem fileSystem, IFileInfo file)
+        {
+            Requires.NotNull(fileSystem, nameof(fileSystem));
+            Requires.NotNull(file, nameof(file));
+            if (!file.Exists || !fileSystem.Path.ContainsPath(file.FullName, fileSystem.Path.GetTempPath()))
+                return;
+            fileSystem.File.Delete(file.FullName);
+        }
+
+
+
         private static readonly char DirectorySeparatorChar = '\\';
 
         public static bool FileExists(FileInfo fileInfo)

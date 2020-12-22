@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
@@ -12,13 +13,11 @@ namespace TaskBasedUpdater.Download
 {
     internal class DownloadManager : IDownloadManager
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger? _logger;
-        private static DownloadManager? _instance;
-        private readonly List<IDownloadEngine> _allEngines = new List<IDownloadEngine>();
-        private readonly List<IDownloadEngine> _defaultEngines = new List<IDownloadEngine>();
-
-        public static IDownloadManager Instance => _instance ??= new DownloadManager();
-
+        private readonly List<IDownloadEngine> _allEngines = new();
+        private readonly List<IDownloadEngine> _defaultEngines = new();
+        
         public IEnumerable<string> DefaultEngines
         {
             get
@@ -46,16 +45,18 @@ namespace TaskBasedUpdater.Download
         internal int SleepDurationBetweenRetries { get; set; }
 
 
-        private DownloadManager()
+        public DownloadManager(IServiceProvider serviceProvider)
         {
-            AddDownloadEngine(new WebClientDownloader(null));
-            AddDownloadEngine(new FileDownloader());
+            _serviceProvider = serviceProvider;
+            _logger = serviceProvider.GetService<ILogger>();
+            AddDownloadEngine(new WebClientDownloader(_serviceProvider));
+            AddDownloadEngine(new FileDownloader(_serviceProvider));
             DefaultEngines = _allEngines.Select(e => e.Name);
             // TODO: split-projects
             //SleepDurationBetweenRetries = UpdateConfiguration.Instance.DownloadRetryDelay;
         }
 
-        public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback progress, CancellationToken cancellationToken,
+        public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback? progress, CancellationToken cancellationToken,
             ProductComponent? productComponent = default, bool verify = false)
         {
             _logger?.LogTrace($"Download requested: {uri.AbsoluteUri}");
@@ -93,8 +94,24 @@ namespace TaskBasedUpdater.Download
             }
         }
 
+        internal void RemoveAllEngines()
+        {
+            _allEngines.Clear();
+            _defaultEngines.Clear();
+        }
+
+        internal void AddDownloadEngine(IDownloadEngine engine)
+        {
+            if (engine == null)
+                throw new ArgumentNullException(nameof(engine));
+            if (_allEngines.Any(e => string.Equals(e.Name, engine.Name, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException("Engine " + engine.Name + " already exists.");
+            _allEngines.Add(engine);
+            _defaultEngines.Add(engine);
+        }
+
         private DownloadSummary DownloadWithRetry(IDownloadEngine[] engines, Uri uri, Stream outputStream,
-            ProgressUpdateCallback progress, CancellationToken cancellationToken, ProductComponent? productComponent = null,
+            ProgressUpdateCallback? progress, CancellationToken cancellationToken, ProductComponent? productComponent = null,
             bool verify = false)
         {
             var failureList = new List<DownloadFailureInformation>();
@@ -104,12 +121,11 @@ namespace TaskBasedUpdater.Download
                 var length = outputStream.Length;
                 try
                 {
-                    _logger.LogTrace($"Attempting download '{uri.AbsoluteUri}' using engine '{engine.Name}'");
+                    _logger?.LogTrace($"Attempting download '{uri.AbsoluteUri}' using engine '{engine.Name}'");
                     var engineSummary = engine.Download(uri, outputStream,
                         status =>
                         {
-                            progress?.Invoke(new ProgressUpdateStatus(engine.Name, status.BytesRead, status.TotalBytes,
-                                status.BitRate));
+                            progress?.Invoke(new ProgressUpdateStatus(engine.Name, status.BytesRead, status.TotalBytes, status.BitRate));
                         }, cancellationToken,
                         productComponent);
                     // TODO: split-projects
@@ -153,7 +169,7 @@ namespace TaskBasedUpdater.Download
                                 }
                             }
                             else
-                                _logger.LogTrace(
+                                _logger?.LogTrace(
                                     $"Skipping validation because validation context of Update Item {productComponent.Name} is not valid.");
                         }
                     }
@@ -170,7 +186,7 @@ namespace TaskBasedUpdater.Download
                 catch (Exception ex)
                 {
                     failureList.Add(new DownloadFailureInformation(ex, engine.Name));
-                    _logger.LogTrace($"Download failed using {engine.Name} engine. {ex}");
+                    _logger?.LogTrace($"Download failed using {engine.Name} engine. {ex}");
 
                     if (engine.Equals(engines.LastOrDefault()))
                         throw new DownloadFailureException(failureList);
@@ -181,22 +197,12 @@ namespace TaskBasedUpdater.Download
                     var millisecondsTimeout = SleepDurationBetweenRetries;
                     if (millisecondsTimeout < 0)
                         millisecondsTimeout = 0;
-                    _logger.LogTrace($"Sleeping {millisecondsTimeout} before retrying download.");
+                    _logger?.LogTrace($"Sleeping {millisecondsTimeout} before retrying download.");
                     Thread.Sleep(millisecondsTimeout);
                 }
             }
 
-            return null;
-        }
-
-        private void AddDownloadEngine(IDownloadEngine engine)
-        {
-            if (engine == null)
-                throw new ArgumentNullException(nameof(engine));
-            if (_allEngines.Any(e => string.Equals(e.Name, engine.Name, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Engine " + engine.Name + " already exists.");
-            _allEngines.Add(engine);
-            _defaultEngines.Add(engine);
+            return null!;
         }
 
         private IDownloadEngine[] GetSuitableEngines(IEnumerable<IDownloadEngine> downloadEngines, Uri uri)
@@ -215,7 +221,7 @@ namespace TaskBasedUpdater.Download
         {
             if (engineOrder == null)
                 throw new ArgumentNullException("Invalid engine prefernece.");
-            if (engineOrder.Count() > engines.Count())
+            if (engineOrder.Count() > engines.Count)
                 throw new ArgumentException("Default engines can't be more than all available engines.");
             var list = new List<IDownloadEngine>();
             foreach (var name in engineOrder)
