@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders.Physical;
 using TaskBasedUpdater.Component;
 using Validation;
 
@@ -15,7 +14,8 @@ namespace TaskBasedUpdater.FileSystem
         // Remove this overload
         public byte[] GetFileHash(string file, HashType hashType)
         {
-            return GetFileHash(new PhysicalFileInfo(new FileInfo(file)), hashType);
+            IFileSystem fs = new System.IO.Abstractions.FileSystem();
+            return GetFileHash(fs.FileInfo.FromFileName(file), hashType);
         }
 
 
@@ -24,8 +24,6 @@ namespace TaskBasedUpdater.FileSystem
             Requires.NotNull(file, nameof(file));
             if (!file.Exists)
                 throw new FileNotFoundException(nameof(file));
-            if (file.IsDirectory)
-                throw new InvalidOperationException("Unable to compute hash from a directory.");
             return HashFileInternal(file, GetAlgorithm(hashType));
         }
 
@@ -33,7 +31,7 @@ namespace TaskBasedUpdater.FileSystem
         {
             using (algorithm)
             {
-                using var fs = file.CreateReadStream();
+                using var fs = file.OpenRead();
                 fs.Position = 0;
                 return algorithm.ComputeHash(fs);
             }
@@ -62,8 +60,6 @@ namespace TaskBasedUpdater.FileSystem
             Requires.NotNull(file, nameof(file));
             if (!file.Exists)
                 throw new FileNotFoundException(nameof(file));
-            if (file.IsDirectory)
-                throw new InvalidOperationException("Unable to compute hash from a directory.");
             return HashFileInternalAsync(file, GetAlgorithm(hashType));
         }
 
@@ -71,7 +67,7 @@ namespace TaskBasedUpdater.FileSystem
         {
             using (algorithm)
             {
-                using var fs = file.CreateReadStream();
+                using var fs = file.OpenRead();
                 fs.Position = 0;
                 return algorithm.ComputeHashAsync(fs);
             }

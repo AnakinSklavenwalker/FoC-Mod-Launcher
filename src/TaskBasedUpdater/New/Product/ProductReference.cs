@@ -9,10 +9,12 @@ namespace TaskBasedUpdater.New.Product
         public Version? Version { get; init; }
         public ProductReleaseType ReleaseType { get; init; }
 
-        public ProductReference(string name)
+        public ProductReference(string name, Version? version = null, ProductReleaseType releaseType = ProductReleaseType.Stable)
         {
             Requires.NotNullOrEmpty(name, nameof(name));
             Name = name;
+            Version = version;
+            ReleaseType = releaseType;
         }
     }
 }

@@ -1,37 +1,35 @@
 ﻿using System;
-using System.IO;
-using Microsoft.Extensions.FileProviders;
+using System.IO.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Validation;
 
 namespace TaskBasedUpdater.Component
 {
-    public static class ComponentFileFactory
+    public class ComponentFileFactory
     {
-        public static ProductComponent FromFile(IFileInfo file, Func<IFileInfo, Version?>? versionGetter, HashType hashType)
-        {
-            Requires.NotNull(file, nameof(file));
-            if (file.IsDirectory)
-                throw new ComponentException("Unable to create a ProductComponent from a directory.");
-            var name = file.Name;
-            var destination = Path.GetDirectoryName(file.PhysicalPath);
-            var component = new ProductComponent(name, destination!);
-            return FromFile(component, file, versionGetter, hashType);
-        }
+        private readonly IServiceProvider _serviceProvider;
 
-        public static ProductComponent FromFile(ProductComponent baseComponent,
-            IFileInfo file, Func<IFileInfo, Version?>? versionGetter, HashType hashType)
+        public ComponentFileFactory(IServiceProvider serviceProvider)
         {
-            if (file.IsDirectory)
-                throw new ComponentException("Unable to create a ProductComponent from a directory.");
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceProvider = serviceProvider;
+        }
+        
+        public ProductComponent FromFile(ProductComponent baseComponent, string path, IProductComponentBuilder builder)
+        {
+            Requires.NotNull(baseComponent, nameof(baseComponent));
+            Requires.NotNull(builder, nameof(builder));
+
+            var fs = _serviceProvider.GetRequiredService<IFileSystem>();
+            var file = fs.FileInfo.FromFileName(path);
             if (!file.Exists)
                 return baseComponent with { CurrentState = CurrentState.Removed };
 
-            Version? version = null;
-            if (versionGetter is not null)
-                version = versionGetter(file);
+            var version = builder.GetVersion(file);
 
+            // TODO: split-project
             ValidationContext? validationContext = null;
-            if (hashType != HashType.None)
+            if (builder.HashType != HashType.None)
             {
             }
 

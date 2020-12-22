@@ -1,10 +1,11 @@
-﻿using TaskBasedUpdater.New.Product;
+﻿using System;
+using TaskBasedUpdater.New.Product;
 
 namespace TaskBasedUpdater.New.Update
 {
-    public sealed record UpdateRequest : IUpdateRequest
+    public sealed record UpdateRequest
     {
-        public string UpdateManifestPath { get; init; }
+        public Uri UpdateManifestPath { get; init; }
         public IProductReference Product { get; init; }
     }
 }

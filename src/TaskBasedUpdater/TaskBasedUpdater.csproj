@@ -15,9 +15,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="System.IO.Abstractions" Version="13.2.7" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
     <PackageReference Include="System.Threading.AccessControl" Version="5.0.0" />
     <PackageReference Include="Validation" Version="2.4.22" />

@@ -20,7 +20,7 @@ namespace TaskBasedUpdater.New.Update
             Requires.NotNull(installedCatalog, nameof(installedCatalog));
             Requires.NotNull(availableCatalog, nameof(availableCatalog));
 
-            if (!ProductReferenceEqualityComparer.Default.Equals(installedCatalog.Product, availableCatalog.Product))
+            if (!ProductReferenceEqualityComparer.Default.Equals(installedCatalog.Product.ProductReference, availableCatalog.Product))
                 throw new InvalidOperationException("Cannot build update catalog from different products.");
 
             var currentItems = installedCatalog.Items.ToHashSet(ProductComponentIdentityComparer.VersionIndependent);
@@ -72,6 +72,9 @@ namespace TaskBasedUpdater.New.Update
                     $"Cannot get action from not-matching product components {current.Name}:{available.Name}");
             if (available.OriginInfo is null)
                 throw new ComponentException("Update Catalog Component must have origin data information.");
+
+            if (current.CurrentState != CurrentState.Installed)
+                return ComponentAction.Update;
 
             if (available.CurrentVersion is null && available.OriginInfo is null && available.DiskSize is null)
                 return ComponentAction.Keep;

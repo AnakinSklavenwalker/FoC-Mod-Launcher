@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.IO.Abstractions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using FocLauncher;
 using FocLauncher.Threading;
 using FocLauncherHost.Dialogs;
-using Microsoft;
+using FocLauncherHost.Update;
+using FocLauncherHost.Utilities;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
@@ -20,86 +18,45 @@ using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
+using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.New.Update;
+using Requires = Microsoft.Requires;
 
-namespace FocLauncherHost
+namespace FocLauncherHost.Product
 {
-    internal class UpdaterServiceFactory
+    internal sealed class LauncherProductService : ProductServiceBase
     {
-        public IServiceProvider CreateServiceProvider(IServiceProvider services)
+        public LauncherProductService(IProductComponentBuilder componentBuilder, IServiceProvider serviceProvider) : base(componentBuilder, serviceProvider)
         {
-            Requires.NotNull(services, nameof(services));
-            var serviceCollection = new ServiceCollection();
-
-            serviceCollection.AddSingleton<ILauncherProductService>(new LauncherProductService());
-
-            return serviceCollection.BuildServiceProvider();
-        }
-    }
-
-    internal interface ILauncherProductService
-    {
-        IInstalledProduct GetCurrentInstance();
-
-        void UpdateCurrentInstance(IInstalledProduct product);
-
-        IProductReference CreateProductReference(Version? newVersion, ProductReleaseType newReleaseType);
-    }
-
-    internal class LauncherProductService : ILauncherProductService
-    {
-        private bool _isInitialized;
-        private IInstalledProduct? _installedProduct;
-
-        public IInstalledProduct GetCurrentInstance()
-        {
-            Initialize();
-            return _installedProduct!;
         }
 
-        public IProductReference CreateProductReference(Version? newVersion = null,
-            ProductReleaseType newReleaseType = ProductReleaseType.Stable)
+        public override IProductReference CreateProductReference(Version? newVersion,
+            ProductReleaseType newReleaseType)
         {
-            Initialize();
-            return new ProductReference(_installedProduct!.Name)
+            return new ProductReference(LauncherConstants.ProductName)
             {
                 Version = newVersion,
                 ReleaseType = newReleaseType
             };
         }
 
-        public void UpdateCurrentInstance(IInstalledProduct product)
+        protected override IInstalledProduct BuildProduct()
+        {
+            var productRef = CreateProductReference(null, ProductReleaseType.Stable);
+            var path = GetInstallationPath();
+            var manifest = GetManifest(productRef);
+            return new InstalledProduct(productRef, manifest, path);
+        }
+
+        protected override IAvailableProductManifest LoadManifest(IProductReference product, IFileInfo manifestFile)
         {
             throw new NotImplementedException();
         }
 
-        private void Initialize()
-        {
-            if (_isInitialized)
-                return;
-            _installedProduct ??= BuildLauncherProduct();
-            _isInitialized = true;
-        }
 
-        private static InstalledProduct BuildLauncherProduct()
+        private static IInstalledProductManifest GetManifest(IProductReference productReference)
         {
-            var name = GetProductName();
-            var path = GetInstallationPath();
-            var manifest = GetManifest();
-            return new InstalledProduct(name, path, manifest)
-            {
-                ReleaseType = ProductReleaseType.Stable
-            };
-        }
-
-        private static IInstalledProductManifest GetManifest()
-        {
-            return new LauncherManifest();
-        }
-
-        private static string GetProductName()
-        {
-            return LauncherConstants.ProductName;
+            return new LauncherManifest(productReference);
         }
 
         private static string GetInstallationPath()
@@ -108,197 +65,58 @@ namespace FocLauncherHost
         }
     }
 
+    internal class LauncherComponentBuilder : IProductComponentBuilder
+    {
+        private readonly IServiceProvider _serviceProvider;
+
+        public LauncherComponentBuilder(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+        
+        public HashType HashType => HashType.Sha256;
+        
+        public Version? GetVersion(IFileInfo file)
+        {
+            return LauncherVersionUtilities.GetFileVersionSafe(file);
+        }
+    }
+
     internal class LauncherManifest : IInstalledProductManifest
     {
+        public LauncherManifest(IProductReference product)
+        {
+            Requires.NotNull(product, nameof(product));
+            Product = product;
+        }
+
         public IEnumerable<ProductComponent> Items
         {
             get
             {
-                yield return new(LauncherConstants.LauncherFileName, "");
-                
-                yield return new(LauncherConstants.UpdaterFileName,
+                yield return new ProductComponent(LauncherConstants.LauncherFileName, "");
+
+                yield return new ProductComponent(LauncherConstants.UpdaterFileName,
                     $"%{LauncherConstants.ApplicationBaseVariable}%");
-                
-                yield return new(LauncherConstants.LauncherDllFileName,
+
+                yield return new ProductComponent(LauncherConstants.LauncherDllFileName,
                     $"%{LauncherConstants.ApplicationBaseVariable}%");
-                
-                yield return new(LauncherConstants.LauncherThemeFileName,
+
+                yield return new ProductComponent(LauncherConstants.LauncherThemeFileName,
                     $"%{LauncherConstants.ApplicationBaseVariable}%");
-                
-                yield return new(LauncherConstants.LauncherThreadingFileName,
+
+                yield return new ProductComponent(LauncherConstants.LauncherThreadingFileName,
                     $"%{LauncherConstants.ApplicationBaseVariable}%");
             }
         }
+
+        public IProductReference Product { get; }
     }
+}
 
 
-    internal class FocLauncherUpdater : IDisposable
-    {
-        private readonly IInstalledProduct _product;
-        private readonly IServiceProvider _services;
-        private IUpdateCatalog? _updateCatalog;
-        private IUpdateManager? _updateManager;
-
-        public IUpdateConfiguration UpdateConfiguration { get; }
-
-        public FocLauncherUpdater(IInstalledProduct product, IUpdateConfiguration updateConfiguration, IServiceProvider services)
-        {
-            Requires.NotNull(product, nameof(product));
-            Requires.NotNull(services, nameof(services));
-            Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
-            _product = product;
-            _services = new AggregatedServiceProvider(services, InitializeServices);
-            UpdateConfiguration = updateConfiguration;
-        }
-
-        public UpdateResultInformation CheckAndUpdate(IUpdateRequest updateRequest, CancellationToken token)
-        {
-            Requires.NotNull(updateRequest, nameof(updateRequest));
-            try
-            {
-                if (!IsUpdateAvailable(updateRequest))
-                    return UpdateResultInformation.NoUpdate;
-                if (_updateCatalog is null)
-                    return new UpdateResultInformation
-                    {
-                        Result = UpdateResult.NoUpdate,
-                        Message = "Unable to find update manifest."
-                    };
-                token.ThrowIfCancellationRequested();
-                return Update(token);
-            }
-            catch (OperationCanceledException)
-            {
-                return new UpdateResultInformation
-                {
-                    Result = UpdateResult.Cancelled,
-                    Message = "Update cancelled by user request."
-                };
-            }
-        }
-
-        private UpdateResultInformation Update(CancellationToken token)
-        {
-            var updater =
-                new NewUpdateManager(new ServiceCollection().BuildServiceProvider(), UpdateConfiguration);
-
-            if (_updateCatalog is null)
-                throw new InvalidOperationException("Catalog cannot be null");
-
-            updater.Update(_updateCatalog, token);
-
-            return UpdateResultInformation.Success;
-        }
-
-        private bool IsUpdateAvailable(IUpdateRequest updateRequest)
-        {
-            var productProviderService = _services.GetRequiredService<IProductCatalogService>();
-
-            var currentCatalog = productProviderService.GetInstalledProductCatalog(_product);
-            var availableCatalog = productProviderService.GetAvailableProductCatalog(updateRequest);
-
-            IUpdateCatalogBuilder builder = _services.GetRequiredService<IUpdateCatalogBuilder>();
-            var updateCatalog = builder.Build(currentCatalog, availableCatalog);
-
-            if (!updateCatalog.Items.Any())
-                return false;
-            _updateCatalog = updateCatalog;
-            return true;
-        }
-
-        private IServiceCollection InitializeServices()
-        {
-            var sc =  new ServiceCollection();
-            sc.AddTransient<IProductCatalogService>(_ => new LauncherCatalogService(_services));
-            sc.AddTransient<IUpdateCatalogBuilder>(_ => new UpdateCatalogBuilder());
-            return sc;
-        }
-
-        public void Dispose()
-        {
-            _updateManager?.Dispose();
-        }
-    }
-
-    internal class LauncherCatalogService : IProductCatalogService
-    {
-        private readonly IServiceProvider _serviceProvider;
-
-        public LauncherCatalogService(IServiceProvider serviceProvider)
-        {
-            Requires.NotNull(serviceProvider, nameof(serviceProvider));
-            _serviceProvider = serviceProvider;
-        }
-
-        public IInstalledProductCatalog GetInstalledProductCatalog(IInstalledProduct product)
-        {
-            var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
-            if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, product))
-                throw new InvalidOperationException("Not compatible product");
-
-            var installedComponents = FindInstalledComponents(launcherProduct);
-            return new InstalledProductCatalog(product, installedComponents);
-        }
-
-        public IAvailableProductCatalog GetAvailableProductCatalog(IUpdateRequest request)
-        {
-            var launcherProduct = _serviceProvider.GetRequiredService<ILauncherProductService>().GetCurrentInstance();
-            if (!ProductReferenceEqualityComparer.Default.Equals(launcherProduct, request.Product))
-                throw new InvalidOperationException("Not compatible product");
-            
-            return new AvailableProductCatalog(request.Product, new ProductComponent[0]);
-        }
-
-        internal IEnumerable<ProductComponent> FindInstalledComponents(IInstalledProduct product)
-        {
-            if (product.ProductManifest is null)
-                throw new InvalidOperationException("Product manifest cannot be null.");
-
-            foreach (var component in product.ProductManifest.Items)
-            {
-                var path = component.GetFilePath();
-
-                FileInfo fileInfo = Path.IsPathRooted(path)
-                    ? new FileInfo(path)
-                    : new FileInfo(Path.Combine(product.InstallationPath, path));
-
-                var installedComponent = ComponentFileFactory.FromFile(component, new PhysicalFileInfo(fileInfo),
-                    LauncherVersionUtilities.GetFileVersionSafe, HashType.Sha256);
-
-                if (installedComponent.CurrentState == CurrentState.Installed)
-                    yield return installedComponent;
-            }
-        }
-    }
-
-    internal static class LauncherVersionUtilities
-    {
-        public static Version? GetFileVersionSafe(IFileInfo file)
-        {
-            try
-            {
-                return GetFileVersion(file);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        public static Version GetFileVersion(IFileInfo file)
-        {
-            Requires.NotNull(file, nameof(file));
-            if (file.IsDirectory)
-                throw new IOException("Cannot get version from directory");
-            if (file.PhysicalPath is null)
-                throw new IOException("Cannot get physical path from file");
-            var existingVersionString = FileVersionInfo.GetVersionInfo(file.PhysicalPath).FileVersion;
-            return Version.Parse(existingVersionString);
-        }
-    }
-
-
-
+namespace FocLauncherHost
+{
     public class HostApplication : Application
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -321,7 +139,7 @@ namespace FocLauncherHost
             SplashScreen.Launcher = FocLauncherInformation.Instance;
 
             _services = new UpdaterServiceFactory().CreateServiceProvider(
-                new ServiceCollection().BuildServiceProvider());
+                new LauncherServiceFactory().CreateLauncherServices());
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -353,7 +171,7 @@ namespace FocLauncherHost
                         
                         updateInformation = await Task.Run(() =>
                         {
-                            var ps = _services.GetRequiredService<ILauncherProductService>();
+                            var ps = _services.GetRequiredService<IProductService>();
                             var p = ps.GetCurrentInstance();
 
                             var u = new FocLauncherUpdater(p, new UpdateConfiguration(), _services);
@@ -361,7 +179,7 @@ namespace FocLauncherHost
                             var r = new UpdateRequest
                             {
                                 Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
-                                UpdateManifestPath = string.Empty
+                                UpdateManifestPath = new Uri("file://path/file.txt", UriKind.Absolute)
                             };
 
                             return u.CheckAndUpdate(r, cts.Token);

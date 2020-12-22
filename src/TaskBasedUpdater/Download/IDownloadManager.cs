@@ -13,7 +13,7 @@ namespace TaskBasedUpdater.Download
 
         IEnumerable<string> AllEngines { get; }
 
-        Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback progress,
+        Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,
             CancellationToken cancellationToken, ProductComponent? productComponent = null, bool verify = false);
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TaskBasedUpdater.New.Product
 {
-    public class ProductReferenceEqualityComparer : IEqualityComparer<IProductReference>
+    public class ProductReferenceEqualityComparer : IEqualityComparer<IProductReference>, IEqualityComparer<IInstalledProduct>
     {
         private readonly bool _compareVersion;
         private readonly bool _compareRelease;
@@ -60,6 +60,20 @@ namespace TaskBasedUpdater.New.Product
                 return hashCode;
             }
 #endif
+        }
+
+        public bool Equals(IInstalledProduct? x, IInstalledProduct? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+            if (x is null || y is null)
+                return false;
+            return Equals(x.ProductReference, y.ProductReference);
+        }
+
+        public int GetHashCode(IInstalledProduct obj)
+        {
+            return obj.ProductReference.GetHashCode();
         }
     }
 }

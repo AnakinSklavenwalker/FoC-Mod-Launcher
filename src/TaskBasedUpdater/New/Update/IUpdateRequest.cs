@@ -1,11 +1,9 @@
-﻿using TaskBasedUpdater.New.Product;
-
-namespace TaskBasedUpdater.New.Update
+﻿namespace TaskBasedUpdater.New.Update
 {
-    public interface IUpdateRequest
-    {
-        string UpdateManifestPath { get; }
+    //public interface IUpdateRequest
+    //{
+    //    string UpdateManifestPath { get; }
         
-        IProductReference Product { get; }
-    }
+    //    IProductReference Product { get; }
+    //}
 }
