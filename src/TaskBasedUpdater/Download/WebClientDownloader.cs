@@ -7,12 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
 using Validation;
+#if NET
+using System.Buffers;
+#endif
 
 namespace TaskBasedUpdater.Download
 {
     internal class WebClientDownloader: DownloadEngineBase
     {
-        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger? _logger;
         private readonly DownloadHelpers _helper;
 
@@ -26,9 +28,8 @@ namespace TaskBasedUpdater.Download
         public WebClientDownloader(IServiceProvider serviceProvider) : base("WebClient", new[] {DownloadSource.Internet})
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
-            _serviceProvider = serviceProvider;
             _logger = serviceProvider.GetService<ILogger>();
-            _helper = new DownloadHelpers(serviceProvider);
+            _helper = new DownloadHelpers();
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,
@@ -36,74 +37,99 @@ namespace TaskBasedUpdater.Download
         {
             var summary = new DownloadSummary();
 
-            using var webResponse = GetWebResponse(uri, ref summary, out var webRequest, cancellationToken);
-            if (webResponse != null)
+            var webResponse = GetWebResponse(uri, ref summary, out var webRequest, cancellationToken);
+            try
             {
-                var registration1 = cancellationToken.Register(() => webResponse.Close());
-                try
+                if (webResponse != null)
                 {
-                    using var responseStream = webResponse.GetResponseStream();
-                    var header = webResponse.Headers["Content-Length"];
-                    if (string.IsNullOrEmpty(header))
-                        throw new IOException("Error: Content-Length is missing from response header.");
-                    var totalStreamLength = (long) Convert.ToInt32(header);
-                    if (totalStreamLength.Equals(0L))
-                        throw new IOException("Error: Response stream length is 0.");
-                    var streamReadError = false;
-                    var totalBytesRead = 0L;
-                    var array = new byte[Math.Max(1024L, Math.Min(totalStreamLength, 32768L))];
-                    var registration2 = cancellationToken.Register(() => webRequest.Abort());
+                    var registration1 = cancellationToken.Register(() => webResponse.Close());
                     try
                     {
-                        while (true)
+                        using var responseStream = webResponse.GetResponseStream();
+                        var header = webResponse.Headers["Content-Length"];
+                        if (string.IsNullOrEmpty(header))
+                            throw new IOException("Error: Content-Length is missing from response header.");
+                        long totalStreamLength = Convert.ToInt32(header);
+                        if (totalStreamLength.Equals(0L))
+                            throw new IOException("Error: Response stream length is 0.");
+                        bool streamReadError;
+                        var totalBytesRead = 0L;
+                        var bufferSize = Math.Max(1024, Math.Min(totalStreamLength, 32768));
+                        byte[] array;
+#if NET
+                        var arrayRent = false;
+                        if (bufferSize <= int.MaxValue)
                         {
+                            array = ArrayPool<byte>.Shared.Rent((int) bufferSize);
+                            arrayRent = true;
+                        }
+                        else
+                            array = new byte[bufferSize];
+#else
+                        array = new byte[bufferSize];
+#endif
+                        var registration2 = cancellationToken.Register(() => webRequest.Abort());
+                        try
+                        {
+                            while (true)
+                            {
+                                cancellationToken.ThrowIfCancellationRequested();
+                                var bytesRead = responseStream!.Read(array, 0, array.Length);
+                                streamReadError = bytesRead < 0;
+                                if (bytesRead <= 0)
+                                    break;
+                                totalBytesRead += bytesRead;
+                                outputStream.Write(array, 0, bytesRead);
+                                if (totalStreamLength < totalBytesRead)
+                                    totalStreamLength = totalBytesRead;
+                                progress?.Invoke(new ProgressUpdateStatus(totalBytesRead, totalStreamLength, 0));
+                            }
+                        }
+                        finally
+                        {
+#if NET
+                            if (arrayRent)
+                                ArrayPool<byte>.Shared.Return(array);
+#endif
+                            registration2.Dispose();
+                        }
+
+                        cancellationToken.ThrowIfCancellationRequested();
+                        if (streamReadError)
+                            throw new IOException("Internal error while downloading the stream.");
+                        summary.DownloadedSize = totalBytesRead;
+                        return summary;
+
+                    }
+                    catch (WebException ex)
+                    {
+                        var message = cancellationToken.IsCancellationRequested
+                            ? "DownloadCore failed along with a cancellation request."
+                            : "DownloadCore failed";
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            _logger.LogTrace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "' - " +
+                                             message);
                             cancellationToken.ThrowIfCancellationRequested();
-                            var bytesRead = responseStream.Read(array, 0, array.Length);
-                            streamReadError = bytesRead < 0;
-                            if (bytesRead <= 0)
-                                break;
-                            totalBytesRead += bytesRead;
-                            outputStream.Write(array, 0, bytesRead);
-                            if (totalStreamLength < totalBytesRead)
-                                totalStreamLength = totalBytesRead;
-                            progress?.Invoke(new ProgressUpdateStatus(totalBytesRead, totalStreamLength, 0));
+                        }
+                        else
+                        {
+                            _logger.LogTrace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "'.");
+                            throw;
                         }
                     }
                     finally
                     {
-                        registration2.Dispose();
+                        registration1.Dispose();
                     }
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (streamReadError)
-                        throw new IOException("Internal error while downloading the stream.");
-                    summary.DownloadedSize = totalBytesRead;
-                    return summary;
+                }
 
-                }
-                catch (WebException ex)
-                {
-                    var message = cancellationToken.IsCancellationRequested
-                        ? "DownloadCore failed along with a cancellation request."
-                        : "DownloadCore failed";
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        _logger.LogTrace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "' - " +
-                                     message);
-                        cancellationToken.ThrowIfCancellationRequested();
-                    }
-                    else
-                    {
-                        _logger.LogTrace("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "'.");
-                        throw;
-                    }
-                }
-                finally
-                {
-                    registration1.Dispose();
-                }
+                return summary;
             }
-
-            return summary;
+            finally
+            {
+                webResponse?.Dispose();
+            }
         }
 
         private HttpWebResponse? GetWebResponse(Uri uri, ref DownloadSummary summary, out HttpWebRequest webRequest, CancellationToken cancellationToken)
