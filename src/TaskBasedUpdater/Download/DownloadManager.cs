@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
-using TaskBasedUpdater.FileSystem;
+
+using TaskBasedUpdater.Verification;
 
 namespace TaskBasedUpdater.Download
 {
@@ -17,7 +18,8 @@ namespace TaskBasedUpdater.Download
         private readonly ILogger? _logger;
         private readonly List<IDownloadEngine> _allEngines = new();
         private readonly List<IDownloadEngine> _defaultEngines = new();
-        
+        private IVerifier? _verifier;
+
         public IEnumerable<string> DefaultEngines
         {
             get
@@ -138,6 +140,9 @@ namespace TaskBasedUpdater.Download
 
                     if (verify && outputStream.Length != 0)
                     {
+                        if (_verifier is null)
+                            _verifier = _serviceProvider.GetService<IVerifier>() ?? new HashVerifier(_serviceProvider);
+
                         if (productComponent is null)
                         {
                             // TODO: split-projects
@@ -147,7 +152,7 @@ namespace TaskBasedUpdater.Download
                         }
                         else
                         {
-                            var validationContext = productComponent.OriginInfo?.ValidationContext;
+                            var validationContext = productComponent.OriginInfo?.VerificationContext;
                             var valid = validationContext?.Verify();
 
                             // TODO: split-projects
@@ -158,9 +163,9 @@ namespace TaskBasedUpdater.Download
 
                             if (valid.HasValue && valid.Value)
                             {
-                                var validationResult = HashVerifier.Verify(outputStream, validationContext!);
+                                var validationResult = _verifier.Verify(outputStream, validationContext!.Value);
                                 engineSummary.ValidationResult = validationResult;
-                                if (validationResult == ValidationResult.HashMismatch)
+                                if (validationResult == VerificationResult.HashMismatch)
                                 {
                                     var exception = new ValidationFailedException(DownloadResult.HashMismatch,
                                         $"Hash on downloaded file '{uri.AbsoluteUri}' does not match expected value.");

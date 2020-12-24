@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
+using TaskBasedUpdater.Verification;
 using Validation;
 
 namespace TaskBasedUpdater.New.Update
@@ -87,11 +88,32 @@ namespace TaskBasedUpdater.New.Update
                 !current.DiskSize.Value.Equals(available.OriginInfo.Size.Value))
                 return ComponentAction.Update;
 
-            if (available.OriginInfo.ValidationContext is not null &&
-                !available.OriginInfo.ValidationContext.Equals(current.ValidationContext))
+            if (!CompareVerificationContext(current.VerificationContext, available.OriginInfo.VerificationContext))
                 return ComponentAction.Update;
             
             return ComponentAction.Keep;
+        }
+
+        private static bool CompareVerificationContext(VerificationContext current, VerificationContext available)
+        {
+            return available.Equals(VerificationContext.None) || new VerificationContextComparer().Equals(current, available);
+        }
+
+
+        private class VerificationContextComparer : IEqualityComparer<VerificationContext>
+        {
+            public bool Equals(VerificationContext x, VerificationContext y)
+            {
+                return x.HashType == y.HashType && x.Hash.SequenceEqual(y.Hash);
+            }
+
+            public int GetHashCode(VerificationContext obj)
+            {
+                unchecked
+                {
+                    return (obj.Hash.GetHashCode() * 397) ^ (int) obj.HashType;
+                }
+            }
         }
 
 

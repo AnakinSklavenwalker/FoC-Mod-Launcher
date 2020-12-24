@@ -9,7 +9,7 @@ namespace TaskBasedUpdater.Download
     {
         private static readonly object SyncRoot = new object();
         private static PreferredDownloadEngines? _instance;
-        private static readonly ConcurrentDictionary<string, int> ConcurrentPreferredEngines = new ConcurrentDictionary<string, int>();
+        private static readonly ConcurrentDictionary<string, int> ConcurrentPreferredEngines = new();
         private readonly ConcurrentDictionary<string, int> _preferredEngines;
         private string? _lastSuccessfulEngineName;
 

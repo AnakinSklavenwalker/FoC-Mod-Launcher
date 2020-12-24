@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO.Abstractions;
+using TaskBasedUpdater.Verification;
 
 namespace TaskBasedUpdater.Component
 {

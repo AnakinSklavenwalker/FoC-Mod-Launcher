@@ -32,7 +32,6 @@ namespace TaskBasedUpdater.Operations
 
         private TaskRunner _installs;
         private AsyncTaskRunner _downloads;
-        private IDownloadManager _downloadManager;
         private AcquireMutexTask? _installMutexTask;
 
         private CancellationTokenSource? _linkedCancellationTokenSource;
@@ -174,10 +173,6 @@ namespace TaskBasedUpdater.Operations
 
         private void Initialize()
         {
-            // TODO: split-project
-            //if (_downloadManager == null)
-            //    _downloadManager = DownloadManager.Instance;
-
             if (_elevator == null)
             {
                 _elevator = Elevator.Instance;

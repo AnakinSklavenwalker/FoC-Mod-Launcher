@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using TaskBasedUpdater.Verification;
 using Validation;
 
 namespace TaskBasedUpdater.Component
@@ -28,7 +29,7 @@ namespace TaskBasedUpdater.Component
             var version = builder.GetVersion(file);
 
             // TODO: split-project
-            ValidationContext? validationContext = null;
+            var verificationContext = VerificationContext.None;
             if (builder.HashType != HashType.None)
             {
             }
@@ -37,8 +38,8 @@ namespace TaskBasedUpdater.Component
                 {
                 CurrentState = CurrentState.Installed,
                 CurrentVersion = version,
-                ValidationContext = validationContext
-                };
+                VerificationContext = verificationContext
+            };
         }
     }
 }

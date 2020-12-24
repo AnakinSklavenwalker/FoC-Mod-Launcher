@@ -1,4 +1,5 @@
 ﻿using System;
+using TaskBasedUpdater.Verification;
 
 namespace TaskBasedUpdater.Component
 {
@@ -6,6 +7,6 @@ namespace TaskBasedUpdater.Component
     {
         public long? Size { get; init; }
 
-        public ValidationContext? ValidationContext { get; init; }
+        public VerificationContext VerificationContext { get; init; }
     }
 }

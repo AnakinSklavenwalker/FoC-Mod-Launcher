@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.Verification;
 
 namespace TaskBasedUpdater
 {
@@ -20,7 +21,7 @@ namespace TaskBasedUpdater
 
         public static BackupManager Instance => _instance ??= new BackupManager();
 
-        private FileHasher _hasher = new FileHasher();
+        private readonly HashingService _hasher = new();
 
         private BackupManager()
         {
@@ -145,6 +146,7 @@ namespace TaskBasedUpdater
         {
             if (productComponent == null)
                 throw new ArgumentNullException(nameof(productComponent));
+            // TODO: split-projects; empty is allowed - test behavior 
             if (string.IsNullOrEmpty(productComponent.Destination))
                 throw new IOException("Unable to resolve the updateItem's file path");
         }

@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
+using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
+using TaskBasedUpdater.Elevation;
 
 namespace TaskBasedUpdater.Tasks
 {
@@ -91,9 +93,9 @@ namespace TaskBasedUpdater.Tasks
 
         private void DownloadAction(CancellationToken token, out Exception? lastException)
         {
-            lastException = null; 
+            lastException = null;
+            var downloadManager = new DownloadManager(ServiceProvider);
             // TODO: split-projects
-            //var downloadManager = DownloadManager.Instance;
             //for (var i = 0; i <= UpdateConfiguration.Instance.DownloadRetryCount; i++)
             //{
             //    if (token.IsCancellationRequested)

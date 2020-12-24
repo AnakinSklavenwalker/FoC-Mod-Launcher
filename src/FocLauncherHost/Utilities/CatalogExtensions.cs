@@ -1,6 +1,7 @@
 ﻿using System;
 using FocLauncher.UpdateMetadata;
 using TaskBasedUpdater.Component;
+using TaskBasedUpdater.Verification;
 
 namespace FocLauncherHost.Utilities
 {
@@ -18,13 +19,13 @@ namespace FocLauncherHost.Utilities
             var hash = dependency.Sha2;
             var size = dependency.Size;
 
-            ValidationContext? validationContext = null;
+            var verificationContext = VerificationContext.None;
             if (hash != null)
-                validationContext = new ValidationContext(hash, HashType.Sha256);
+                verificationContext = new VerificationContext(hash, HashType.Sha256);
             var originInfo = new OriginInfo(new Uri(dependency.Origin, UriKind.Absolute))
             {
                 Size = size,
-                ValidationContext = validationContext
+                VerificationContext = verificationContext
             };
 
             return new ProductComponent(dependency.Name, GetRealDependencyDestination(dependency))

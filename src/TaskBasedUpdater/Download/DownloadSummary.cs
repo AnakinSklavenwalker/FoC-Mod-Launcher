@@ -1,5 +1,5 @@
 ﻿using System;
-using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.Verification;
 
 namespace TaskBasedUpdater.Download
 {
@@ -19,7 +19,7 @@ namespace TaskBasedUpdater.Download
 
         public DownloadResult Result { get; internal set; }
 
-        public ValidationResult ValidationResult { get; internal set; }
+        public VerificationResult ValidationResult { get; internal set; }
 
         public DownloadSummary()
             : this(null, 0L, 0.0, TimeSpan.Zero, default)
@@ -40,7 +40,7 @@ namespace TaskBasedUpdater.Download
         {
         }
 
-        public DownloadSummary(string downloadEngine, long downloadSize, double bitRate, TimeSpan downloadTime, ValidationResult validationResult)
+        public DownloadSummary(string downloadEngine, long downloadSize, double bitRate, TimeSpan downloadTime, VerificationResult validationResult)
         {
             DownloadEngine = downloadEngine;
             DownloadedSize = downloadSize;

@@ -400,13 +400,13 @@
                     return Task.CompletedTask;
                 }
 
-                if (item.OriginInfo.ValidationContext is null)
+                if (item.OriginInfo.VerificationContext is null)
                 {
                     Logger?.LogInformation($"Dependency marked to keep: {item}");
                     return Task.CompletedTask;
                 }
 
-                var hashResult = HashVerifier.VerifyFile(filePath, item.OriginInfo.ValidationContext);
+                var hashResult = HashVerifier.VerifyFile(filePath, item.OriginInfo.VerificationContext);
                 if (hashResult == ValidationResult.HashMismatch)
                 {
                     Logger?.LogInformation($"Dependency marked to get updated: {item}");

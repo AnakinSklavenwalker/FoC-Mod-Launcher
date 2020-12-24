@@ -5,6 +5,7 @@ using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.New.Update;
+using TaskBasedUpdater.Verification;
 using Xunit;
 
 namespace TaskBasedUpdater.Tests
@@ -331,14 +332,14 @@ namespace TaskBasedUpdater.Tests
                 new ProductComponent("A", "D")
                 {
                     CurrentState = CurrentState.Installed,
-                    DiskSize = 5, ValidationContext = context1
+                    DiskSize = 5, VerificationContext = context1
                 },
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(5, context1)},
                 ComponentAction.Keep
             };
             yield return new object[]
             {
-                new ProductComponent("A", "D") {DiskSize = 5, ValidationContext = context1},
+                new ProductComponent("A", "D") {DiskSize = 5, VerificationContext = context1},
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(5, context2)},
                 ComponentAction.Update
             };
@@ -348,7 +349,7 @@ namespace TaskBasedUpdater.Tests
                 new ProductComponent("A", "D")
                 {
                     CurrentState = CurrentState.Installed,
-                    DiskSize = 5, ValidationContext = context1
+                    DiskSize = 5, VerificationContext = context1
                 },
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(5)},
                 ComponentAction.Keep
@@ -364,16 +365,24 @@ namespace TaskBasedUpdater.Tests
                 new ProductComponent("A", "D")
                 {
                     CurrentState = CurrentState.Installed,
-                    ValidationContext = context1
+                    VerificationContext = context1
                 },
-                new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(validationContext: context1)},
+                new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(nullableVerificationContext: context1)},
                 ComponentAction.Keep
             };
             yield return new object[]
             {
-                new ProductComponent("A", "D") {ValidationContext = context1},
-                new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(validationContext: context2)},
+                new ProductComponent("A", "D") {VerificationContext = context1},
+                new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(nullableVerificationContext: context2)},
                 ComponentAction.Update
+            };
+
+            var context3 = new VerificationContext((byte[]) context1.Hash.Clone(), HashType.MD5);
+            yield return new object[]
+            {
+                new ProductComponent("A", "D") {VerificationContext = context1, CurrentState = CurrentState.Installed},
+                new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(nullableVerificationContext: context3)},
+                ComponentAction.Keep
             };
         }
 
@@ -439,16 +448,17 @@ namespace TaskBasedUpdater.Tests
         }
 
 
-        private static OriginInfo CreateOriginInfo(long? size = null, ValidationContext? validationContext = null)
+        private static OriginInfo CreateOriginInfo(long? size = null, VerificationContext? nullableVerificationContext = null)
         {
-            return new OriginInfo(new Uri("file://usr")) {Size = size, ValidationContext = validationContext};
+            VerificationContext verificationContext = nullableVerificationContext ?? VerificationContext.None;
+            return new OriginInfo(new Uri("file://usr")) {Size = size, VerificationContext = verificationContext };
         }
 
-        private static ValidationContext CreateRandomValidationContext()
+        private static VerificationContext CreateRandomValidationContext()
         {
             var buffer = new byte[16];
             new Random().NextBytes(buffer);
-            return new ValidationContext(buffer, HashType.MD5);
+            return new VerificationContext(buffer, HashType.MD5);
         }
 
         private class UpdateCatalogStub : IUpdateCatalog

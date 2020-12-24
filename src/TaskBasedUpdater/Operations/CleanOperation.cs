@@ -84,8 +84,9 @@ namespace TaskBasedUpdater.Operations
                 {
                 }
 
-                BackupManager.Instance.Flush();
-                UpdateItemDownloadPathStorage.Instance.Clear();
+                // TODO: split-projects
+                //BackupManager.Instance.Flush();
+                //UpdateItemDownloadPathStorage.Instance.Clear();
 
                 if (!_filesFailedToBeCleaned.Any())
                     return;

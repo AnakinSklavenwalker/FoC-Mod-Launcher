@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using TaskBasedUpdater.Verification;
 using Validation;
 
 namespace TaskBasedUpdater.Component
@@ -20,7 +21,7 @@ namespace TaskBasedUpdater.Component
 
         public OriginInfo? OriginInfo { get; init; }
 
-        public ValidationContext? ValidationContext { get; init; }
+        public VerificationContext VerificationContext { get; init; }
 
         public long? DiskSize { get; init; }
         

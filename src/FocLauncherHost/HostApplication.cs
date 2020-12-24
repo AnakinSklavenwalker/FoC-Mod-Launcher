@@ -20,6 +20,7 @@ using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.New.Update;
+using TaskBasedUpdater.Verification;
 using Requires = Microsoft.Requires;
 
 namespace FocLauncherHost.Product
