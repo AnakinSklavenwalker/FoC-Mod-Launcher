@@ -10,6 +10,6 @@
 
         string? LogFile { get; set; }
 
-        string Unparse();
+        string ToCommandLine();
     }
 }

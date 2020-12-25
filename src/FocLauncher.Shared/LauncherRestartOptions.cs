@@ -25,7 +25,7 @@ namespace FocLauncher.Shared
         [Option('p', "payload", Required = false, HelpText = "Payload in base64 format which is required for the update")]
         public string Payload { get; set; }
 
-        public string Unparse()
+        public string ToCommandLine()
         {
             return Parser.Default.FormatCommandLine(this, config => config.SkipDefault = true);
         }

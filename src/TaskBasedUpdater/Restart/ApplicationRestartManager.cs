@@ -39,7 +39,7 @@ namespace TaskBasedUpdater.Restart
             if (elevated) 
                 startInfo.Verb = "runas";
 
-            startInfo.Arguments = restartOptions.Unparse();
+            startInfo.Arguments = restartOptions.ToCommandLine();
             Process.Start(startInfo);
 
             Environment.Exit(0);

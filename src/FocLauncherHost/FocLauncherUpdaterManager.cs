@@ -106,7 +106,7 @@ namespace FocLauncherHost
             }
 
             
-            var args = options.Unparse();
+            var args = options.ToCommandLine();
             Logger.Debug($"Created restart options: {args}");
             return options;
         }

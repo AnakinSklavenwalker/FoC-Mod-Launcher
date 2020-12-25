@@ -21,7 +21,7 @@ namespace TaskBasedUpdater.Restart
 
         internal LockingProcessInfo(RestartMgr.RmProcessInfo process)
         {
-            var fileTime = ((long)process.Process.ProcessStartTime.dwHighDateTime << 32) + (long)process.Process.ProcessStartTime.dwLowDateTime;
+            var fileTime = ((long)process.Process.ProcessStartTime.dwHighDateTime << 32) + process.Process.ProcessStartTime.dwLowDateTime;
             Id = process.Process.DwProcessId;
             StartTime = DateTime.FromFileTime(fileTime);
             Description = process.strAppName;
