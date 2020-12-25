@@ -13,7 +13,7 @@ namespace SimplePipeline.Tasks
 
         protected internal ILogger? Logger { get; private set; }
 
-        protected internal IServiceProvider ServiceProvider { get; private set; }
+        protected IServiceProvider ServiceProvider { get; }
 
         public Exception? Error { get; internal set; }
 

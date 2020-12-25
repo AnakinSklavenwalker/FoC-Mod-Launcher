@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Abstractions;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -20,126 +21,54 @@ namespace TaskBasedUpdater.FileSystem
             fileSystem.File.Delete(file.FullName);
         }
 
-
-
-        private static readonly char DirectorySeparatorChar = '\\';
-
-        public static bool FileExists(FileInfo fileInfo)
+        public static long GetDriveFreeSpace(this IFileSystem fileSystem, string path)
         {
-            if (fileInfo == null)
-                throw new ArgumentNullException(nameof(fileInfo));
-            return File.Exists(fileInfo.FullName);
+            Requires.NotNull(fileSystem, nameof(fileSystem));
+            var pathInstance = fileSystem.Path;
+            var root = pathInstance.GetPathRoot(path);
+            return fileSystem.DriveInfo.FromDriveName(root).AvailableFreeSpace;
         }
-
-        public static long GetDriveFreeSpace(string path)
+        
+        public static Stream? CreateFileWithRetry(this IFileSystem fileSystem, string path, int retryCount = 2, int retryDelay = 500)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
-            return new DriveInfo(Path.GetPathRoot(path)).AvailableFreeSpace;
-        }
-
-        public static void DeleteFile(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
-            File.Delete(path);
-        }
-
-        public static bool ContainsPath(string fullPath, string path)
-        {
-            return ContainsPath(fullPath, path, false);
-        }
-
-        public static bool ContainsPath(string fullPath, string path, bool excludeSame)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(fullPath) || string.IsNullOrEmpty(path))
-                    return false;
-                fullPath = Path.GetFullPath(fullPath);
-                path = Path.GetFullPath(path);
-                fullPath = AddBackslashIfNotPresent(fullPath);
-                path = AddBackslashIfNotPresent(path);
-                var flag = fullPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
-                return flag & excludeSame ? !fullPath.Equals(path, StringComparison.OrdinalIgnoreCase) : flag;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public static string AddBackslashIfNotPresent(string path)
-        {
-            if (!string.IsNullOrEmpty(path) && path[path.Length - 1] != DirectorySeparatorChar)
-                path += DirectorySeparatorChar.ToString();
-            return path;
-        }
-
-        public static Stream CreateFileWithRetry(string path, int retryCount = 2, int retryDelay = 500)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
-            Stream stream = null;
-            ExecuteFileActionWithRetry(retryCount, retryDelay, () => stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None));
+            Requires.NotNull(fileSystem, nameof(fileSystem));
+            Requires.NotNullOrEmpty(path, nameof(path));
+            Stream? stream = null;
+            ExecuteFileActionWithRetry(retryCount, retryDelay,
+                () => stream = fileSystem.FileStream.Create(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None));
             return stream;
         }
 
-        public static void CopyFileWithRetry(string source, string destination, int retryCount = 2, int retryDelay = 500)
+        public static void CopyFileWithRetry(this IFileSystem fileSystem, string source, string destination, int retryCount = 2, int retryDelay = 500)
         {
-            if (string.IsNullOrEmpty(source))
-                throw new ArgumentNullException(nameof(source));
-            if (string.IsNullOrEmpty(destination))
-                throw new ArgumentNullException(nameof(destination));
-            ExecuteFileActionWithRetry(retryCount, retryDelay, () => File.Copy(source, destination, true));
+            Requires.NotNull(fileSystem, nameof(fileSystem));
+            Requires.NotNullOrEmpty(source, nameof(source));
+            Requires.NotNullOrEmpty(destination, nameof(destination));
+            ExecuteFileActionWithRetry(retryCount, retryDelay, () => fileSystem.File.Copy(source, destination, true));
         }
 
-        public static bool DeleteFileWithRetry(FileInfo file, out bool rebootRequired, 
-            bool rebootOk = false, int retryCount = 2, int retryDelay = 500, Func<Exception, int, bool> errorAction = null)
-        {
-            if (file == null)
-                throw new ArgumentNullException(nameof(file));
-            return DeleteFileWithRetry(file.FullName, out rebootRequired, rebootOk, retryCount, retryDelay, errorAction);
-        }
-
-        public static FileAttributes GetFileAttributes(string path)
-        {
-            if (path == null)
-                throw new ArgumentNullException(nameof(path));
-            return (FileAttributes) File.GetAttributes(path);
-        }
-
-        public static void SetFileAttributes(string path, FileAttributes attributeValues, FileAttributes attributeMask)
-        {
-            if (path == null)
-                throw new ArgumentNullException(nameof(path));
-            var fileInfo = new FileInfo(path);
-            var attributes = (int)fileInfo.Attributes;
-            var fileAttributes = attributeValues & attributeMask;
-            var num = (int)~attributeMask;
-            fileInfo.Attributes = (System.IO.FileAttributes)((FileAttributes)(attributes & num) | fileAttributes);
-            fileInfo.Refresh();
-        }
-
-        public static bool DeleteFileWithRetry(string path, out bool restartRequired,
+        public static bool DeleteFileWithRetry(this IFileSystem fileSystem, string path, out bool restartRequired,
             bool restartOk = false, int retryCount = 2, int retryDelay = 500, Func<Exception, int, bool>? errorAction = null)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
+            Requires.NotNull(fileSystem, nameof(fileSystem));
+            Requires.NotNullOrEmpty(path, nameof(path));
 
-            restartRequired = false;
-            if (!File.Exists(path))
+            
+            if (!fileSystem.File.Exists(path))
+            {
+                restartRequired = false;
                 return true;
+            }
 
-            var flag = ExecuteFileActionWithRetry(retryCount, retryDelay, () => DeleteFile(path), !restartOk, (ex, attempt) =>
+            var flag = ExecuteFileActionWithRetry(retryCount, retryDelay, () => fileSystem.File.Delete(path), !restartOk, (ex, attempt) =>
             {
                 if (ex is UnauthorizedAccessException)
                 {
                     if (attempt == 0)
                     {
-                        if ((GetFileAttributes(path) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                        if ((fileSystem.File.GetAttributes(path) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                         {
-                            SetFileAttributes(path, FileAttributes.None, FileAttributes.ReadOnly);
+                            fileSystem.RemoveFileAttributes(path, FileAttributes.ReadOnly);
                             errorAction?.Invoke(ex, attempt);
                             return true;
                         }
@@ -151,95 +80,70 @@ namespace TaskBasedUpdater.FileSystem
                 return false;
             });
             if (flag || !restartOk)
+            {
+                restartRequired = false;
                 return flag;
+            }
 
             restartRequired = true;
             return false;
         }
-        
-        // Based on: https://stackoverflow.com/questions/1410127/c-sharp-test-if-user-has-write-access-to-a-folder
-        public static bool UserHasDirectoryAccessRights(string path, FileSystemRights accessRights, bool create = false)
+
+        public static void RemoveFileAttributes(this IFileSystem fileSystem, string path, FileAttributes attributesToRemove)
         {
-            var isInRoleWithAccess = false;
+            var fileInfo = fileSystem.FileInfo.FromFileName(path);
+            var currentAttributes = fileInfo.Attributes;
+            var newAttributes = currentAttributes & ~attributesToRemove;
+            fileSystem.File.SetAttributes(path, newAttributes);
+            fileInfo.Refresh();
+        }
+
+        // Based on: https://stackoverflow.com/questions/1410127/c-sharp-test-if-user-has-write-access-to-a-folder
+        public static bool UserHasDirectoryAccessRights(this IFileSystem fileSystem, string path,
+            FileSystemRights accessRights, bool create = false)
+        {
+            Requires.NotNull(fileSystem, nameof(fileSystem));
+            bool isInRoleWithAccess;
+            var di = fileSystem.DirectoryInfo.FromDirectoryName(path);
             try
             {
-                var di = new DirectoryInfo(path);
-
                 if (!di.Exists && create)
                     di.Create();
-
-                var acl = di.GetAccessControl();
-
-                var rules = acl.GetAccessRules(true, true,
-                    // If Windows 7
-                    Environment.OSVersion.VersionString.StartsWith("6.1")
-                        ? typeof(SecurityIdentifier)
-                        : typeof(NTAccount));
-
-                var currentUser = WindowsIdentity.GetCurrent();
-                var principal = new WindowsPrincipal(currentUser);
-                foreach (AuthorizationRule rule in rules)
-                {
-                    var fsAccessRule = rule as FileSystemAccessRule;
-                    if (fsAccessRule == null)
-                        continue;
-
-                    if ((fsAccessRule.FileSystemRights & accessRights) > 0)
-                    {
-                        var ntAccount = rule.IdentityReference as NTAccount;
-                        if (ntAccount == null)
-                            continue;
-
-                        if (principal.IsInRole(ntAccount.Value))
-                        {
-                            if (fsAccessRule.AccessControlType == AccessControlType.Deny)
-                                return false;
-                            isInRoleWithAccess = true;
-                        }
-                    }
-                }
+#if NET
+                if (!OperatingSystem.IsWindows())
+                    return TestAccessRightsOnNonWindows();
+#endif
+                isInRoleWithAccess = TestAccessRightsOnWindows(di, accessRights);
             }
             catch (UnauthorizedAccessException)
             {
                 return false;
             }
+
             return isInRoleWithAccess;
         }
-
-        public static bool MoveFile(string source, string destination, bool replace = false)
+        
+        public static bool MoveFile(this IFileSystem fileSystem, string source, string destination, bool replace = false)
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            var isDirectory = Directory.Exists(source);
+            Requires.NotNullOrEmpty(source, nameof(source));
+            var directoryExists = fileSystem.Directory.Exists(source);
             if (!replace)
             {
-                if (isDirectory)
-                    Directory.Move(source, destination);
+                if (directoryExists)
+                    fileSystem.Directory.Move(source, destination);
                 else
-                    File.Move(source, destination);
+                    fileSystem.File.Move(source, destination);
                 return true;
             }
             var flags = MoveFileFlags.MoveFileWriteThrough;
             flags |= MoveFileFlags.MoveFileReplaceExisting;
-            if (!isDirectory)
+            if (!directoryExists)
                 flags |= MoveFileFlags.MoveFileCopyAllowed;
             return MoveFileEx(source, destination, flags);
         }
-
-        internal static string? GetPathRoot(string filePath)
-        {
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                var pathRoot = Path.GetPathRoot(Environment.ExpandEnvironmentVariables(filePath));
-                if (!string.IsNullOrEmpty(pathRoot))
-                    return pathRoot;
-            }
-            return null;
-        }
-
-
+        
         private static bool ExecuteFileActionWithRetry(int retryCount, int retryDelay, Action fileAction,
-            bool throwOnFailure = true, Func<Exception, int, bool> errorAction = null)
+            bool throwOnFailure = true, Func<Exception, int, bool>? errorAction = null)
         {
             var num = retryCount + 1;
             for (var index = 0; index < num; ++index)
@@ -275,15 +179,52 @@ namespace TaskBasedUpdater.FileSystem
 
         private static bool MoveFileEx(string source, string destination, MoveFileFlags flags)
         {
+#if NET
+            if (!OperatingSystem.IsWindows())
+                throw new NotImplementedException();
+#endif
             return Kernel32.MoveFileEx(source, destination, flags);
         }
-    }
 
-    public enum FileAttributes
-    {
-        None = 0,
-        ReadOnly = 1,
-        Hidden = 2,
-        Directory = 16
+#if NET
+        [SupportedOSPlatform("windows")]
+#endif
+        private static bool TestAccessRightsOnWindows(IDirectoryInfo directoryInfo, FileSystemRights accessRights)
+        {
+            var acl = directoryInfo.GetAccessControl();
+            var rules = acl.GetAccessRules(true, true,
+                // If Windows 7
+                Environment.OSVersion.VersionString.StartsWith("6.1")
+                    ? typeof(SecurityIdentifier)
+                    : typeof(NTAccount));
+
+            var currentUser = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(currentUser);
+            foreach (AuthorizationRule rule in rules)
+            {
+                var fsAccessRule = rule as FileSystemAccessRule;
+                if (fsAccessRule == null)
+                    continue;
+
+                if ((fsAccessRule.FileSystemRights & accessRights) > 0)
+                {
+                    var ntAccount = rule.IdentityReference as NTAccount;
+                    if (ntAccount == null)
+                        continue;
+
+                    if (principal.IsInRole(ntAccount.Value))
+                    {
+                        return fsAccessRule.AccessControlType != AccessControlType.Deny;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TestAccessRightsOnNonWindows()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

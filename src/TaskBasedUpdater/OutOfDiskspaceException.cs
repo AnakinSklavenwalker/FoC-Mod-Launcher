@@ -1,4 +1,4 @@
-﻿namespace TaskBasedUpdater.FileSystem
+﻿namespace TaskBasedUpdater
 {
     internal class OutOfDiskspaceException : UpdaterException
     {

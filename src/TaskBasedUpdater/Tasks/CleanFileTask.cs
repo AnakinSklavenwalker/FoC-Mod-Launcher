@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO.Abstractions;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
@@ -35,7 +37,8 @@ namespace TaskBasedUpdater.Tasks
         {
             if (token.IsCancellationRequested)
                 return;
-            if (!FileSystemExtensions.DeleteFileWithRetry(File, out _))
+            var fileSystem = ServiceProvider.GetRequiredService<IFileSystem>();
+            if (!fileSystem.DeleteFileWithRetry(File, out _))
                 throw new Exception($"Failed to delete file: {File}");
         }
     }

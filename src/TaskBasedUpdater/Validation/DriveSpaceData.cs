@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TaskBasedUpdater.FileSystem
+namespace TaskBasedUpdater.Validation
 {
     public class DriveSpaceData : IEquatable<DriveSpaceData>
     {

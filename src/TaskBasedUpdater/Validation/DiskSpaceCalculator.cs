@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using TaskBasedUpdater.Component;
+using TaskBasedUpdater.FileSystem;
+using Validation;
 
-namespace TaskBasedUpdater.FileSystem
+namespace TaskBasedUpdater.Validation
 {
     internal class DiskSpaceCalculator
     {
@@ -10,11 +14,18 @@ namespace TaskBasedUpdater.FileSystem
 
         public bool HasEnoughDiskSpace { get; } = true;
 
-        internal DiskSpaceCalculator(ProductComponent productComponent, long additionalBuffer = 0, CalculationOption option = CalculationOption.All)
+        internal DiskSpaceCalculator(
+            IServiceProvider serviceProvider,
+            ProductComponent productComponent, 
+            long additionalBuffer = 0, 
+            CalculationOption option = CalculationOption.All)
         {
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            
             CalculatedDiskSizes = new Dictionary<string, DriveSpaceData>(StringComparer.OrdinalIgnoreCase);
+            var fileSystem = serviceProvider.GetRequiredService<IFileSystem>();
+            var destinationRoot = fileSystem.Path.GetPathRoot(productComponent.GetFilePath());
 
-            var destinationRoot = FileSystemExtensions.GetPathRoot(productComponent.Destination);
             // TODO: split-projects
             var backupRoot = string.Empty;
             //var backupRoot = FileSystemExtensions.GetPathRoot(UpdateConfiguration.Instance.BackupPath);
@@ -24,9 +35,9 @@ namespace TaskBasedUpdater.FileSystem
 
             
 
-            if (UpdateItemDownloadPathStorage.Instance.TryGetValue(productComponent, out var downloadPath) && option.HasFlag(CalculationOption.Download))
+            if (option.HasFlag(CalculationOption.Download) && UpdateItemDownloadPathStorage.Instance.TryGetValue(productComponent, out var downloadPath))
             {
-                var downloadRoot = FileSystemExtensions.GetPathRoot(downloadPath);
+                var downloadRoot = fileSystem.Path.GetPathRoot(downloadPath);
                 if (!string.IsNullOrEmpty(downloadPath))
                     SetSizeMembers(productComponent.OriginInfo?.Size, downloadRoot!);
             }
@@ -40,7 +51,7 @@ namespace TaskBasedUpdater.FileSystem
             {
                 try
                 {
-                    var driveFreeSpace = FileSystemExtensions.GetDriveFreeSpace(sizes.Key);
+                    var driveFreeSpace = fileSystem.GetDriveFreeSpace(sizes.Key);
                     sizes.Value.AvailableDiskSpace = driveFreeSpace;
                     sizes.Value.HasEnoughDiskSpace = driveFreeSpace >= sizes.Value.RequestedSize + additionalBuffer;
                 }
@@ -52,10 +63,11 @@ namespace TaskBasedUpdater.FileSystem
             }
         }
 
-        public static void ThrowIfNotEnoughDiskSpaceAvailable(ProductComponent productComponent, long additionalBuffer = 0,
+        // TODO: split-projects: remove method
+        public static void ThrowIfNotEnoughDiskSpaceAvailable(IServiceProvider serviceProvider, ProductComponent productComponent, long additionalBuffer = 0,
             CalculationOption option = CalculationOption.All)
         {
-            foreach (var diskData in new DiskSpaceCalculator(productComponent, additionalBuffer, option).CalculatedDiskSizes)
+            foreach (var diskData in new DiskSpaceCalculator(serviceProvider, productComponent, additionalBuffer, option).CalculatedDiskSizes)
             {
                 if (!diskData.Value.HasEnoughDiskSpace)
                     throw new OutOfDiskspaceException(

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.Validation;
 
 namespace TaskBasedUpdater.Tasks
 {
@@ -112,7 +113,7 @@ namespace TaskBasedUpdater.Tasks
             }
         }
 
-        private static void ValidateEnoughDiskSpaceAvailable(ProductComponent component)
+        private void ValidateEnoughDiskSpaceAvailable(ProductComponent component)
         {
             if (component.RequiredAction == ComponentAction.Keep)
                 return;
@@ -122,7 +123,7 @@ namespace TaskBasedUpdater.Tasks
             // TODO: split-projects
             //if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Disable)
             //    option &= ~DiskSpaceCalculator.CalculationOption.Backup;
-            DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(component, AdditionalSizeBuffer, option);
+            DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(ServiceProvider, component, AdditionalSizeBuffer, option);
         }
 
         private void BackupItem()

@@ -39,7 +39,8 @@ namespace TaskBasedUpdater
             if (File.Exists(itemFilePath))
             {
                 backupFilePath = CreateBackupFilePath(productComponent, backupPath);
-                FileSystemExtensions.CopyFileWithRetry(itemFilePath, backupFilePath);
+                // TODO: split-projects
+                //FileSystemExtensions.CopyFileWithRetry(itemFilePath, backupFilePath);
             }
             else
             {
@@ -71,9 +72,10 @@ namespace TaskBasedUpdater
                 {
                     if (!File.Exists(componentFile))
                         return;
-                    var success = FileSystemExtensions.DeleteFileWithRetry(componentFile, out _);
-                    if (success) 
-                        return;
+                    // TODO: split-projects
+                    //var success = FileSystemExtensions.DeleteFileWithRetry(componentFile, out _);
+                    //if (success) 
+                    //    return;
                     remove = false;
                     throw new IOException("Unable to restore the backup. Please restart your computer!");
                 }
@@ -92,12 +94,13 @@ namespace TaskBasedUpdater
                             return;
                         }
                     }
-                    var success = FileSystemExtensions.MoveFile(backupFile, productComponent.GetFilePath(), true);
-                    if (!success)
-                    {
-                        remove = false;
-                        throw new IOException($"Unable to restore the backup file '{backupFile}'. Please restart your computer!");
-                    }
+                    // TODO: split-projects
+                    //var success = FileSystemExtensions.MoveFile(backupFile, productComponent.GetFilePath(), true);
+                    //if (!success)
+                    //{
+                    //    remove = false;
+                    //    throw new IOException($"Unable to restore the backup file '{backupFile}'. Please restart your computer!");
+                    //}
 
                     // TODO: split-projects
                     //if (UpdateConfiguration.Instance.DownloadOnlyMode)
@@ -105,7 +108,8 @@ namespace TaskBasedUpdater
 
                     try
                     {
-                        FileSystemExtensions.DeleteFileWithRetry(backupFile!, out _);
+                        // TODO: split-projects
+                        //FileSystemExtensions.DeleteFileWithRetry(backupFile!, out _);
                     }
                     catch
                     {
@@ -155,8 +159,9 @@ namespace TaskBasedUpdater
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
-            if (!FileSystemExtensions.UserHasDirectoryAccessRights(path, FileSystemRights.Read | FileSystemRights.Write, true))
-                throw new InvalidOperationException($"No Read/Write access to the backup directory: {path}");
+            // TODO: split-projects
+            //if (!FileSystemExtensions.UserHasDirectoryAccessRights(path, FileSystemRights.Read | FileSystemRights.Write, true))
+            //    throw new InvalidOperationException($"No Read/Write access to the backup directory: {path}");
         }
 
         private static string CreateBackupFilePath(ProductComponent productComponent, string backupPath)

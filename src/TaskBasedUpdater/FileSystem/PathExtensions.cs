@@ -31,7 +31,7 @@ namespace TaskBasedUpdater.FileSystem
             }
         }
 
-        public static string AddBackslashIfNotPresent(string path)
+        private static string AddBackslashIfNotPresent(string path)
         {
             if (!string.IsNullOrEmpty(path) && path[path.Length - 1] != DirectorySeparatorChar)
                 path += DirectorySeparatorChar.ToString();

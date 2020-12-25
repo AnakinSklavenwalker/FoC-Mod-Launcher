@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,8 @@ namespace TaskBasedUpdater
         protected internal IEnumerable<string> LockedFiles => _lockedFiles;
 
         protected ProductComponent ProductComponent { get; private set; }
+
+        protected IFileSystem FileSystem { get; }
 
 
         public static FileInstaller Instance => _fileInstaller ??= new FileInstaller(null);
@@ -89,7 +92,7 @@ namespace TaskBasedUpdater
         
         internal InstallResult UninstallCoreInternal(string installDir, ProductComponent productComponent)
         {
-            if (!FileSystemExtensions.ContainsPath(installDir, productComponent.Destination))
+            if (!FileSystem.Path.ContainsPath(installDir, productComponent.Destination))
             {
                 _logger.LogWarning("Different paths for item and method input");
                 return InstallResult.Failure;
@@ -111,17 +114,15 @@ namespace TaskBasedUpdater
 
         private bool CopyFile(string source, string destination, out bool restartRequired)
         {
-            restartRequired = false;
-            if (LockedFilesWatcher.Instance.LockedFiles.Contains(destination))
-                restartRequired = true;
-            
-            Directory.CreateDirectory(Path.GetDirectoryName(destination));
-            Stream output = null;
+            restartRequired = LockedFilesWatcher.Instance.LockedFiles.Contains(destination);
+
+            FileSystem.Directory.CreateDirectory(FileSystem.Path.GetDirectoryName(destination));
+            Stream? output = null;
             try
             {
-                output = FileSystemExtensions.CreateFileWithRetry(destination, 2, 500);
+                output = FileSystem.CreateFileWithRetry(destination, 2, 500);
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException)
             {
                 _lockedFiles.Add(destination);
                 restartRequired = true;
@@ -135,6 +136,8 @@ namespace TaskBasedUpdater
 
             using (output)
             {
+                // TODO: split-projects
+                // use FS (see VS impl...)
                 using var sourceStream = new FileStream(source, FileMode.Open, FileAccess.Read);
                 sourceStream.CopyTo(output);
             }
@@ -143,14 +146,14 @@ namespace TaskBasedUpdater
 
         protected bool DeleteFile(string file, out bool restartRequired)
         {
-            if (!File.Exists(file))
+            if (!FileSystem.File.Exists(file))
             {
                 _logger.LogTrace($"'{file}' file is already deleted.");
                 restartRequired = false;
                 return true;
             }
 
-            var deleteSuccess = FileSystemExtensions.DeleteFileWithRetry(file, out restartRequired, true, 2, 500,
+            var deleteSuccess = FileSystem.DeleteFileWithRetry(file, out restartRequired, true, 2, 500,
                 (ex, attempt) =>
                 {
                     _logger?.LogTrace(
