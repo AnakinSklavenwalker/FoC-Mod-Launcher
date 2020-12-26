@@ -12,11 +12,11 @@ namespace TaskBasedUpdater.New
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public IUpdateConfiguration UpdateConfiguration { get; }
+        public UpdateConfiguration UpdateConfiguration { get; }
 
         public bool IsDisposed { get; private set; }
 
-        public NewUpdateManager(IServiceProvider serviceProvider, IUpdateConfiguration updateConfiguration)
+        public NewUpdateManager(IServiceProvider serviceProvider, UpdateConfiguration updateConfiguration)
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             Requires.NotNull(updateConfiguration, nameof(updateConfiguration));

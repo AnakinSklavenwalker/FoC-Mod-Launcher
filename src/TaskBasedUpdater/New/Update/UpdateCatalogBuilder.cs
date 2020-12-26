@@ -99,6 +99,12 @@ namespace TaskBasedUpdater.New.Update
             return available.Equals(VerificationContext.None) || new VerificationContextComparer().Equals(current, available);
         }
 
+        private static IUpdateCatalog ShallowCatalogWithAction(IProductReference product, 
+            ICatalog catalog, ComponentAction updateAction)
+        {
+            return new UpdateCatalog(product,
+                catalog.Items.Select(c => c with { RequiredAction = updateAction}));
+        }
 
         private class VerificationContextComparer : IEqualityComparer<VerificationContext>
         {
@@ -111,17 +117,9 @@ namespace TaskBasedUpdater.New.Update
             {
                 unchecked
                 {
-                    return (obj.Hash.GetHashCode() * 397) ^ (int) obj.HashType;
+                    return (obj.Hash.GetHashCode() * 397) ^ (int)obj.HashType;
                 }
             }
-        }
-
-
-        private static IUpdateCatalog ShallowCatalogWithAction(IProductReference product, 
-            ICatalog catalog, ComponentAction updateAction)
-        {
-            return new UpdateCatalog(product,
-                catalog.Items.Select(c => c with { RequiredAction = updateAction}));
         }
     }
 }

@@ -6,22 +6,18 @@ using Validation;
 
 namespace TaskBasedUpdater.New.Update
 {
-    public class UpdateCatalog : IUpdateCatalog
+    public class UpdateCatalog : Catalog, IUpdateCatalog
     {
-        public IEnumerable<ProductComponent> Items { get; }
         public IProductReference Product { get; }
         //public UpdateRequestAction RequestAction { get; }
         public IEnumerable<ProductComponent> ComponentsToInstall => Items.Where(x => x.RequiredAction == ComponentAction.Update);
         public IEnumerable<ProductComponent> ComponentsToKeep => Items.Where(x => x.RequiredAction == ComponentAction.Keep);
         public IEnumerable<ProductComponent> ComponentsToDelete => Items.Where(x => x.RequiredAction == ComponentAction.Delete);
 
-        public UpdateCatalog(IProductReference product, IEnumerable<ProductComponent> components)
+        public UpdateCatalog(IProductReference product, IEnumerable<ProductComponent> components) : base(components)
         {
             Requires.NotNull(product, nameof(product));
-            Requires.NotNull(components, nameof(components));
             Product = product;
-            //RequestAction = requestAction;
-            Items = components;
         }
     }
 }

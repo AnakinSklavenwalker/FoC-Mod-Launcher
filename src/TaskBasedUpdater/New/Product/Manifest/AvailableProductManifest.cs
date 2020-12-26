@@ -4,17 +4,14 @@ using Validation;
 
 namespace TaskBasedUpdater.New.Product.Manifest
 {
-    public class AvailableProductManifest : IAvailableProductManifest
+    public class AvailableProductManifest : Catalog, IAvailableProductManifest
     {
-        public IEnumerable<ProductComponent> Items { get; }
         public IProductReference Product { get; }
 
-        public AvailableProductManifest(IProductReference product, IEnumerable<ProductComponent> items)
+        public AvailableProductManifest(IProductReference product, IEnumerable<ProductComponent> items) : base(items)
         {
             Requires.NotNull(product, nameof(product));
-            Requires.NotNull(items, nameof(items));
             Product = product;
-            Items = items;
         }
     }
 }

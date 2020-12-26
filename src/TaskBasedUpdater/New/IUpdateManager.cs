@@ -7,7 +7,7 @@ namespace TaskBasedUpdater.New
 {
     public interface IUpdateManager : IDisposable
     {
-        IUpdateConfiguration UpdateConfiguration { get; }
+        UpdateConfiguration UpdateConfiguration { get; }
 
         void Initialize();
 
