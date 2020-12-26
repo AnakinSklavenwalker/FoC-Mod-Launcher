@@ -25,7 +25,7 @@ namespace TaskBasedUpdater.Download
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
-        public WebClientDownloader(IServiceProvider serviceProvider) : base("WebClient", new[] {DownloadSource.Internet})
+        public WebClientDownloader(IServiceProvider serviceProvider) : base(DownloadEngineNames.WebClientEngine, new[] {DownloadSource.Internet})
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             _logger = serviceProvider.GetService<ILogger>();
@@ -33,7 +33,7 @@ namespace TaskBasedUpdater.Download
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,
-            CancellationToken cancellationToken, ProductComponent? productComponent)
+            CancellationToken cancellationToken)
         {
             var summary = new DownloadSummary();
 

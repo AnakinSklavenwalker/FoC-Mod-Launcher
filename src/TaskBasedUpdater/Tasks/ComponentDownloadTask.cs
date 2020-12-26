@@ -94,8 +94,8 @@ namespace TaskBasedUpdater.Tasks
         private void DownloadAction(CancellationToken token, out Exception? lastException)
         {
             lastException = null;
-            var downloadManager = new DownloadManager(ServiceProvider);
             // TODO: split-projects
+            //var downloadManager = new DownloadManager(ServiceProvider);
             //for (var i = 0; i <= UpdateConfiguration.Instance.DownloadRetryCount; i++)
             //{
             //    if (token.IsCancellationRequested)
@@ -183,7 +183,8 @@ namespace TaskBasedUpdater.Tasks
             try
             {
                 using var file = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-                await downloadManager.DownloadAsync(Uri, file, status => _progress?.Invoke(status), token, ProductComponent, true);
+                await downloadManager.DownloadAsync(Uri, file, status => _progress?.Invoke(status), token, 
+                    ProductComponent.OriginInfo?.VerificationContext);
             }
             catch (OperationCanceledException)
             {

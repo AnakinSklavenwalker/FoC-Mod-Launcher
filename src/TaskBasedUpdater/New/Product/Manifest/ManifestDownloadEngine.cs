@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
 using Validation;
 
@@ -42,7 +43,8 @@ namespace TaskBasedUpdater.New.Product.Manifest
 
             var tempFile = fileSystem.Path.GetTempFileName();
             using var file = fileSystem.File.Create(tempFile);
-            await new DownloadManager(_serviceProvider).DownloadAsync(manifestUri, file, null, token);
+            await new DownloadManager(_serviceProvider, DownloadManagerConfiguration.Default)
+                .DownloadAsync(manifestUri, file, null, token);
             
             return fileSystem.FileInfo.FromFileName(tempFile);
         }

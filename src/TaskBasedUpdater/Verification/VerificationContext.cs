@@ -1,5 +1,4 @@
 ﻿using System;
-using TaskBasedUpdater.Component;
 using Validation;
 
 namespace TaskBasedUpdater.Verification

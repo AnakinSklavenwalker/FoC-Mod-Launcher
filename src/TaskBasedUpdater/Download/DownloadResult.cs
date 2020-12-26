@@ -5,7 +5,7 @@
         Success,
         NotSupported,
         Exception,
-        MissingOrInvalidValidationContext,
+        MissingOrInvalidVerificationContext,
         HashMismatch,
     }
 }

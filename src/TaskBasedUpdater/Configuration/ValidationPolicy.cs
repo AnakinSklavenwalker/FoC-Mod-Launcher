@@ -2,7 +2,9 @@
 {
     public enum ValidationPolicy
     {
-        AllowSkipWhenContextNullOrBroken,
+        Skip,
+        SkipWhenNoContextOrBroken,
+        Optional,
         Enforce,
     }
 }

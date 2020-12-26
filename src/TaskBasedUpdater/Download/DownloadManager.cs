@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TaskBasedUpdater.Component;
-
+using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Verification;
+using Validation;
 
 namespace TaskBasedUpdater.Download
 {
@@ -41,25 +41,23 @@ namespace TaskBasedUpdater.Download
                 return _allEngines.Select(e => e.Name);
             }
         }
-
-        public IEnumerable<IDownloadEngine> Engines => _allEngines;
-
-        internal int SleepDurationBetweenRetries { get; set; }
-
-
-        public DownloadManager(IServiceProvider serviceProvider)
+        
+        public DownloadManager(IServiceProvider serviceProvider, DownloadManagerConfiguration configuration)
         {
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            Requires.NotNull(configuration, nameof(configuration));
             _serviceProvider = serviceProvider;
             _logger = serviceProvider.GetService<ILogger>();
             AddDownloadEngine(new WebClientDownloader(_serviceProvider));
             AddDownloadEngine(new FileDownloader(_serviceProvider));
             DefaultEngines = _allEngines.Select(e => e.Name);
-            // TODO: split-projects
-            //SleepDurationBetweenRetries = UpdateConfiguration.Instance.DownloadRetryDelay;
+            Configuration = configuration;
         }
 
+        public DownloadManagerConfiguration Configuration { get; }
+
         public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback? progress, CancellationToken cancellationToken,
-            ProductComponent? productComponent = default, bool verify = false)
+            VerificationContext? productComponent = default)
         {
             _logger?.LogTrace($"Download requested: {uri.AbsoluteUri}");
             if (outputStream == null)
@@ -86,7 +84,7 @@ namespace TaskBasedUpdater.Download
             {
                 var engines = GetSuitableEngines(_defaultEngines, uri);
                 return Task.Factory.StartNew(() => DownloadWithRetry(engines, uri, outputStream, progress,
-                        cancellationToken, productComponent, verify), cancellationToken,
+                        cancellationToken, productComponent), cancellationToken,
                     TaskCreationOptions.LongRunning, TaskScheduler.Default);
             }
             catch (Exception ex)
@@ -95,13 +93,7 @@ namespace TaskBasedUpdater.Download
                 throw;
             }
         }
-
-        internal void RemoveAllEngines()
-        {
-            _allEngines.Clear();
-            _defaultEngines.Clear();
-        }
-
+        
         internal void AddDownloadEngine(IDownloadEngine engine)
         {
             if (engine == null)
@@ -113,9 +105,16 @@ namespace TaskBasedUpdater.Download
         }
 
         private DownloadSummary DownloadWithRetry(IDownloadEngine[] engines, Uri uri, Stream outputStream,
-            ProgressUpdateCallback? progress, CancellationToken cancellationToken, ProductComponent? productComponent = null,
-            bool verify = false)
+            ProgressUpdateCallback? progress, CancellationToken cancellationToken, VerificationContext? verificationContext = null)
         {
+            if (Configuration.ValidationPolicy == ValidationPolicy.Enforce && verificationContext is null)
+            {
+                var exception = new ValidationFailedException(DownloadResult.MissingOrInvalidVerificationContext,
+                    "No verification context available to verify the download.");
+                _logger?.LogError(exception, exception.Message);
+                throw exception;
+            }
+            
             var failureList = new List<DownloadFailureInformation>();
             foreach (var engine in engines)
             {
@@ -128,53 +127,44 @@ namespace TaskBasedUpdater.Download
                         status =>
                         {
                             progress?.Invoke(new ProgressUpdateStatus(engine.Name, status.BytesRead, status.TotalBytes, status.BitRate));
-                        }, cancellationToken,
-                        productComponent);
-                    // TODO: split-projects
-                    if (outputStream.Length == 0 /*&& !UpdateConfiguration.Instance.AllowEmptyFileDownload*/)
+                        }, cancellationToken);
+                    if (outputStream.Length == 0 && !Configuration.AllowEmptyFileDownload)
                     {
                         var exception = new UpdaterException($"Empty file downloaded on '{uri}'.");
                         _logger?.LogError(exception, exception.Message);
                         throw exception;
                     }
 
-                    if (verify && outputStream.Length != 0)
+                    if (Configuration.ValidationPolicy != ValidationPolicy.Skip &&
+                        verificationContext.HasValue &&
+                        outputStream.Length != 0)
                     {
                         _verifier ??= _serviceProvider.GetService<IVerifier>() ?? new HashVerifier(_serviceProvider);
 
-                        if (productComponent is null)
+                        var valid = verificationContext.Value.Verify();
+                        if (valid)
                         {
-                            // TODO: split-projects
-                            //if (UpdateConfiguration.Instance.ValidationPolicy == ValidationPolicy.Enforce)
-                            //    throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
-                            //        "Unable to get necessary validation data because download context is null.");
+                            var verificationResult= _verifier.Verify(outputStream, verificationContext.Value);
+                            engineSummary.ValidationResult = verificationResult;
+                            if (verificationResult != VerificationResult.Success)
+                            {
+                                var reason = verificationResult == VerificationResult.HashMismatch
+                                    ? DownloadResult.HashMismatch
+                                    : DownloadResult.MissingOrInvalidVerificationContext;
+                               
+                                var exception = new ValidationFailedException(reason,
+                                    $"Hash on downloaded file '{uri.AbsoluteUri}' does not match expected value.");
+                                _logger?.LogError(exception, exception.Message);
+                                throw exception;
+                            }
                         }
                         else
                         {
-                            var validationContext = productComponent.OriginInfo?.VerificationContext;
-                            var valid = validationContext?.Verify();
-
-                            // TODO: split-projects
-                            //if ((!valid.HasValue || !valid.Value) && UpdateConfiguration.Instance.ValidationPolicy ==
-                            //    ValidationPolicy.Enforce)
-                            //    throw new ValidationFailedException(DownloadResult.MissingOrInvalidValidationContext,
-                            //        $"Update Item'{updateItem.Name}' is missing or has an invalid ValidationInfo");
-
-                            if (valid.HasValue && valid.Value)
-                            {
-                                var validationResult = _verifier.Verify(outputStream, validationContext!.Value);
-                                engineSummary.ValidationResult = validationResult;
-                                if (validationResult == VerificationResult.HashMismatch)
-                                {
-                                    var exception = new ValidationFailedException(DownloadResult.HashMismatch,
-                                        $"Hash on downloaded file '{uri.AbsoluteUri}' does not match expected value.");
-                                    _logger?.LogError(exception, exception.Message);
-                                    throw exception;
-                                }
-                            }
-                            else
-                                _logger?.LogTrace(
-                                    $"Skipping validation because validation context of Update Item {productComponent.Name} is not valid.");
+                            if (Configuration.ValidationPolicy == ValidationPolicy.Optional ||
+                                Configuration.ValidationPolicy == ValidationPolicy.Enforce)
+                                throw new ValidationFailedException(DownloadResult.MissingOrInvalidVerificationContext,
+                                    "Download is missing or has an invalid VerificationContext");
+                            _logger?.LogTrace("Skipping validation because verification context of is not valid.");
                         }
                     }
 
@@ -198,9 +188,10 @@ namespace TaskBasedUpdater.Download
                     cancellationToken.ThrowIfCancellationRequested();
                     outputStream.SetLength(length);
                     outputStream.Seek(position, SeekOrigin.Begin);
-                    var millisecondsTimeout = SleepDurationBetweenRetries;
-                    if (millisecondsTimeout < 0)
-                        millisecondsTimeout = 0;
+                    var millisecondsTimeout = Configuration.DownloadRetryDelay;
+                    if (millisecondsTimeout <= 0)
+                        continue;
+                    
                     _logger?.LogTrace($"Sleeping {millisecondsTimeout} before retrying download.");
                     Thread.Sleep(millisecondsTimeout);
                 }

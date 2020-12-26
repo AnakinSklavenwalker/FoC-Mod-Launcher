@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using TaskBasedUpdater.Component;
+using TaskBasedUpdater.Verification;
 
 namespace TaskBasedUpdater.Download
 {
@@ -14,6 +14,6 @@ namespace TaskBasedUpdater.Download
         IEnumerable<string> AllEngines { get; }
 
         Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,
-            CancellationToken cancellationToken, ProductComponent? productComponent = null, bool verify = false);
+            CancellationToken cancellationToken, VerificationContext? verificationContext = null);
     }
 }
