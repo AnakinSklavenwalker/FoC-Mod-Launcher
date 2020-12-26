@@ -140,8 +140,7 @@ namespace TaskBasedUpdater.Download
 
                     if (verify && outputStream.Length != 0)
                     {
-                        if (_verifier is null)
-                            _verifier = _serviceProvider.GetService<IVerifier>() ?? new HashVerifier(_serviceProvider);
+                        _verifier ??= _serviceProvider.GetService<IVerifier>() ?? new HashVerifier(_serviceProvider);
 
                         if (productComponent is null)
                         {

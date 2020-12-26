@@ -18,9 +18,9 @@ namespace FocLauncherHost.Update
         private IUpdateCatalog? _updateCatalog;
         private IUpdateManager? _updateManager;
 
-        public IUpdateConfiguration UpdateConfiguration { get; }
+        public UpdateConfiguration UpdateConfiguration { get; }
 
-        public FocLauncherUpdater(IInstalledProduct product, IUpdateConfiguration updateConfiguration, IServiceProvider services)
+        public FocLauncherUpdater(IInstalledProduct product, UpdateConfiguration updateConfiguration, IServiceProvider services)
         {
             Requires.NotNull(product, nameof(product));
             Requires.NotNull(services, nameof(services));

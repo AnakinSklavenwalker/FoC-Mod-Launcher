@@ -1,33 +1,38 @@
 ﻿namespace TaskBasedUpdater.Configuration
 {
-    public class UpdateConfiguration : IUpdateConfiguration
+    public record UpdateConfiguration
     {
-        public string? BackupPath { get; set; }
+        public string? BackupPath { get; init; }
 
-        public BackupPolicy BackupPolicy { get; set; }
+        public BackupPolicy BackupPolicy { get; init; }
 
-        public int ConcurrentDownloads { get; set; } = 2;
+        public int ConcurrentDownloads { get; init; } = 2;
 
-        public bool DiagnosticMode { get; set; }
+        public bool DiagnosticMode { get; init; }
 
-        public int DownloadRetryDelay { get; set; } = 5000;
+        public ValidationPolicy ValidationPolicy { get; init; }
 
-        public bool AllowEmptyFileDownload { get; set; }
+        public bool DownloadOnlyMode { get; init; }
 
-        public ValidationPolicy ValidationPolicy { get; set; }
-
-        public bool DownloadOnlyMode { get; set; }
-
-        public string? AlternativeDownloadPath { get; set; }
-
-        public int DownloadRetryCount { get; set; } = 3;
-
-        public bool SupportsRestart { get; set; }
-
-        public string? ExternalUpdaterPath { get; set; }
+        public string? AlternativeDownloadPath { get; init; }
         
-        public string? ExternalElevatorPath { get; set; }
+        public bool SupportsRestart { get; init; }
 
-        public bool RequiredElevationCancelsUpdate { get; set; }
+        public string? ExternalUpdaterPath { get; init; }
+        
+        public string? ExternalElevatorPath { get; init; }
+
+        public bool RequiredElevationCancelsUpdate { get; init; }
+    }
+    
+    public record DownloadManagerConfiguration
+    {
+        public static DownloadManagerConfiguration Default = new();
+        
+        public int DownloadRetryCount { get; init; } = 3;
+
+        public int DownloadRetryDelay { get; init; } = 5000;
+
+        public bool AllowEmptyFileDownload { get; init; }
     }
 }
