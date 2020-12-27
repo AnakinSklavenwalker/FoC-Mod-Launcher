@@ -12,7 +12,7 @@ namespace TaskBasedUpdater.Elevation
 
         public static Elevator Instance => _instance ??= new Elevator();
 
-        public static Lazy<bool> LazyProcessElevated = new Lazy<bool>(IsElevated);
+        public static Lazy<bool> LazyProcessElevated = new(IsElevated);
 
         public static bool IsProcessElevated => LazyProcessElevated.Value;
 

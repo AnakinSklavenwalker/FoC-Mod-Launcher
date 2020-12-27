@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
-using TaskBasedUpdater.Download;
+using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.Restart;
 using TaskBasedUpdater.Tasks;
@@ -18,7 +19,7 @@ namespace TaskBasedUpdater.Operations
     internal class UpdateOperation : IOperation
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger? _logger;
+        private ILogger? _logger;
 
         private readonly HashSet<ProductComponent> _allComponents;
         private bool _scheduled;
@@ -43,13 +44,17 @@ namespace TaskBasedUpdater.Operations
         internal bool RequiredProcessElevation { get; private set; }
 
         private static int ParallelDownload => 2;
+        
+        private UpdateConfiguration Configuration { get; }
 
-        public UpdateOperation(IEnumerable<ProductComponent> dependencies, IServiceProvider serviceProvider)
+        public UpdateOperation(IServiceProvider serviceProvider, UpdateConfiguration updateConfiguration, IEnumerable<ProductComponent> dependencies)
         {
             Requires.NotNull(dependencies, nameof(dependencies));
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
             _serviceProvider = serviceProvider;
             _allComponents = new HashSet<ProductComponent>(dependencies, ProductComponentIdentityComparer.Default);
+            Configuration = updateConfiguration;
         }
 
         public bool Plan()
@@ -151,9 +156,8 @@ namespace TaskBasedUpdater.Operations
             _logger.LogInformation($"Elevation requested: {e.Exception.Message}");
             RequiredProcessElevation = true;
             _elevationRequests.Add(e);
-            // TODO: split-projects
-            //if (UpdateConfiguration.Instance.RequiredElevationCancelsUpdate)
-            //    _linkedCancellationTokenSource?.Cancel();
+            if (Configuration.RequiredElevationCancelsUpdate)
+                _linkedCancellationTokenSource?.Cancel();
         }
 
         internal void Schedule()
@@ -173,30 +177,33 @@ namespace TaskBasedUpdater.Operations
 
         private void Initialize()
         {
-            if (_elevator == null)
+            if (_elevator is null)
             {
                 _elevator = Elevator.Instance;
                 _elevator.ElevationRequested += OnElevationRequested;
             }
-            if (_downloads == null)
+
+            if (_logger is null)
+                _logger = _serviceProvider.GetService<ILogger>();
+            if (_downloads is null)
             {
                 var workers = ParallelDownload;
                 _logger?.LogTrace($"Concurrent downloads: {workers}");
-                _downloads = new AsyncTaskRunner(null, workers);
+                _downloads = new AsyncTaskRunner(_serviceProvider, workers);
                 _downloads.Error += OnError;
             }
-            if (_installs == null)
+            if (_installs is null)
             {
-                _installs = new TaskRunner(null);
+                _installs = new TaskRunner(_serviceProvider);
                 _installs.Error += OnError;
             }
         }
 
         private void CleanEvents()
         {
-            if (_downloads != null)
+            if (_downloads is not null)
                 _downloads.Error -= OnError;
-            if (_installs != null)
+            if (_installs is not null)
                 _installs.Error -= OnError;
             _elevator.ElevationRequested -= OnElevationRequested;
         }
@@ -204,7 +211,7 @@ namespace TaskBasedUpdater.Operations
         private void QueueInitialActivities()
         {
             //_installs.Queue(new WaitTask(_downloads)); // Waits until all downloads are finished
-            _installMutexTask = new AcquireMutexTask(null);
+            _installMutexTask = new AcquireMutexTask(_serviceProvider);
             _installs.Queue(_installMutexTask);
         }
 
@@ -238,19 +245,19 @@ namespace TaskBasedUpdater.Operations
 
         private PackageActivities CreateDownloadInstallActivities(ProductComponent productComponent, ComponentAction action, bool isPresent)
         {
-            ComponentDownloadTask downloadTask;
+            ComponentDownloadTask? downloadTask;
             ComponentInstallTask install;
 
             if (DownloadRequired(action, productComponent))
             {
-                downloadTask = new ComponentDownloadTask(null, productComponent);
+                downloadTask = new ComponentDownloadTask(_serviceProvider, productComponent, Configuration);
                 downloadTask.Canceled += (_, __) => _linkedCancellationTokenSource?.Cancel();
-                install = new ComponentInstallTask(null, productComponent, action, downloadTask, isPresent);
+                install = new ComponentInstallTask(_serviceProvider, productComponent, action, Configuration, downloadTask, isPresent);
             }
             else
             {
                 downloadTask = null;
-                install = new ComponentInstallTask(null, productComponent, action, isPresent);
+                install = new ComponentInstallTask(_serviceProvider, productComponent, action, Configuration, isPresent);
             }
             
             return new PackageActivities
@@ -306,7 +313,7 @@ namespace TaskBasedUpdater.Operations
 
         private class PackageActivities
         {
-            internal ComponentDownloadTask Download { get; init; }
+            internal ComponentDownloadTask? Download { get; init; }
 
             internal ComponentInstallTask Install { get; init; }
         }

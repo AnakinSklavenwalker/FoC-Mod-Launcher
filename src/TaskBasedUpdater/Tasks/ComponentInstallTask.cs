@@ -4,14 +4,15 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Component;
-using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Validation;
+using Validation;
 
 namespace TaskBasedUpdater.Tasks
 {
     internal class ComponentInstallTask : SynchronizedPipelineTask, IUpdaterTask
     {
-        private readonly ComponentDownloadTask _download;
+        private readonly ComponentDownloadTask? _download;
         internal static readonly long AdditionalSizeBuffer = 20000000;
         private readonly bool _isPresent;
 
@@ -23,20 +24,26 @@ namespace TaskBasedUpdater.Tasks
 
         internal bool? RestartRequired { get; private set; }
 
-        public virtual TimeSpan DownloadWaitTime { get; internal set; } = new TimeSpan(0L);
+        public virtual TimeSpan DownloadWaitTime { get; internal set; } = new(0L);
+
+        public UpdateConfiguration Configuration { get; }
 
         public ComponentInstallTask(IServiceProvider serviceProvider,
-            ProductComponent productComponent, ComponentAction action, ComponentDownloadTask download,
+            ProductComponent productComponent, ComponentAction action, UpdateConfiguration configuration, ComponentDownloadTask download,
             bool isPresent = false) :
-            this(serviceProvider, productComponent, action, isPresent)
+            this(serviceProvider, productComponent, action, configuration, isPresent)
         {
             _download = download;
         }
 
         public ComponentInstallTask(IServiceProvider serviceProvider, ProductComponent productComponent, ComponentAction action,
+            UpdateConfiguration configuration,
             bool isPresent = false) : base(serviceProvider)
         {
-            ProductComponent = productComponent ?? throw new ArgumentNullException(nameof(productComponent));
+            Requires.NotNull(productComponent, nameof(productComponent));
+            Requires.NotNull(configuration, nameof(configuration));
+            ProductComponent = productComponent;
+            Configuration = configuration;
             Action = action;
             _isPresent = isPresent;
         }
@@ -70,9 +77,8 @@ namespace TaskBasedUpdater.Tasks
                 {
                     ValidateEnoughDiskSpaceAvailable(ProductComponent);
 
-                    // TODO: split-projects
-                    //if (UpdateConfiguration.Instance.BackupPolicy != BackupPolicy.Disable)
-                    //    BackupItem();
+                    if (Configuration.BackupPolicy != BackupPolicy.Disable)
+                        BackupItem();
 
                     if (Action == ComponentAction.Update)
                     {
@@ -120,10 +126,16 @@ namespace TaskBasedUpdater.Tasks
             var option = DiskSpaceCalculator.CalculationOption.All;
             if (component.CurrentState == CurrentState.Downloaded)
                 option &= ~DiskSpaceCalculator.CalculationOption.Download;
-            // TODO: split-projects
-            //if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Disable)
-            //    option &= ~DiskSpaceCalculator.CalculationOption.Backup;
-            DiskSpaceCalculator.ThrowIfNotEnoughDiskSpaceAvailable(ServiceProvider, component, AdditionalSizeBuffer, option);
+            if (Configuration.BackupPolicy == BackupPolicy.Disable)
+                option &= ~DiskSpaceCalculator.CalculationOption.Backup;
+
+            foreach (var d in new DiskSpaceCalculator(ServiceProvider, ProductComponent, AdditionalSizeBuffer, option).CalculatedDiskSizes)
+            {
+                if (!d.Value.HasEnoughDiskSpace)
+                    throw new OutOfDiskspaceException(
+                        $"There is not enough space to install “{ProductComponent.Name}”.{d.Value.RequestedSize + AdditionalSizeBuffer} is required on drive {d.Key}" +
+                        $"but you only have {d.Value.AvailableDiskSpace} available.");
+            }
         }
 
         private void BackupItem()
@@ -135,12 +147,11 @@ namespace TaskBasedUpdater.Tasks
             catch (Exception ex)
             {
                 Logger.LogWarning(ex, $"Creating backup of {ProductComponent.Name} failed.");
-                // TODO: split-projects
-                //if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Required)
-                //{
-                //    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
-                //    throw;
-                //}
+                if (Configuration.BackupPolicy == BackupPolicy.Required)
+                {
+                    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
+                    throw;
+                }
             }
         }
     }

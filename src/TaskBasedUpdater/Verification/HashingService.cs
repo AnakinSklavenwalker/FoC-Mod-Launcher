@@ -14,7 +14,6 @@ namespace TaskBasedUpdater.Verification
     {
         // TODO: split-projects
         // Remove this overload
-        
         public byte[] GetFileHash(string file, HashType hashType)
         {
             Requires.NotNullOrEmpty(file, nameof(file));

@@ -28,7 +28,7 @@ namespace TaskBasedUpdater.Validation
 
             // TODO: split-projects
             var backupRoot = string.Empty;
-            //var backupRoot = FileSystemExtensions.GetPathRoot(UpdateConfiguration.Instance.BackupPath);
+            //var backupRoot = fileSystem.Path.GetPathRoot(UpdateConfiguration.Instance.BackupPath);
 
             if (string.IsNullOrEmpty(backupRoot)) 
                 backupRoot = destinationRoot;

@@ -2,7 +2,7 @@
 {
     public record UpdateConfiguration
     {
-        private DownloadManagerConfiguration DownloadConfiguration { get; init; } = new();
+        public DownloadManagerConfiguration DownloadConfiguration { get; init; } = new();
 
         public string? BackupPath { get; init; }
 
@@ -13,6 +13,8 @@
         public bool DiagnosticMode { get; init; }
         
         public bool DownloadOnlyMode { get; init; }
+
+        public int DownloadRetryCount { get; init; } = 3;
 
         public string? AlternativeDownloadPath { get; init; }
         

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Elevation;
 
 namespace TaskBasedUpdater.Restart

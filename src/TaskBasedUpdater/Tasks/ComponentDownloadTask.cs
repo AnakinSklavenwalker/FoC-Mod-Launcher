@@ -8,6 +8,7 @@ using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
+using Validation;
 
 namespace TaskBasedUpdater.Tasks
 {
@@ -16,9 +17,8 @@ namespace TaskBasedUpdater.Tasks
         public const string NewFileExtension = ".new";
         internal static readonly long AdditionalSizeBuffer = 20000000;
 
-        private readonly ProgressUpdateCallback _progress;
-
-        public Uri FailedDownloadUri { get; set; }
+        // TODO: Progress
+        private readonly ProgressUpdateCallback? _progress;
 
         public Uri Uri { get; }
 
@@ -26,10 +26,15 @@ namespace TaskBasedUpdater.Tasks
 
         public string DownloadPath { get; private set; }
 
-        public ComponentDownloadTask(IServiceProvider serviceProvider, ProductComponent productComponent) 
+        public UpdateConfiguration Configuration { get; }
+
+        public ComponentDownloadTask(IServiceProvider serviceProvider, ProductComponent productComponent, UpdateConfiguration configuration) 
             : base(serviceProvider)
         {
-            ProductComponent = productComponent ?? throw new ArgumentNullException(nameof(productComponent));
+            Requires.NotNull(productComponent, nameof(productComponent));
+            Requires.NotNull(configuration, nameof(configuration));
+            ProductComponent = productComponent;
+            Configuration = configuration;
             if (productComponent.OriginInfo?.Origin == null)
                 throw new ArgumentNullException(nameof(OriginInfo));
             Uri = productComponent.OriginInfo.Origin;
@@ -54,12 +59,11 @@ namespace TaskBasedUpdater.Tasks
                 Directory.CreateDirectory(directoryName);
             }
 
-            // TODO: split-projects
-            //if (UpdateConfiguration.Instance.BackupPolicy != BackupPolicy.NotRequired && UpdateConfiguration.Instance.DownloadOnlyMode)
-            //    BackupItem();
+            if (Configuration.BackupPolicy != BackupPolicy.NotRequired && Configuration.DownloadOnlyMode)
+                BackupItem();
 
 
-            Exception lastException = null;
+            Exception? lastException = null;
             if (!token.IsCancellationRequested)
                 DownloadAction(token, out lastException);
 
@@ -82,12 +86,11 @@ namespace TaskBasedUpdater.Tasks
             catch (Exception ex)
             {
                 Logger.LogWarning(ex, $"Creating backup of {ProductComponent.Name} failed.");
-                // TODO: split-projects
-                //if (UpdateConfiguration.Instance.BackupPolicy == BackupPolicy.Required)
-                //{
-                //    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
-                //    throw;
-                //}
+                if (Configuration.BackupPolicy == BackupPolicy.Required)
+                {
+                    Logger.LogTrace("Cancelling update operation due to BackupPolicy");
+                    throw;
+                }
             }
         }
 
@@ -95,86 +98,85 @@ namespace TaskBasedUpdater.Tasks
         {
             lastException = null;
             // TODO: split-projects
-            //var downloadManager = new DownloadManager(ServiceProvider);
-            //for (var i = 0; i <= UpdateConfiguration.Instance.DownloadRetryCount; i++)
-            //{
-            //    if (token.IsCancellationRequested)
-            //        break;
-            //    try
-            //    {
-            //        var downloadPath = CalculateDownloadPath();
-            //        DownloadPath = downloadPath;
-            //        UpdateItemDownloadPathStorage.Instance.Add(UpdateItem, DownloadPath);
+            var downloadManager = new DownloadManager(ServiceProvider, Configuration.DownloadConfiguration);
+            for (var i = 0; i <= Configuration.DownloadRetryCount; i++)
+            {
+                if (token.IsCancellationRequested)
+                    break;
+                try
+                {
+                    var downloadPath = CalculateDownloadPath();
+                    DownloadPath = downloadPath;
+                    UpdateItemDownloadPathStorage.Instance.Add(ProductComponent, DownloadPath);
 
-            //        DownloadAndVerifyAsync(downloadManager, DownloadPath, token).Wait();
-            //        if (!File.Exists(DownloadPath))
-            //        {
-            //            var message = "File not found after being successfully downloaded and verified: " +
-            //                          DownloadPath + ", package: " + UpdateItem.Name;
-            //            Logger.LogWarning(message);
-            //            throw new FileNotFoundException(message, DownloadPath);
-            //        }
+                    DownloadAndVerifyAsync(downloadManager, DownloadPath, token).Wait();
+                    if (!File.Exists(DownloadPath))
+                    {
+                        var message = "File not found after being successfully downloaded and verified: " +
+                                      DownloadPath + ", package: " + ProductComponent.Name;
+                        Logger.LogWarning(message);
+                        throw new FileNotFoundException(message, DownloadPath);
+                    }
 
-            //        lastException = null;
+                    lastException = null;
 
-            //        if (UpdateConfiguration.Instance.DownloadOnlyMode)
-            //        {
-            //            UpdateItem.CurrentState = CurrentState.Installed;
-            //            UpdateItemDownloadPathStorage.Instance.Remove(UpdateItem);
-            //        }
-            //        else
-            //            UpdateItem.CurrentState = CurrentState.Downloaded;
+                    if (Configuration.DownloadOnlyMode)
+                    {
+                        ProductComponent.CurrentState = CurrentState.Installed;
+                        UpdateItemDownloadPathStorage.Instance.Remove(ProductComponent);
+                    }
+                    else
+                        ProductComponent.CurrentState = CurrentState.Downloaded;
 
-            //        break;
-            //    }
-            //    catch (OperationCanceledException ex)
-            //    {
-            //        lastException = ex;
-            //        Logger.LogWarning($"Download of {Uri} was cancelled.");
-            //        break;
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        if (ex is AggregateException && ex.IsExceptionType<OperationCanceledException>())
-            //        {
-            //            lastException = ex;
-            //            Logger.LogWarning($"Download of {Uri} was cancelled.");
-            //            break;
-            //        }
-            //        var wrappedException = ex.TryGetWrappedException();
-            //        if (wrappedException != null)
-            //            ex = wrappedException;
-            //        if (ex is UnauthorizedAccessException unauthorizedAccessException)
-            //        {
-            //            lastException = ex;
-            //            Logger.LogError(ex, $"Failed to download \"{Uri}\" to {DownloadPath}: {ex.Message}");
-            //            Elevator.Instance.RequestElevation(unauthorizedAccessException, UpdateItem);
-            //            break;
-            //        }
-            //        lastException = ex;
-            //        Logger.LogError(ex, $"Failed to download \"{Uri}\" on try {i}: {ex.Message}");
-            //    }
-            //}
+                    break;
+                }
+                catch (OperationCanceledException ex)
+                {
+                    lastException = ex;
+                    Logger.LogWarning($"Download of {Uri} was cancelled.");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (ex is AggregateException && ex.IsExceptionType<OperationCanceledException>())
+                    {
+                        lastException = ex;
+                        Logger.LogWarning($"Download of {Uri} was cancelled.");
+                        break;
+                    }
+                    var wrappedException = ex.TryGetWrappedException();
+                    if (wrappedException != null)
+                        ex = wrappedException;
+                    if (ex is UnauthorizedAccessException unauthorizedAccessException)
+                    {
+                        lastException = ex;
+                        Logger.LogError(ex, $"Failed to download \"{Uri}\" to {DownloadPath}: {ex.Message}");
+                        Elevator.Instance.RequestElevation(unauthorizedAccessException, ProductComponent);
+                        break;
+                    }
+                    lastException = ex;
+                    Logger.LogError(ex, $"Failed to download \"{Uri}\" on try {i}: {ex.Message}");
+                }
+            }
         }
 
         private string CalculateDownloadPath()
         {
-            // TODO: split-projects
-            //if (UpdateConfiguration.Instance.DownloadOnlyMode)
-            //{
-            //    var destination = UpdateItem.GetFilePath(); 
-            //    return destination;
-            //}
+            if (Configuration.DownloadOnlyMode)
+            {
+                var destination = ProductComponent.GetFilePath();
+                return destination;
+            }
 
             var randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
             var backupFileName = $"{ProductComponent.Name}.{randomFileName}{NewFileExtension}";
 
-            // TODO: split-projects
-            //if (!string.IsNullOrEmpty(UpdateConfiguration.Instance.AlternativeDownloadPath))
-            //{
-            //    Directory.CreateDirectory(UpdateConfiguration.Instance.AlternativeDownloadPath);
-            //    return Path.Combine(UpdateConfiguration.Instance.AlternativeDownloadPath, backupFileName);
-            //}
+            var alternateDownloadPath = Configuration.AlternativeDownloadPath;
+            if (!string.IsNullOrEmpty(alternateDownloadPath))
+            {
+                Directory.CreateDirectory(alternateDownloadPath!);
+                return Path.Combine(alternateDownloadPath!, backupFileName);
+            }
             return Path.Combine(ProductComponent.Destination, backupFileName);
         }
 
@@ -204,7 +206,6 @@ namespace TaskBasedUpdater.Tasks
         // TODO: This has to be a precheck, because of parallel download tasks
         private static void ValidateEnoughDiskSpaceAvailable(ProductComponent productComponent)
         {
-            // TODO: split-projects
             //var option = DiskSpaceCalculator.CalculationOption.Download;
             //if (UpdateConfiguration.Instance.DownloadOnlyMode)
             //{

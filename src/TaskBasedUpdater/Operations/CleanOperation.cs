@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
@@ -17,19 +18,19 @@ namespace TaskBasedUpdater.Operations
         private const int ConcurrentClean = 2;
 
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger? _logger;
+        private ILogger? _logger;
        
         private readonly IList<CleanFileTask> _cleanFileTasks;
         private readonly AsyncTaskRunner _taskRunner;
         private readonly IList<string> _filesToBeCleaned = new List<string>();
-        private readonly ConcurrentBag<string> _filesFailedToBeCleaned = new ConcurrentBag<string>();
+        private readonly ConcurrentBag<string> _filesFailedToBeCleaned = new();
         private bool _planSuccessful;
        
 
         public CleanOperation(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _taskRunner = new AsyncTaskRunner(null, ConcurrentClean);
+            _taskRunner = new AsyncTaskRunner(serviceProvider, ConcurrentClean);
             _taskRunner.Error += OnCleaningError;
             _cleanFileTasks = new List<CleanFileTask>();
         }
@@ -45,6 +46,8 @@ namespace TaskBasedUpdater.Operations
         {
             if (_planSuccessful)
                 return true;
+            if (_logger is null)
+                _logger = _serviceProvider.GetService<ILogger>();
             var files = GetFiles();
 
             foreach (var data in files)
@@ -52,7 +55,7 @@ namespace TaskBasedUpdater.Operations
                 var file = data.Value;
                 if (!File.Exists(file)) 
                     continue;
-                var cleanTask = new CleanFileTask(null, data.Key, file);
+                var cleanTask = new CleanFileTask(_serviceProvider, data.Key, file);
                 _cleanFileTasks.Add(cleanTask);
                 _taskRunner.Queue(cleanTask);
                 _filesToBeCleaned.Add(file);
