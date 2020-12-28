@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>9</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>9</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -66,8 +68,10 @@
     <Compile Include="Utilities\UrlCombine.cs" />
     <Compile Include="Utilities\ValueSerializer.cs" />
     <Compile Include="NativeMethods\WiniNet.cs" />
-    <Compile Include="Utilities\XmlObjectParser.cs" />
-    <Compile Include="Utilities\XmlValidator.cs" />
+    <Compile Include="Xml\XmlObjectParser.cs" />
+    <Compile Include="Xml\XmlValidationError.cs" />
+    <Compile Include="Xml\XmlValidationResult.cs" />
+    <Compile Include="Xml\XmlValidator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="PresentationFramework" />
@@ -79,6 +83,9 @@
   <ItemGroup>
     <PackageReference Include="NLog">
       <Version>4.7.6</Version>
+    </PackageReference>
+    <PackageReference Include="Validation">
+      <Version>2.4.22</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

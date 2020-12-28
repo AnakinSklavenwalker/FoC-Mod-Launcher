@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using Microsoft;
-using Microsoft.Extensions.DependencyInjection;
 using TaskBasedUpdater;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
@@ -13,20 +12,21 @@ namespace FocLauncherHost.Update
 {
     internal class FocLauncherUpdater : IDisposable
     {
-        private readonly IInstalledProduct _product;
+        private readonly IProductService _productService;
         private readonly IServiceProvider _services;
         private IUpdateCatalog? _updateCatalog;
         private IUpdateManager? _updateManager;
 
         public UpdateConfiguration UpdateConfiguration { get; }
 
-        public FocLauncherUpdater(IInstalledProduct product, UpdateConfiguration updateConfiguration, IServiceProvider services)
+        public FocLauncherUpdater(IProductService productService, UpdateConfiguration updateConfiguration,
+            IServiceProvider services)
         {
-            Requires.NotNull(product, nameof(product));
+            Requires.NotNull(productService, nameof(productService));
             Requires.NotNull(services, nameof(services));
             Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
-            _product = product;
-            _services = new AggregatedServiceProvider(services, InitializeServices);
+            _productService = productService;
+            _services = services;
             UpdateConfiguration = updateConfiguration;
         }
 
@@ -56,27 +56,14 @@ namespace FocLauncherHost.Update
             }
         }
 
-        private UpdateResultInformation Update(CancellationToken token)
+        public bool IsUpdateAvailable(UpdateRequest updateRequest)
         {
-            var updater =
-                new NewUpdateManager(new ServiceCollection().BuildServiceProvider(), UpdateConfiguration);
-
-            if (_updateCatalog is null)
-                throw new InvalidOperationException("Catalog cannot be null");
-
-            updater.Update(_updateCatalog, token);
-
-            return UpdateResultInformation.Success;
-        }
-
-        private bool IsUpdateAvailable(UpdateRequest updateRequest)
-        {
-            var productProviderService = _services.GetRequiredService<IProductService>();
+            var productProviderService = _productService;
 
             var currentCatalog = productProviderService.GetInstalledProductCatalog();
             var availableCatalog = productProviderService.GetAvailableProductCatalog(updateRequest);
 
-            IUpdateCatalogBuilder builder = _services.GetRequiredService<IUpdateCatalogBuilder>();
+            IUpdateCatalogBuilder builder = new UpdateCatalogBuilder();
             var updateCatalog = builder.Build(currentCatalog, availableCatalog);
 
             if (!updateCatalog.Items.Any())
@@ -85,13 +72,18 @@ namespace FocLauncherHost.Update
             return true;
         }
 
-        private IServiceCollection InitializeServices()
+        private UpdateResultInformation Update(CancellationToken token)
         {
-            var sc = new ServiceCollection();
-            sc.AddTransient<IUpdateCatalogBuilder>(_ => new UpdateCatalogBuilder());
-            return sc;
-        }
+            _updateManager = new NewUpdateManager(_services, UpdateConfiguration);
 
+            if (_updateCatalog is null)
+                throw new InvalidOperationException("Catalog cannot be null");
+
+            _updateManager.Update(_updateCatalog, token);
+
+            return UpdateResultInformation.Success;
+        }
+        
         public void Dispose()
         {
             _updateManager?.Dispose();

@@ -21,7 +21,7 @@ namespace TaskBasedUpdater.New.Product
         protected ILogger? Logger;
 
         protected IProductComponentBuilder ComponentBuilder { get; }
-
+        
         protected ProductServiceBase(IProductComponentBuilder componentBuilder, IServiceProvider serviceProvider)
         {
             Requires.NotNull(componentBuilder, nameof(componentBuilder));
@@ -54,7 +54,7 @@ namespace TaskBasedUpdater.New.Product
         public IAvailableProductCatalog GetAvailableProductCatalog(UpdateRequest updateRequest)
         {
             Initialize();
-            if (!ProductReferenceEqualityComparer.Default.Equals(_installedProduct!.ProductReference, updateRequest.Product))
+            if (!IsProductCompatible(updateRequest.Product))
                 throw new InvalidOperationException("Not compatible product");
 
             var engine = new ManifestDownloadEngine(_serviceProvider);
@@ -89,6 +89,11 @@ namespace TaskBasedUpdater.New.Product
                 path = Path.IsPathRooted(path) ? path : Path.Combine(installationPath, path);
                 yield return new ComponentFileFactory(_serviceProvider).FromFile(component, path, ComponentBuilder);
             }
+        }
+
+        protected virtual bool IsProductCompatible(IProductReference product)
+        {
+            return !ProductReferenceEqualityComparer.ReleaseAware.Equals(_installedProduct!.ProductReference, product);
         }
 
         private void Initialize()

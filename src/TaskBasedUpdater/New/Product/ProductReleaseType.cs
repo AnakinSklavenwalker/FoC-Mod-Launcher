@@ -4,6 +4,7 @@
     {
         Stable,
         PreAlpha,
+        Alpha,
         Beta,
         ReleaseCandidate,
         Rtm

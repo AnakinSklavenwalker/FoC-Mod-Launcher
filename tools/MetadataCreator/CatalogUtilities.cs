@@ -6,6 +6,7 @@ using System.Linq;
 using FocLauncher;
 using FocLauncher.UpdateMetadata;
 using FocLauncher.Utilities;
+using FocLauncher.Xml;
 using NLog;
 
 namespace MetadataCreator

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace FocLauncherHost.Utilities
 {
@@ -6,12 +7,13 @@ namespace FocLauncherHost.Utilities
     {
         internal static Stream ToStream(this string input)
         {
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(input);
-            writer.Flush();
-            stream.Position = 0;
-            return stream;
+            return input.ToStream(Encoding.UTF8);
+        }
+
+        internal static Stream ToStream(this string input, Encoding encoding)
+        {
+            var e = encoding.GetBytes(input);
+            return new MemoryStream(e);
         }
     }
 }

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using FocLauncher.Utilities;
+using FocLauncher.Xml;
 using NLog;
 
 namespace FocLauncher.UpdateMetadata
@@ -24,7 +24,7 @@ namespace FocLauncher.UpdateMetadata
             set => _products = value;
         }
 
-        public static async Task<Catalogs> DeserializeAsync(Stream stream)
+        public static Catalogs FromStream(Stream stream)
         {
             if (stream == null || stream.Length == 0)
                 throw new ArgumentNullException(nameof(stream));
@@ -32,15 +32,15 @@ namespace FocLauncher.UpdateMetadata
                 throw new NotSupportedException();
 
             var parser = new XmlObjectParser<Catalogs>(stream);
-            return await Task.FromResult(parser.Parse());
+            return parser.Parse();
         }
 
-        public static async Task<Catalogs?> TryDeserializeAsync(Stream stream)
+        public static Catalogs? FromStreamSafe(Stream stream)
         {
             try
             {
                 Logger.Trace("Try deserializing stream to Catalogs");
-                return  await DeserializeAsync(stream);
+                return FromStream(stream);
             }
             catch (Exception e)
             {

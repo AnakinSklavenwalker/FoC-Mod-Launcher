@@ -10,6 +10,7 @@ using FocLauncher;
 using FocLauncher.Properties;
 using FocLauncher.UpdateMetadata;
 using FocLauncher.Utilities;
+using FocLauncher.Xml;
 using NLog;
 using NLog.Conditions;
 using NLog.Targets;
@@ -163,7 +164,7 @@ namespace MetadataCreator
 
             var schemeStream = Resources.UpdateValidator.ToStream();
             var validator = new XmlValidator(schemeStream);
-            if (!validator.Validate(outputFile))
+            if (!validator.Validate(outputFile).IsValid)
             {
                 if (File.Exists(outputFile))
                     File.Delete(outputFile);

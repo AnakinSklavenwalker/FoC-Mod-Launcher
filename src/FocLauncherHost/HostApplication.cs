@@ -1,112 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Abstractions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using FocLauncher;
 using FocLauncher.Threading;
 using FocLauncherHost.Dialogs;
+using FocLauncherHost.Product;
 using FocLauncherHost.Update;
-using FocLauncherHost.Utilities;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
-using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.New.Update;
-using TaskBasedUpdater.Verification;
-using Requires = Microsoft.Requires;
-
-namespace FocLauncherHost.Product
-{
-    internal sealed class LauncherProductService : ProductServiceBase
-    {
-        public LauncherProductService(IProductComponentBuilder componentBuilder, IServiceProvider serviceProvider) : base(componentBuilder, serviceProvider)
-        {
-        }
-
-        public override IProductReference CreateProductReference(Version? newVersion,
-            ProductReleaseType newReleaseType)
-        {
-            return new ProductReference(LauncherConstants.ProductName)
-            {
-                Version = newVersion,
-                ReleaseType = newReleaseType
-            };
-        }
-
-        protected override IInstalledProduct BuildProduct()
-        {
-            var productRef = CreateProductReference(null, ProductReleaseType.Stable);
-            var path = GetInstallationPath();
-            var manifest = GetManifest(productRef);
-            return new InstalledProduct(productRef, manifest, path);
-        }
-
-        protected override IAvailableProductManifest LoadManifest(IProductReference product, IFileInfo manifestFile)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        private static IInstalledProductManifest GetManifest(IProductReference productReference)
-        {
-            return new LauncherManifest(productReference);
-        }
-
-        private static string GetInstallationPath()
-        {
-            return Directory.GetCurrentDirectory();
-        }
-    }
-    
-    internal class LauncherComponentBuilder : IProductComponentBuilder
-    {
-        public HashType HashType => HashType.Sha256;
-        
-        public Version? GetVersion(IFileInfo file)
-        {
-            return LauncherVersionUtilities.GetFileVersionSafe(file);
-        }
-    }
-    
-    internal class LauncherManifest : IInstalledProductManifest
-    {
-        public LauncherManifest(IProductReference product)
-        {
-            Requires.NotNull(product, nameof(product));
-            Product = product;
-        }
-
-        public IEnumerable<ProductComponent> Items
-        {
-            get
-            {
-                yield return new ProductComponent(LauncherConstants.LauncherFileName, "");
-
-                yield return new ProductComponent(LauncherConstants.UpdaterFileName,
-                    $"%{LauncherConstants.ApplicationBaseVariable}%");
-
-                yield return new ProductComponent(LauncherConstants.LauncherDllFileName,
-                    $"%{LauncherConstants.ApplicationBaseVariable}%");
-
-                yield return new ProductComponent(LauncherConstants.LauncherThemeFileName,
-                    $"%{LauncherConstants.ApplicationBaseVariable}%");
-
-                yield return new ProductComponent(LauncherConstants.LauncherThreadingFileName,
-                    $"%{LauncherConstants.ApplicationBaseVariable}%");
-            }
-        }
-
-        public IProductReference Product { get; }
-    }
-}
 
 
 namespace FocLauncherHost
@@ -132,8 +39,7 @@ namespace FocLauncherHost
             MainWindow = SplashScreen = new SplashScreen();
             SplashScreen.Launcher = FocLauncherInformation.Instance;
 
-            _services = new UpdaterServiceFactory().CreateServiceProvider(
-                new LauncherServiceFactory().CreateLauncherServices());
+            _services = new LauncherServiceFactory().CreateLauncherServices();
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -165,14 +71,14 @@ namespace FocLauncherHost
                         
                         updateInformation = await Task.Run(() =>
                         {
-                            var ps = _services.GetRequiredService<IProductService>();
+                            var ps = new LauncherProductService(new LauncherComponentBuilder(), _services);
                             var p = ps.GetCurrentInstance();
 
-                            var u = new FocLauncherUpdater(p, new UpdateConfiguration(), _services);
+                            var u = new FocLauncherUpdater(ps, new UpdateConfiguration(), _services);
 
                             var r = new UpdateRequest
                             {
-                                Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
+                                Product = ps.CreateProductReference(null, ProductReleaseType.Alpha),
                                 UpdateManifestPath = new Uri("file://c:/Test/text.xml", UriKind.Absolute)
                             };
 
