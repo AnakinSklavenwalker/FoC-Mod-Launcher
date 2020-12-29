@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.Schema;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Validation;
 
 namespace FocLauncher.Xml
@@ -61,7 +61,7 @@ namespace FocLauncher.Xml
             }
             catch(Exception e)
             {
-                _logger?.Error(e, e.Message);
+                _logger?.LogError(e, e.Message);
                 return new XmlValidationResult(e);
             }
             return new XmlValidationResult(_errors);
@@ -71,7 +71,7 @@ namespace FocLauncher.Xml
         {
             var error = new XmlValidationError(e.Message, e.Exception.LineNumber, e.Exception.LinePosition);
             _errors.Add(error);
-            _logger?.Warn(error.ToString);
+            _logger?.LogWarning(error.ToString());
         }
 
         public void Dispose()

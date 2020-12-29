@@ -2,10 +2,11 @@
 using FocLauncher.UpdateMetadata;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Verification;
+using Requires = Validation.Requires;
 
 namespace FocLauncherHost.Utilities
 {
-    public static class CatalogExtensions
+    public class DependencyToComponentConverter : IComponentConverter<Dependency>
     {
         public static ProductComponent? DependencyToComponent(Dependency dependency)
         {
@@ -41,6 +42,12 @@ namespace FocLauncherHost.Utilities
             if (!Uri.TryCreate(destination, UriKind.Absolute, out var uri))
                 throw new InvalidOperationException($"No absolute dependency destination: {destination}");
             return uri.LocalPath;
+        }
+
+        public ProductComponent Convert(Dependency metaModel)
+        {
+            Requires.NotNullAllowStructs(metaModel, nameof(metaModel));
+            return null;
         }
     }
 }

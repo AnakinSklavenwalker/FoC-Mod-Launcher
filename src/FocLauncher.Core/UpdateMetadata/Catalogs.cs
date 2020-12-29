@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
-using FocLauncher.Utilities;
 using FocLauncher.Xml;
-using NLog;
 
 namespace FocLauncher.UpdateMetadata
 {
@@ -12,10 +10,7 @@ namespace FocLauncher.UpdateMetadata
     [XmlRoot("Products", Namespace = "", IsNullable = false)]
     public class Catalogs
     {
-        private List<ProductCatalog> _products = new List<ProductCatalog>();
-
-        [XmlIgnore]
-        protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private List<ProductCatalog> _products = new();
 
         [XmlElement("Product")]
         public List<ProductCatalog> Products
@@ -39,12 +34,10 @@ namespace FocLauncher.UpdateMetadata
         {
             try
             {
-                Logger.Trace("Try deserializing stream to Catalogs");
                 return FromStream(stream);
             }
             catch (Exception e)
             {
-                Logger.Debug(e, "Getting catalogs from stream failed with exception. Returning null instead.");
                 return null;
             }
         }

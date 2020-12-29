@@ -2,13 +2,14 @@
 using System.IO;
 using System.Net;
 using System.Net.Cache;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace MetadataCreator
 {
+    // TODO: Remove and use existing....
     public static class Downloader
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly ILogger? Logger;
 
         public static bool Download(Uri uri, Stream outputStream)
         {
@@ -27,7 +28,7 @@ namespace MetadataCreator
             }
             catch (Exception e)
             {
-                Logger.Error(e, e.Message);
+                Logger?.LogError(e, e.Message);
                 return false;
             }
             return true;
@@ -75,7 +76,7 @@ namespace MetadataCreator
                 }
                 catch (WebException ex)
                 {
-                    Logger.Error("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "'.");
+                    Logger?.LogError("WebClient error '" + ex.Status + "' with '" + uri.AbsoluteUri + "'.");
                     throw;
                 }
             }
@@ -119,7 +120,7 @@ namespace MetadataCreator
                     var responseUri = httpWebResponse.ResponseUri.ToString();
                     if (!string.IsNullOrEmpty(responseUri) &&
                         !uri.ToString().EndsWith(responseUri, StringComparison.InvariantCultureIgnoreCase))
-                        Logger.Debug($"Uri '{uri}' + redirected to '{responseUri}'");
+                        Logger?.LogDebug($"Uri '{uri}' + redirected to '{responseUri}'");
 
                     switch (httpWebResponse.StatusCode)
                     {
@@ -132,14 +133,14 @@ namespace MetadataCreator
                             ++proxyResolution;
                             if (proxyResolution == ProxyResolution.Error)
                             {
-                                Logger.Warn($"WebResponse error '{httpWebResponse.StatusCode}' with '{uri}'.");
+                                Logger?.LogWarning($"WebResponse error '{httpWebResponse.StatusCode}' with '{uri}'.");
                                 throw new WrappedWebException();
                             }
-                            Logger.Warn($"WebResponse error '{httpWebResponse.StatusCode}' - '{uri.AbsoluteUri}'. Reattempt with proxy set to '{proxyResolution}'");
+                            Logger?.LogWarning($"WebResponse error '{httpWebResponse.StatusCode}' - '{uri.AbsoluteUri}'. Reattempt with proxy set to '{proxyResolution}'");
                             continue;
                         default:
                             proxyResolution = ProxyResolution.Error;
-                            Logger.Warn($"WebResponse error '{httpWebResponse.StatusCode}'  - '{uri.AbsoluteUri}'.");
+                            Logger?.LogWarning($"WebResponse error '{httpWebResponse.StatusCode}'  - '{uri.AbsoluteUri}'.");
                             throw new WrappedWebException();
                     }
                 }
@@ -147,13 +148,13 @@ namespace MetadataCreator
                 {
                     if (proxyResolution == ProxyResolution.Error)
                     {
-                        Logger.Error($"WebResponse exception '{ex.Status}' with '{uri}'.");
+                        Logger?.LogError($"WebResponse exception '{ex.Status}' with '{uri}'.");
                         throw;
                     }
                 }
                 catch (WebException ex)
                 {
-                    Logger.Error("WebClient error '" + ex.Status + "' - proxy setting '" + proxyResolution + "' - '" + uri.AbsoluteUri + "'.");
+                    Logger?.LogError("WebClient error '" + ex.Status + "' - proxy setting '" + proxyResolution + "' - '" + uri.AbsoluteUri + "'.");
                     switch (ex.Status)
                     {
                         case WebExceptionStatus.NameResolutionFailure:
@@ -169,13 +170,13 @@ namespace MetadataCreator
                     }
                     if (proxyResolution == ProxyResolution.Error)
                     {
-                        Logger.Warn("WebClient failed in '" + uri.AbsoluteUri + "' with '" + ex.Message + "' - '" + uri.AbsoluteUri + "'.");
+                        Logger?.LogWarning("WebClient failed in '" + uri.AbsoluteUri + "' with '" + ex.Message + "' - '" + uri.AbsoluteUri + "'.");
                         throw;
                     }
                 }
                 catch (Exception)
                 {
-                    Logger.Error("General exception error in web client.");
+                    Logger?.LogError("General exception error in web client.");
                     throw;
                 }
                 finally

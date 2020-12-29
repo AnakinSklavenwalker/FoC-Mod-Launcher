@@ -7,13 +7,15 @@ using FocLauncher;
 using FocLauncher.UpdateMetadata;
 using FocLauncher.Utilities;
 using FocLauncher.Xml;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace MetadataCreator
 {
+    // TODO: switch-logging
+    // TODO: make non-static
     internal static class CatalogUtilities
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly ILogger? Logger;
 
         internal static ProductCatalog? FindMatchingCatalog(this Catalogs catalogs, string productName, ApplicationType applicationType)
         {
@@ -21,14 +23,14 @@ namespace MetadataCreator
                 x.Name.Equals(productName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault(x => x.ApplicationType == applicationType);
         }
 
-        internal static bool DownloadCurrentCatalog(Uri currentMetadataUri, out Catalogs currentCatalog)
+        internal static bool DownloadCurrentCatalog(Uri currentMetadataUri, out Catalogs? currentCatalog)
         {
             currentCatalog = default;
             using var metadataStream = new MemoryStream();
-            Logger.Trace($"Downloading current metadata file from {currentMetadataUri}");
+            Logger?.LogTrace($"Downloading current metadata file from {currentMetadataUri}");
             if (!Downloader.Download(currentMetadataUri, metadataStream))
             {
-                Logger.Error("Unable to get the current metadata file");
+                Logger?.LogError("Unable to get the current metadata file");
                 return false;
             }
 
@@ -39,10 +41,10 @@ namespace MetadataCreator
             }
             catch (Exception e)
             {
-                Logger.Fatal(e, $"Download failed: {e.Message}");
+                Logger?.LogCritical(e, $"Download failed: {e.Message}");
                 return false;
             }
-            Logger.Info("Succeeded download.");
+            Logger?.LogInformation("Succeeded download.");
             return true;
         }
 
@@ -58,7 +60,7 @@ namespace MetadataCreator
             };
             foreach (var file in applicationFiles.Files)
                 product.Dependencies.Add(CreateDependency(file, applicationFiles.Type));
-            Logger.Debug($"Product created: {product}");
+            Logger?.LogDebug($"Product created: {product}");
             return product;
         }
 
@@ -72,7 +74,7 @@ namespace MetadataCreator
             dependency.Sha2 = FileHashHelper.GetFileHash(file.FullName, FileHashHelper.HashType.Sha256);
             dependency.Size = file.Length;
             dependency.Origin = UrlCombine.Combine(Program.LaunchOptions.OriginPathRoot, application.ToString(), file.Name);
-            Logger.Debug($"Dependency created: {dependency}");
+            Logger?.LogDebug($"Dependency created: {dependency}");
             return dependency;
         }
     }

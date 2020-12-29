@@ -9,23 +9,22 @@ using CommandLine;
 using FocLauncher;
 using FocLauncher.Properties;
 using FocLauncher.UpdateMetadata;
-using FocLauncher.Utilities;
 using FocLauncher.Xml;
-using NLog;
-using NLog.Conditions;
-using NLog.Targets;
+using Microsoft.Extensions.Logging;
 
 namespace MetadataCreator
 {
-    internal class Program
+    // TODO: make non-static
+    internal static class Program
     {
         private const string DefaultFileRootPath = "https://raw.githubusercontent.com/AnakinSklavenwalker/FoC-Mod-Launcher-Builds/master";
         public static readonly string[] SupportedFileEndings = {".exe", ".dll"};
 
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        // TODO: switch-logging
+        private static readonly ILogger? Logger;
 
 
-        internal static LaunchOptions LaunchOptions;
+        internal static LaunchOptions? LaunchOptions;
 
 
         private static int Main(string[] args)
@@ -45,7 +44,7 @@ namespace MetadataCreator
             });
             if (LaunchOptions is null)
             {
-                Logger.Fatal("Failed parsing arguments.");
+                Logger?.LogCritical("Failed parsing arguments.");
                 return -1;
             }
             
@@ -80,11 +79,11 @@ namespace MetadataCreator
                     CopyFiles(product, filesToCopy, LaunchOptions.FilesCopyLocation);
                 }
 
-                Logger.Info("Operation succeeded successfully!");
+                Logger?.LogInformation("Operation succeeded successfully!");
             }
             catch (Exception e)
             {
-                Logger.Fatal(e, $"The tool failed with an error: {e.Message}");
+                Logger?.LogCritical(e, $"The tool failed with an error: {e.Message}");
                 Console.ReadKey();
                 return e.HResult;
             }
@@ -106,14 +105,14 @@ namespace MetadataCreator
                     continue;
                 if (!product.Dependencies.Any(x => x.Name.Equals(file.Name)))
                 {
-                    Logger.Warn($"Deleting '{file.Name}' because it was not present in the product catalog");
+                    Logger?.LogWarning($"Deleting '{file.Name}' because it was not present in the product catalog");
                     file.Delete();
                 }
             }
 
             foreach (var newFile in newDependencyFiles)
             {
-                Logger.Debug($"Copying file '{newFile.Name}' to location {directory.FullName}");
+                Logger?.LogDebug($"Copying file '{newFile.Name}' to location {directory.FullName}");
                 newFile.CopyTo(Path.Combine(directory.FullName, newFile.Name), true);
             }
         }
@@ -127,14 +126,14 @@ namespace MetadataCreator
             {
                 if (product.ApplicationType != ApplicationType.Stable)
                     throw new NotSupportedException("Only having preview versions in the metadata file is not valid");
-                Logger.Info($"Created new Catalog. Option: {LaunchOptions.XmlIntegrationMode}");
+                Logger?.LogInformation($"Created new Catalog. Option: {LaunchOptions.XmlIntegrationMode}");
                 return catalog;
             }
 
 
             if (!Uri.TryCreate(LaunchOptions.CurrentMetadataFile, UriKind.RelativeOrAbsolute, out var metadataUri))
             {
-                Logger.Warn("Unable to get the current metadata file. Returning new catalog instead");
+                Logger?.LogWarning("Unable to get the current metadata file. Returning new catalog instead");
                 return catalog;
             }
             
@@ -150,7 +149,7 @@ namespace MetadataCreator
 
             if (File.Exists(outputFile))
             {
-                Logger.Trace("Deleteing old xml file");
+                Logger?.LogTrace("Deleteing old xml file");
                 File.Delete(outputFile);
             }
 
@@ -171,8 +170,8 @@ namespace MetadataCreator
                 throw new InvalidOperationException("Created .xml is not valid. File deleted");
             }
 
-            Logger.Info($"Wrote {LauncherConstants.UpdateMetadataFileName} to path '{outputFile}'");
-            Logger.Trace(File.ReadAllText(outputFile));
+            Logger?.LogInformation($"Wrote {LauncherConstants.UpdateMetadataFileName} to path '{outputFile}'");
+            Logger?.LogTrace(File.ReadAllText(outputFile));
         }
 
         private static Catalogs Integrate(Uri currentMetadataUri, ProductCatalog newProduct, IntegrationMode integrationMode, out ICollection<string> newDependencyNames)
@@ -188,7 +187,7 @@ namespace MetadataCreator
                 if (currentCatalog.Products == null)
                     currentCatalog.Products = new List<ProductCatalog>();
                 currentCatalog.Products.Add(newProduct);
-                Logger.Info($"Created new Product. Option: {LaunchOptions.XmlIntegrationMode}");
+                Logger?.LogInformation($"Created new Product. Option: {LaunchOptions.XmlIntegrationMode}");
                 return currentCatalog;
             }
 
@@ -198,12 +197,12 @@ namespace MetadataCreator
                 case IntegrationMode.Product:
                     currentCatalog.Products.Remove(currentProduct);
                     currentCatalog.Products.Add(newProduct);
-                    Logger.Info($"Added Product. Option: {LaunchOptions.XmlIntegrationMode}");
+                    Logger?.LogInformation($"Added Product. Option: {LaunchOptions.XmlIntegrationMode}");
                     break;
                 case IntegrationMode.Dependency:
                     currentProduct.Dependencies = new List<Dependency>();
                     currentProduct.Dependencies.AddRange(newProduct.Dependencies);
-                    Logger.Info($"Replaced missmatching product dependencies. Option: {LaunchOptions.XmlIntegrationMode}");
+                    Logger?.LogInformation($"Replaced missmatching product dependencies. Option: {LaunchOptions.XmlIntegrationMode}");
                     break;
                 case IntegrationMode.DependencyVersion:
                 {
@@ -220,16 +219,16 @@ namespace MetadataCreator
                         {
                             if (DependencyComparer.NameAndVersion.Equals(oldDependency, newDependency))
                             {
-                                Logger.Trace($"Keeping old dependency {newDependency.Name} because version are equal");
+                                Logger?.LogTrace($"Keeping old dependency {newDependency.Name} because version are equal");
                                 currentProduct.Dependencies.Add(oldDependency);
                                 continue;
                             }
                         }
-                        Logger.Trace($"Adding new dependency '{newDependency.Name}' because version are different");
+                        Logger?.LogTrace($"Adding new dependency '{newDependency.Name}' because version are different");
                         newDependencyNames.Add(newDependency.Name);
                         currentProduct.Dependencies.Add(newDependency);
                     }
-                    Logger.Info($"Replaced missmatching product dependencies. Option: {LaunchOptions.XmlIntegrationMode}");
+                    Logger?.LogInformation($"Replaced missmatching product dependencies. Option: {LaunchOptions.XmlIntegrationMode}");
                     break;
                 }
             }
@@ -239,7 +238,7 @@ namespace MetadataCreator
 
         internal static void FillData(IEnumerable<FileInfo> files, in ApplicationFiles data)
         {
-            Logger.Trace("Added application files to an ApplicationFiles");
+            Logger?.LogTrace("Added application files to an ApplicationFiles");
             foreach (var file in files)
             {
                 if (file.Name.Equals(LauncherConstants.LauncherFileName))
@@ -255,16 +254,16 @@ namespace MetadataCreator
         
         private static void SetLogging()
         {
-            var config = new NLog.Config.LoggingConfiguration();
-            var consoleTarget = new ColoredConsoleTarget();
-            var highlightRule = new ConsoleRowHighlightingRule
-            {
-                Condition = ConditionParser.ParseExpression("level == LogLevel.Info"),
-                ForegroundColor = ConsoleOutputColor.Green
-            };
-            consoleTarget.RowHighlightingRules.Add(highlightRule);
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
-            LogManager.Configuration = config;
+            //var config = new NLog.Config.LoggingConfiguration();
+            //var consoleTarget = new ColoredConsoleTarget();
+            //var highlightRule = new ConsoleRowHighlightingRule
+            //{
+            //    Condition = ConditionParser.ParseExpression("level == LogLevel.Info"),
+            //    ForegroundColor = ConsoleOutputColor.Green
+            //};
+            //consoleTarget.RowHighlightingRules.Add(highlightRule);
+            //config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
+            //LogManager.Configuration = config;
         }
     }
 }
