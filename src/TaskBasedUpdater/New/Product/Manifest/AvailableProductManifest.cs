@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using TaskBasedUpdater.Component;
 using Validation;
 
@@ -12,6 +13,13 @@ namespace TaskBasedUpdater.New.Product.Manifest
         {
             Requires.NotNull(product, nameof(product));
             Product = product;
+        }
+
+        public static IAvailableProductCatalog FromCatalog(ICatalog catalog, IProductReference product)
+        {
+            Requires.NotNull(catalog, nameof(catalog));
+            Requires.NotNull(product, nameof(product));
+            return new AvailableProductCatalog(product, catalog.Items.ToList());
         }
     }
 }

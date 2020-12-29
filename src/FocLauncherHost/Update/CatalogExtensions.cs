@@ -1,13 +1,55 @@
 ﻿using System;
 using FocLauncher.UpdateMetadata;
 using TaskBasedUpdater.Component;
+using TaskBasedUpdater.New;
 using TaskBasedUpdater.Verification;
 using Requires = Validation.Requires;
 
-namespace FocLauncherHost.Utilities
+namespace FocLauncherHost.Update
 {
-    public class DependencyToComponentConverter : IComponentConverter<Dependency>
+    internal interface ILauncherCatalogFinder
     {
+        ProductCatalog FindMatching(Catalogs container);
+    }
+
+    internal class LauncherCatalogFinder : ILauncherCatalogFinder
+    {
+        public ProductCatalog FindMatching(Catalogs container)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal class LauncherToProductCatalogConverter : ICatalogConverter<ProductCatalog, Dependency>
+    {
+        public IComponentConverter<Dependency> ComponentConverter { get; }
+
+        public LauncherToProductCatalogConverter() : 
+            this(new DependencyToComponentConverter())
+        {
+            
+        }
+
+        internal LauncherToProductCatalogConverter(IComponentConverter<Dependency> componentConverter)
+        {
+            Requires.NotNull(componentConverter, nameof(componentConverter));
+            ComponentConverter = componentConverter;
+        }
+
+        public ICatalog Convert(ProductCatalog catalogModel)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal class DependencyToComponentConverter : IComponentConverter<Dependency>
+    {
+        public ProductComponent Convert(Dependency dependency)
+        {
+            Requires.NotNullAllowStructs(dependency, nameof(dependency));
+            return null;
+        }
+
         public static ProductComponent? DependencyToComponent(Dependency dependency)
         {
             if (string.IsNullOrEmpty(dependency.Name) || string.IsNullOrEmpty(dependency.Destination))
@@ -42,12 +84,6 @@ namespace FocLauncherHost.Utilities
             if (!Uri.TryCreate(destination, UriKind.Absolute, out var uri))
                 throw new InvalidOperationException($"No absolute dependency destination: {destination}");
             return uri.LocalPath;
-        }
-
-        public ProductComponent Convert(Dependency metaModel)
-        {
-            Requires.NotNullAllowStructs(metaModel, nameof(metaModel));
-            return null;
         }
     }
 }

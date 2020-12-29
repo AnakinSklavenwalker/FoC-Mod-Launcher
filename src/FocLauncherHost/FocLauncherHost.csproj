@@ -108,7 +108,7 @@
     <Compile Include="Shared\LauncherRestartOptions_Interface.cs" />
     <Compile Include="LauncherServiceFactory.cs" />
     <Compile Include="Utilities\AssemblyExtractor.cs" />
-    <Compile Include="Utilities\CatalogExtensions.cs" />
+    <Compile Include="Update\CatalogExtensions.cs" />
     <Compile Include="Utilities\FileExtensions.cs" />
     <Compile Include="Converters\LauncherTypeNameConverter.cs" />
     <Compile Include="Converters\LockingProcessInfoTextConverter.cs" />
@@ -222,9 +222,6 @@
     </PackageReference>
     <PackageReference Include="dnlib">
       <Version>3.3.2</Version>
-    </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

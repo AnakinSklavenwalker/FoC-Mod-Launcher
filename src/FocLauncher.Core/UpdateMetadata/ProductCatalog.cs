@@ -9,7 +9,7 @@ namespace FocLauncher.UpdateMetadata
     [Serializable]
     public class ProductCatalog
     {
-        private List<Dependency> _dependencies = new List<Dependency>();
+        private List<Dependency> _dependencies = new();
 
         private string _name;
         private string _author;
