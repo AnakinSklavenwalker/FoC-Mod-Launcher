@@ -2,9 +2,9 @@
 
 namespace FocLauncherHost.Update.Model
 {
-    public static class DependencyHelper
+    public static class LauncherComponentHelper
     {
-        public static Version? GetVersion(this Dependency dependency)
+        public static Version? GetVersion(this LauncherComponent dependency)
         {
             if (string.IsNullOrEmpty(dependency.Version))
                 return null;

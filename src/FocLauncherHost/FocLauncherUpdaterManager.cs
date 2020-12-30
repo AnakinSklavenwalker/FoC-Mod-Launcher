@@ -70,7 +70,7 @@ namespace FocLauncherHost
                     return null;
 
                 var result = new HashSet<IUpdateItem>(UpdateItemIdentityComparer.Default);
-                foreach (var component in product.Dependencies.Select(CatalogExtensions.DependencyToComponent)
+                foreach (var component in product.Components.Select(CatalogExtensions.DependencyToComponent)
                     .Where(component => component != null))
                     result.Add(component);
                 return result;
@@ -207,10 +207,10 @@ namespace FocLauncherHost
 
         private ProductCatalog? FindMatchingProductCatalog(Catalogs catalogs, Func<IEnumerable<ProductCatalog>, ProductCatalog> fallbackAction)
         {
-            if (catalogs?.Products is null || !catalogs.Products.Any())
+            if (catalogs?.Manifests is null || !catalogs.Manifests.Any())
                 throw new NotSupportedException("No products to update are found");
 
-            var productsWithCorrectName = catalogs.Products.Where(x =>
+            var productsWithCorrectName = catalogs.Manifests.Where(x =>
                     x.Name.Equals(LauncherInformation.Name, StringComparison.InvariantCultureIgnoreCase)).ToList();
 
             var searchOption = LauncherInformation.CurrentUpdateSearchOption ?? LauncherInformation.UpdateSearchOption;

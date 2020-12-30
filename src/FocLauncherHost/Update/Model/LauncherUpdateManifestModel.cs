@@ -8,19 +8,21 @@ using FocLauncher;
 namespace FocLauncherHost.Update.Model
 {
     [Serializable]
-    public class ProductCatalog
+    [XmlType(TypeName = "Product")]
+    public class LauncherUpdateManifestModel
     {
-        private List<Dependency> _dependencies = new();
+        private List<LauncherComponent> _components = new();
 
         private string _name;
         private string _author;
         private ApplicationType _application;
 
         [XmlArrayItem("Dependency", IsNullable = false)]
-        public List<Dependency> Dependencies
+        [XmlArray("Dependencies")]
+        public List<LauncherComponent> Components
         {
-            get => _dependencies;
-            set => _dependencies = value;
+            get => _components;
+            set => _components = value;
         }
 
         [XmlAttribute]
@@ -52,14 +54,14 @@ namespace FocLauncherHost.Update.Model
             sb.Append($"ApplicationType: {ApplicationType}");
             sb.Append($"Author: {Author}");
 
-            if (!Dependencies.Any())
+            if (!Components.Any())
                 return sb.ToString();
 
             var dependencySb = new StringBuilder();
-            foreach (var dependency in Dependencies) 
+            foreach (var dependency in Components) 
                 dependencySb.AppendLine("\t" + dependency);
 
-            sb.AppendLine($"Dependencies ({Dependencies.Count}):");
+            sb.AppendLine($"Components ({Components.Count}):");
             sb.Append(dependencySb);
             return sb.ToString();
         }

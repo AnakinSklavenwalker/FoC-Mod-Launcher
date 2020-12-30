@@ -8,25 +8,25 @@ namespace FocLauncherHost.Update.Model
 {
     [Serializable]
     [XmlRoot("Products", Namespace = "", IsNullable = false)]
-    public class Catalogs
+    public class LauncherUpdateManifestContainer
     {
-        private List<ProductCatalog> _products = new();
+        private List<LauncherUpdateManifestModel> _manifests = new();
 
         [XmlElement("Product")]
-        public List<ProductCatalog> Products
+        public List<LauncherUpdateManifestModel> Manifests
         {
-            get => _products;
-            set => _products = value;
+            get => _manifests;
+            set => _manifests = value;
         }
 
-        public static Catalogs FromStream(Stream stream)
+        public static LauncherUpdateManifestContainer FromStream(Stream stream)
         {
             if (stream == null || stream.Length == 0)
                 throw new ArgumentNullException(nameof(stream));
             if (!stream.CanRead)
                 throw new NotSupportedException();
 
-            var parser = new XmlObjectParser<Catalogs>(stream);
+            var parser = new XmlObjectParser<LauncherUpdateManifestContainer>(stream);
             return parser.Parse();
         }
     }

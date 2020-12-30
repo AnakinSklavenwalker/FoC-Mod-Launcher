@@ -3,16 +3,18 @@ using System.Xml.Serialization;
 
 namespace FocLauncherHost.Update.Model
 {
+    // TODO: To data contract
     [Serializable]
-    public class Dependency
+    [XmlType(TypeName = "Dependency")]
+    public class LauncherComponent
     {
         private string _destination;
         private string _origin;
-        private byte[] _sha2;
         private string _name;
         private string _version;
         private long? _size;
-        
+        private byte[]? _sha2;
+
         public string Destination
         {
             get => _destination;
@@ -54,25 +56,6 @@ namespace FocLauncherHost.Update.Model
             set => _version = value;
         }
 
-        public override string ToString()
-        {
-            return $"{nameof(Name)}: {Name}, {nameof(Version)}: {Version}, {nameof(Destination)}: {Destination}, {nameof(Origin)}: {Origin}";
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj)) 
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            return obj.GetType() == GetType() && Equals((Dependency)obj);
-        }
-        
-        public override int GetHashCode()
-        {
-            return _name.GetHashCode();
-        }
-
         // Prevents null tags when deserializing 
         public bool ShouldSerializeSize()
         {
@@ -85,9 +68,9 @@ namespace FocLauncherHost.Update.Model
             return _sha2 != null;
         }
 
-        protected bool Equals(Dependency other)
+        public override string ToString()
         {
-            return _name == other._name;
+            return $"{nameof(Name)}: {Name}, {nameof(Version)}: {Version}, {nameof(Destination)}: {Destination}, {nameof(Origin)}: {Origin}";
         }
     }
 }

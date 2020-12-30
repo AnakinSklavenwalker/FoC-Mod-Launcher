@@ -9,20 +9,20 @@ namespace FocLauncherHost.Update
 {
     internal interface ILauncherCatalogFinder
     {
-        ProductCatalog FindMatching(Catalogs container);
+        LauncherUpdateManifestModel FindMatching(LauncherUpdateManifestContainer container);
     }
 
     internal class LauncherCatalogFinder : ILauncherCatalogFinder
     {
-        public ProductCatalog FindMatching(Catalogs container)
+        public LauncherUpdateManifestModel FindMatching(LauncherUpdateManifestContainer container)
         {
             throw new NotImplementedException();
         }
     }
 
-    internal class LauncherToProductCatalogConverter : ICatalogConverter<ProductCatalog, Dependency>
+    internal class LauncherToProductCatalogConverter : ICatalogConverter<LauncherUpdateManifestModel, LauncherComponent>
     {
-        public IComponentConverter<Dependency> ComponentConverter { get; }
+        public IComponentConverter<LauncherComponent> ComponentConverter { get; }
 
         public LauncherToProductCatalogConverter() : 
             this(new DependencyToComponentConverter())
@@ -30,27 +30,27 @@ namespace FocLauncherHost.Update
             
         }
 
-        internal LauncherToProductCatalogConverter(IComponentConverter<Dependency> componentConverter)
+        internal LauncherToProductCatalogConverter(IComponentConverter<LauncherComponent> componentConverter)
         {
             Requires.NotNull(componentConverter, nameof(componentConverter));
             ComponentConverter = componentConverter;
         }
 
-        public ICatalog Convert(ProductCatalog catalogModel)
+        public ICatalog Convert(LauncherUpdateManifestModel catalogModel)
         {
             throw new NotImplementedException();
         }
     }
 
-    internal class DependencyToComponentConverter : IComponentConverter<Dependency>
+    internal class DependencyToComponentConverter : IComponentConverter<LauncherComponent>
     {
-        public ProductComponent Convert(Dependency dependency)
+        public ProductComponent Convert(LauncherComponent dependency)
         {
             Requires.NotNullAllowStructs(dependency, nameof(dependency));
             return null;
         }
 
-        public static ProductComponent? DependencyToComponent(Dependency dependency)
+        public static ProductComponent? DependencyToComponent(LauncherComponent dependency)
         {
             if (string.IsNullOrEmpty(dependency.Name) || string.IsNullOrEmpty(dependency.Destination))
                 return null;
@@ -78,7 +78,7 @@ namespace FocLauncherHost.Update
             };
         }
 
-        private static string GetRealDependencyDestination(Dependency dependency)
+        private static string GetRealDependencyDestination(LauncherComponent dependency)
         {
             var destination = Environment.ExpandEnvironmentVariables(dependency.Destination);
             if (!Uri.TryCreate(destination, UriKind.Absolute, out var uri))

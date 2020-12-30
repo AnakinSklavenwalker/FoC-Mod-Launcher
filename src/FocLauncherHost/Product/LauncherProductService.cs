@@ -49,16 +49,16 @@ namespace FocLauncherHost.Product
 
             if (!validator.Validate(fileStream))
                 throw new ManifestException($"Manifest file '{manifestFile.FullName}' is not valid.");
-            Catalogs manifestModel;
+            LauncherUpdateManifestContainer manifestContainer;
             try
             {
-                manifestModel = Catalogs.FromStream(fileStream);
+                manifestContainer = LauncherUpdateManifestContainer.FromStream(fileStream);
             }
             catch (Exception e)
             {
                 throw new ManifestException(e.Message, e);
             }
-            if (manifestModel is null)
+            if (manifestContainer is null)
                 throw new ManifestException($"Failed to get manifest from '{manifestFile.FullName}'.");
             
 

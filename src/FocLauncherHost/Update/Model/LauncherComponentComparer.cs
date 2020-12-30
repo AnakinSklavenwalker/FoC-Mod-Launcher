@@ -3,22 +3,21 @@ using System.Collections.Generic;
 
 namespace FocLauncherHost.Update.Model
 {
-    public class DependencyComparer : IEqualityComparer<Dependency>
+    public class LauncherComponentComparer : IEqualityComparer<LauncherComponent>
     {
-        public static readonly DependencyComparer Name = new DependencyComparer(CompareMode.Name);
-        public static readonly DependencyComparer NameAndVersion = new DependencyComparer(CompareMode.NameAndVersion);
-        public static readonly DependencyComparer Complete = new DependencyComparer(CompareMode.All);
+        public static readonly LauncherComponentComparer Name = new(CompareMode.Name);
+        public static readonly LauncherComponentComparer NameAndVersion = new(CompareMode.NameAndVersion);
 
         private readonly CompareMode _compareMode;
         private readonly StringComparer _ignoreCaseComparer = StringComparer.OrdinalIgnoreCase;
         private readonly StringComparer _comparer = StringComparer.InvariantCulture;
 
-        public DependencyComparer(CompareMode compareMode)
+        public LauncherComponentComparer(CompareMode compareMode)
         {
             _compareMode = compareMode;
         }
 
-        public bool Equals(Dependency x, Dependency y)
+        public bool Equals(LauncherComponent x, LauncherComponent y)
         {
             if (ReferenceEquals(x, y))
                 return true;
@@ -35,7 +34,7 @@ namespace FocLauncherHost.Update.Model
             return Equals(x.Destination, y.Destination) && Equals(x.Origin, y.Destination) && Equals(x.Sha2, y.Sha2) && Equals(x.Size, y.Size);
         }
 
-        public int GetHashCode(Dependency obj)
+        public int GetHashCode(LauncherComponent obj)
         {
             var num = 0;
             if (obj.Name != null)

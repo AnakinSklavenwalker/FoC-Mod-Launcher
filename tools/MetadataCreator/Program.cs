@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -91,7 +90,7 @@ namespace MetadataCreator
             return 0;
         }
 
-        private static void CopyFiles(ProductCatalog product, IEnumerable<FileInfo> newDependencyFiles, string filesLocation)
+        private static void CopyFiles(LauncherUpdateManifestModel product, IEnumerable<FileInfo> newDependencyFiles, string filesLocation)
         {
             var typeName = Enum.GetName(typeof(ApplicationType), product.ApplicationType);
             if (typeName == null)
@@ -104,7 +103,7 @@ namespace MetadataCreator
             {
                 if (file.Name.Equals(".gitkeep"))
                     continue;
-                if (!product.Dependencies.Any(x => x.Name.Equals(file.Name)))
+                if (!product.Components.Any(x => x.Name.Equals(file.Name)))
                 {
                     Logger?.LogWarning($"Deleting '{file.Name}' because it was not present in the product catalog");
                     file.Delete();
@@ -118,10 +117,10 @@ namespace MetadataCreator
             }
         }
 
-        private static Catalogs CreateCatalogOrIntegrate(in ProductCatalog product, out ICollection<string> newDependencyNames)
+        private static LauncherUpdateManifestContainer CreateCatalogOrIntegrate(in LauncherUpdateManifestModel product, out ICollection<string> newDependencyNames)
         {
-            var catalog = new Catalogs {Products = new List<ProductCatalog> {product}};
-            newDependencyNames = product.Dependencies.Select(x => x.Name).ToList();
+            var catalog = new LauncherUpdateManifestContainer { Manifests = new List<LauncherUpdateManifestModel> {product}};
+            newDependencyNames = product.Components.Select(x => x.Name).ToList();
 
             if (LaunchOptions.XmlIntegrationMode == IntegrationMode.None)
             {
@@ -142,9 +141,9 @@ namespace MetadataCreator
             return catalog;
         }
 
-        private static void WriteXmlFile(Catalogs catalog, string location)
+        private static void WriteXmlFile(LauncherUpdateManifestContainer catalog, string location)
         {
-            var serializer = new XmlSerializer(typeof(Catalogs));
+            var serializer = new XmlSerializer(typeof(LauncherUpdateManifestContainer));
             var outputFile = Path.Combine(location, LauncherConstants.UpdateMetadataFileName);
             Directory.CreateDirectory(location);
 
@@ -175,19 +174,19 @@ namespace MetadataCreator
             Logger?.LogTrace(File.ReadAllText(outputFile));
         }
 
-        private static Catalogs Integrate(Uri currentMetadataUri, ProductCatalog newProduct, IntegrationMode integrationMode, out ICollection<string> newDependencyNames)
+        private static LauncherUpdateManifestContainer Integrate(Uri currentMetadataUri, LauncherUpdateManifestModel newProduct, IntegrationMode integrationMode, out ICollection<string> newDependencyNames)
         {
-            newDependencyNames = newProduct.Dependencies.Select(x => x.Name).ToList();
+            newDependencyNames = newProduct.Components.Select(x => x.Name).ToList();
 
             if (!CatalogUtilities.DownloadCurrentCatalog(currentMetadataUri, out var currentCatalog))
-                return new Catalogs {Products = new List<ProductCatalog> {newProduct}};
+                return new LauncherUpdateManifestContainer { Manifests = new List<LauncherUpdateManifestModel> {newProduct}};
 
             var currentProduct = currentCatalog.FindMatchingCatalog(newProduct.Name, newProduct.ApplicationType);
             if (currentProduct == null)
             {
-                if (currentCatalog.Products == null)
-                    currentCatalog.Products = new List<ProductCatalog>();
-                currentCatalog.Products.Add(newProduct);
+                if (currentCatalog.Manifests == null)
+                    currentCatalog.Manifests = new List<LauncherUpdateManifestModel>();
+                currentCatalog.Manifests.Add(newProduct);
                 Logger?.LogInformation($"Created new Product. Option: {LaunchOptions.XmlIntegrationMode}");
                 return currentCatalog;
             }
@@ -196,38 +195,38 @@ namespace MetadataCreator
             switch (integrationMode)
             {
                 case IntegrationMode.Product:
-                    currentCatalog.Products.Remove(currentProduct);
-                    currentCatalog.Products.Add(newProduct);
+                    currentCatalog.Manifests.Remove(currentProduct);
+                    currentCatalog.Manifests.Add(newProduct);
                     Logger?.LogInformation($"Added Product. Option: {LaunchOptions.XmlIntegrationMode}");
                     break;
                 case IntegrationMode.Dependency:
-                    currentProduct.Dependencies = new List<Dependency>();
-                    currentProduct.Dependencies.AddRange(newProduct.Dependencies);
+                    currentProduct.Components = new List<LauncherComponent>();
+                    currentProduct.Components.AddRange(newProduct.Components);
                     Logger?.LogInformation($"Replaced missmatching product dependencies. Option: {LaunchOptions.XmlIntegrationMode}");
                     break;
                 case IntegrationMode.DependencyVersion:
                 {
-                    var currentDependencies = currentProduct.Dependencies;
-                    var newDependencies = newProduct.Dependencies;
+                    var currentDependencies = currentProduct.Components;
+                    var newDependencies = newProduct.Components;
                     newDependencyNames = new List<string>();
                
-                    currentProduct.Dependencies = new List<Dependency>();
+                    currentProduct.Components = new List<LauncherComponent>();
 
                     foreach (var newDependency in newDependencies)
                     {
-                        var oldDependency = currentDependencies.FirstOrDefault(x => DependencyComparer.Name.Equals(x, newDependency));
+                        var oldDependency = currentDependencies.FirstOrDefault(x => LauncherComponentComparer.Name.Equals(x, newDependency));
                         if (oldDependency != null)
                         {
-                            if (DependencyComparer.NameAndVersion.Equals(oldDependency, newDependency))
+                            if (LauncherComponentComparer.NameAndVersion.Equals(oldDependency, newDependency))
                             {
                                 Logger?.LogTrace($"Keeping old dependency {newDependency.Name} because version are equal");
-                                currentProduct.Dependencies.Add(oldDependency);
+                                currentProduct.Components.Add(oldDependency);
                                 continue;
                             }
                         }
                         Logger?.LogTrace($"Adding new dependency '{newDependency.Name}' because version are different");
                         newDependencyNames.Add(newDependency.Name);
-                        currentProduct.Dependencies.Add(newDependency);
+                        currentProduct.Components.Add(newDependency);
                     }
                     Logger?.LogInformation($"Replaced missmatching product dependencies. Option: {LaunchOptions.XmlIntegrationMode}");
                     break;

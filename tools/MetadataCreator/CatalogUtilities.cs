@@ -17,13 +17,13 @@ namespace MetadataCreator
     {
         private static readonly ILogger? Logger;
 
-        internal static ProductCatalog? FindMatchingCatalog(this Catalogs catalogs, string productName, ApplicationType applicationType)
+        internal static LauncherUpdateManifestModel? FindMatchingCatalog(this LauncherUpdateManifestContainer catalogs, string productName, ApplicationType applicationType)
         {
-            return catalogs.Products.Where(x =>
+            return catalogs.Manifests.Where(x =>
                 x.Name.Equals(productName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault(x => x.ApplicationType == applicationType);
         }
 
-        internal static bool DownloadCurrentCatalog(Uri currentMetadataUri, out Catalogs? currentCatalog)
+        internal static bool DownloadCurrentCatalog(Uri currentMetadataUri, out LauncherUpdateManifestContainer? currentCatalog)
         {
             currentCatalog = default;
             using var metadataStream = new MemoryStream();
@@ -36,7 +36,7 @@ namespace MetadataCreator
 
             try
             {
-                var parser = new XmlObjectParser<Catalogs>(metadataStream);
+                var parser = new XmlObjectParser<LauncherUpdateManifestContainer>(metadataStream);
                 currentCatalog = parser.Parse();
             }
             catch (Exception e)
@@ -49,24 +49,24 @@ namespace MetadataCreator
         }
 
 
-        internal static ProductCatalog CreateProduct(ApplicationFiles applicationFiles)
+        internal static LauncherUpdateManifestModel CreateProduct(ApplicationFiles applicationFiles)
         {
-            var product = new ProductCatalog
+            var product = new LauncherUpdateManifestModel
             {
                 Name = LauncherConstants.ProductName,
                 Author = LauncherConstants.Author,
                 ApplicationType = applicationFiles.Type,
-                Dependencies = new List<Dependency> { CreateDependency(applicationFiles.Executable, applicationFiles.Type, true) }
+                Components = new List<LauncherComponent> { CreateDependency(applicationFiles.Executable, applicationFiles.Type, true) }
             };
             foreach (var file in applicationFiles.Files)
-                product.Dependencies.Add(CreateDependency(file, applicationFiles.Type));
+                product.Components.Add(CreateDependency(file, applicationFiles.Type));
             Logger?.LogDebug($"Product created: {product}");
             return product;
         }
 
-        internal static Dependency CreateDependency(FileInfo file, ApplicationType application, bool isLauncherExecutable = false)
+        internal static LauncherComponent CreateDependency(FileInfo file, ApplicationType application, bool isLauncherExecutable = false)
         {
-            var dependency = new Dependency();
+            var dependency = new LauncherComponent();
             dependency.Name = file.Name;
             var destination = isLauncherExecutable ? LauncherConstants.ExecutablePathVariable : LauncherConstants.ApplicationBaseVariable;
             dependency.Destination = $"%{destination}%";
