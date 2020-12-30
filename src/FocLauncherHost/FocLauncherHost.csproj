@@ -92,7 +92,8 @@
     <Compile Include="Product\LauncherComponentBuilder.cs" />
     <Compile Include="Product\LauncherManifest.cs" />
     <Compile Include="Product\LauncherProductService.cs" />
-    <Compile Include="Update\FocLauncherUpdater.cs" />
+    <Compile Include="Product\LauncherUpdateManifestBuilder.cs" />
+    <Compile Include="Update\DependencyToComponentConverter.cs" />
     <Compile Include="LauncherInitializer.cs" />
     <Compile Include="LauncherRestartManager.cs" />
     <Compile Include="Controls\OutlinedTextBlock.cs" />
@@ -107,6 +108,8 @@
     <Compile Include="FocLauncherUpdaterManager.cs" />
     <Compile Include="Shared\LauncherRestartOptions_Interface.cs" />
     <Compile Include="LauncherServiceFactory.cs" />
+    <Compile Include="Update\ILauncherUpdateManifestFinder.cs" />
+    <Compile Include="Update\LauncherToProductCatalogConverter.cs" />
     <Compile Include="Update\Model\LauncherUpdateManifestContainer.cs" />
     <Compile Include="Update\Model\LauncherComponent.cs" />
     <Compile Include="Update\Model\LauncherComponentComparer.cs" />
@@ -114,7 +117,7 @@
     <Compile Include="Update\Model\InstallLocation.cs" />
     <Compile Include="Update\Model\LauncherUpdateManifestModel.cs" />
     <Compile Include="Utilities\AssemblyExtractor.cs" />
-    <Compile Include="Update\CatalogExtensions.cs" />
+    <Compile Include="Update\LauncherManifestFinder.cs" />
     <Compile Include="Utilities\FileExtensions.cs" />
     <Compile Include="Converters\LauncherTypeNameConverter.cs" />
     <Compile Include="Converters\LockingProcessInfoTextConverter.cs" />

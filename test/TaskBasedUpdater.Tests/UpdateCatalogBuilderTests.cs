@@ -30,7 +30,7 @@ namespace TaskBasedUpdater.Tests
         {
             var p1 = CreateProductRef("A");
             var p2 = CreateProduct("B");
-            var available = new AvailableProductCatalog(p1, new ProductComponent[0]);
+            var available = new AvailableProductManifest(p1, new ProductComponent[0]);
             var installed = new InstalledProductCatalog(p2, new ProductComponent[0]);
 
             Assert.Throws<InvalidOperationException>(() =>
@@ -49,21 +49,21 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new ProductComponent[0]),
-                new AvailableProductCatalog(ProductRef, new ProductComponent[0]),
+                new AvailableProductManifest(ProductRef, new ProductComponent[0]),
                 new UpdateCatalogStub(new ProductComponent[0])
             };
 
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new ProductComponent[0]),
-                new AvailableProductCatalog(ProductRef, new ProductComponent[0]),
+                new AvailableProductManifest(ProductRef, new ProductComponent[0]),
                 new UpdateCatalogStub(new ProductComponent[0])
             };
 
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new ProductComponent[0]),
-                new AvailableProductCatalog(ProductRef, new ProductComponent[0]),
+                new AvailableProductManifest(ProductRef, new ProductComponent[0]),
                 new UpdateCatalogStub(new ProductComponent[0])
             };
         }
@@ -81,7 +81,7 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new []{current}),
-                new AvailableProductCatalog(ProductRef, new []{avail}),
+                new AvailableProductManifest(ProductRef, new []{avail}),
                 new UpdateCatalogStub(new []{expected})
             };
         }
@@ -104,7 +104,7 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new []{current}),
-                new AvailableProductCatalog(ProductRef, new []{availSame, availNew}),
+                new AvailableProductManifest(ProductRef, new []{availSame, availNew}),
                 new UpdateCatalogStub(new []{expectedSame, expectedNew})
             };
         }
@@ -120,7 +120,7 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new []{current}),
-                new AvailableProductCatalog(ProductRef, new ProductComponent[0]),
+                new AvailableProductManifest(ProductRef, new ProductComponent[0]),
                 new UpdateCatalogStub(new []{ expected})
             };
         }
@@ -142,7 +142,7 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new []{currentSame, currentDep}),
-                new AvailableProductCatalog(ProductRef, new []{availSame}),
+                new AvailableProductManifest(ProductRef, new []{availSame}),
                 new UpdateCatalogStub(new []{ expectedSame, expectedDep})
             };
         }
@@ -159,7 +159,7 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new ProductComponent[0]),
-                new AvailableProductCatalog(ProductRef, new []{avail}),
+                new AvailableProductManifest(ProductRef, new []{avail}),
                 new UpdateCatalogStub(new []{expected})
             };
         }
@@ -187,7 +187,7 @@ namespace TaskBasedUpdater.Tests
             yield return new object[]
             {
                 new InstalledProductCatalog(Product, new []{ currentKeep, currentDelete}),
-                new AvailableProductCatalog(ProductRef, new []{availKeep, availUpdate}),
+                new AvailableProductManifest(ProductRef, new []{availKeep, availUpdate}),
                 new UpdateCatalogStub(new []{ expectedKeep, expectedDelete, expectedUpdate})
             };
         }
@@ -202,7 +202,7 @@ namespace TaskBasedUpdater.Tests
         [MemberData(nameof(DeleteUpdateKeep))]
         public void Test(
             IInstalledProductCatalog installedProductCatalog,
-            IAvailableProductCatalog availableProduct,
+            IAvailableProductManifest availableProduct,
             IUpdateCatalog expected)
         {
             Assert.NotNull(installedProductCatalog);

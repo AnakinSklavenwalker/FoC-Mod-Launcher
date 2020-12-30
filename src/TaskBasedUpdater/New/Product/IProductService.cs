@@ -1,4 +1,5 @@
 ﻿using System;
+using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.New.Update;
 
 namespace TaskBasedUpdater.New.Product
@@ -13,6 +14,6 @@ namespace TaskBasedUpdater.New.Product
 
         IInstalledProductCatalog GetInstalledProductCatalog();
 
-        IAvailableProductCatalog GetAvailableProductCatalog(UpdateRequest updateRequest);
+        IAvailableProductManifest GetAvailableProductCatalog(UpdateRequest updateRequest);
     }
 }

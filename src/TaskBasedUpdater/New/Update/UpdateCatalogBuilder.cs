@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
+using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.Verification;
 using Validation;
 
@@ -10,13 +11,13 @@ namespace TaskBasedUpdater.New.Update
 {
     public class UpdateCatalogBuilder : IUpdateCatalogBuilder
     {
-        public IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, IAvailableProductCatalog availableCatalog)
+        public IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, IAvailableProductManifest availableCatalog)
         {
             return Build(installedCatalog, availableCatalog, GetComponentAction);
         }
 
-        public IUpdateCatalog Build(IInstalledProductCatalog installedCatalog, 
-            IAvailableProductCatalog availableCatalog, CompareComponentDelegate compareComponents)
+        public IUpdateCatalog Build(IInstalledProductCatalog installedCatalog,
+            IAvailableProductManifest availableCatalog, CompareComponentDelegate compareComponents)
         {
             Requires.NotNull(installedCatalog, nameof(installedCatalog));
             Requires.NotNull(availableCatalog, nameof(availableCatalog));

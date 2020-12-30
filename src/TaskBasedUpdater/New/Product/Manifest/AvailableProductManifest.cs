@@ -15,11 +15,11 @@ namespace TaskBasedUpdater.New.Product.Manifest
             Product = product;
         }
 
-        public static IAvailableProductCatalog FromCatalog(ICatalog catalog, IProductReference product)
+        public static IAvailableProductManifest FromCatalog(IProductReference product, ICatalog catalog)
         {
             Requires.NotNull(catalog, nameof(catalog));
             Requires.NotNull(product, nameof(product));
-            return new AvailableProductCatalog(product, catalog.Items.ToList());
+            return new AvailableProductManifest(product, catalog.Items.ToList());
         }
     }
 }

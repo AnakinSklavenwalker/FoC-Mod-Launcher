@@ -1,47 +1,11 @@
 ﻿using System;
 using FocLauncherHost.Update.Model;
 using TaskBasedUpdater.Component;
-using TaskBasedUpdater.New;
 using TaskBasedUpdater.Verification;
-using Requires = Validation.Requires;
+using Validation;
 
 namespace FocLauncherHost.Update
 {
-    internal interface ILauncherCatalogFinder
-    {
-        LauncherUpdateManifestModel FindMatching(LauncherUpdateManifestContainer container);
-    }
-
-    internal class LauncherCatalogFinder : ILauncherCatalogFinder
-    {
-        public LauncherUpdateManifestModel FindMatching(LauncherUpdateManifestContainer container)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    internal class LauncherToProductCatalogConverter : ICatalogConverter<LauncherUpdateManifestModel, LauncherComponent>
-    {
-        public IComponentConverter<LauncherComponent> ComponentConverter { get; }
-
-        public LauncherToProductCatalogConverter() : 
-            this(new DependencyToComponentConverter())
-        {
-            
-        }
-
-        internal LauncherToProductCatalogConverter(IComponentConverter<LauncherComponent> componentConverter)
-        {
-            Requires.NotNull(componentConverter, nameof(componentConverter));
-            ComponentConverter = componentConverter;
-        }
-
-        public ICatalog Convert(LauncherUpdateManifestModel catalogModel)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     internal class DependencyToComponentConverter : IComponentConverter<LauncherComponent>
     {
         public ProductComponent Convert(LauncherComponent dependency)

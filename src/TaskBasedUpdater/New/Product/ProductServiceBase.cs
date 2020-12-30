@@ -21,12 +21,16 @@ namespace TaskBasedUpdater.New.Product
         protected ILogger? Logger;
 
         protected IProductComponentBuilder ComponentBuilder { get; }
+
+        protected IAvailableManifestBuilder AvailableManifestBuilder { get; }
         
-        protected ProductServiceBase(IProductComponentBuilder componentBuilder, IServiceProvider serviceProvider)
+        protected ProductServiceBase(IProductComponentBuilder componentBuilder, IAvailableManifestBuilder availableManifestBuilder, IServiceProvider serviceProvider)
         {
             Requires.NotNull(componentBuilder, nameof(componentBuilder));
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            Requires.NotNull(availableManifestBuilder, nameof(availableManifestBuilder));
             ComponentBuilder = componentBuilder;
+            AvailableManifestBuilder = availableManifestBuilder;
             _serviceProvider = serviceProvider;
         }
 
@@ -51,7 +55,7 @@ namespace TaskBasedUpdater.New.Product
             return new InstalledProductCatalog(_installedProduct!, FindInstalledComponents(manifest, installPath));
         }
 
-        public IAvailableProductCatalog GetAvailableProductCatalog(UpdateRequest updateRequest)
+        public IAvailableProductManifest GetAvailableProductCatalog(UpdateRequest updateRequest)
         {
             Initialize();
             if (!IsProductCompatible(updateRequest.Product))
@@ -60,13 +64,13 @@ namespace TaskBasedUpdater.New.Product
             var engine = new ManifestDownloadEngine(_serviceProvider);
             var manifestFile = engine.DownloadManifest(updateRequest.UpdateManifestPath);
 
-            Logger?.LogInformation("Read ");
-            IAvailableProductManifest manifest;
             try
             {
-                manifest = LoadManifest(updateRequest.Product, manifestFile);
+                Logger?.LogInformation($"Loading manifest form {manifestFile.FullName}");
+                IAvailableProductManifest manifest = LoadManifest(updateRequest.Product, manifestFile);
                 if (manifest is null)
                     throw new InvalidOperationException("Manifest must not be null");
+                return manifest;
             }
             catch (Exception e)
             {
@@ -78,8 +82,9 @@ namespace TaskBasedUpdater.New.Product
                 var fileSystem = _serviceProvider.GetRequiredService<IFileSystem>();
                 fileSystem.DeleteFileIfInTemp(manifestFile);
             }
-            return new AvailableProductCatalog(manifest.Product, manifest.Items);
         }
+
+        protected abstract IInstalledProduct BuildProduct();
 
         protected virtual IEnumerable<ProductComponent> FindInstalledComponents(IInstalledProductManifest manifest, string installationPath)
         {
@@ -95,6 +100,11 @@ namespace TaskBasedUpdater.New.Product
         {
             return !ProductReferenceEqualityComparer.ReleaseAware.Equals(_installedProduct!.ProductReference, product);
         }
+        
+        protected virtual IAvailableProductManifest LoadManifest(IProductReference product, IFileInfo manifestFile)
+        {
+            return AvailableManifestBuilder.Build(product, manifestFile);
+        }
 
         private void Initialize()
         {
@@ -106,9 +116,5 @@ namespace TaskBasedUpdater.New.Product
                 throw new InvalidOperationException("Created Product must not be null!");
             _isInitialized = true;
         }
-
-        protected abstract IInstalledProduct BuildProduct();
-
-        protected abstract IAvailableProductManifest LoadManifest(IProductReference product, IFileInfo manifestFile);
     }
 }

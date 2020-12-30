@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using Microsoft;
-using TaskBasedUpdater;
 using TaskBasedUpdater.Configuration;
-using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Update;
+using Validation;
 
-namespace FocLauncherHost.Update
+namespace TaskBasedUpdater.New
 {
-    internal class FocLauncherUpdater : IDisposable
+    public class UpdateManager : IDisposable
     {
         private readonly IProductService _productService;
         private readonly IServiceProvider _services;
         private IUpdateCatalog? _updateCatalog;
-        private IUpdateManager? _updateManager;
+        private UpdaterEngine? _updateManager; // TODO: split-projects user interface
 
         public UpdateConfiguration UpdateConfiguration { get; }
 
-        public FocLauncherUpdater(IProductService productService, UpdateConfiguration updateConfiguration,
+        public UpdateManager(IProductService productService, UpdateConfiguration updateConfiguration,
             IServiceProvider services)
         {
             Requires.NotNull(productService, nameof(productService));
@@ -74,7 +72,7 @@ namespace FocLauncherHost.Update
 
         private UpdateResultInformation Update(CancellationToken token)
         {
-            _updateManager = new NewUpdateManager(_services, UpdateConfiguration);
+            _updateManager = new UpdaterEngine(_services, UpdateConfiguration);
 
             if (_updateCatalog is null)
                 throw new InvalidOperationException("Catalog cannot be null");

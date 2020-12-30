@@ -8,7 +8,7 @@ using Validation;
 
 namespace TaskBasedUpdater.New
 {
-    public class NewUpdateManager : IUpdateManager
+    public class UpdaterEngine
     {
         private readonly IServiceProvider _serviceProvider;
 
@@ -16,7 +16,7 @@ namespace TaskBasedUpdater.New
 
         public bool IsDisposed { get; private set; }
 
-        public NewUpdateManager(IServiceProvider serviceProvider, UpdateConfiguration updateConfiguration)
+        public UpdaterEngine(IServiceProvider serviceProvider, UpdateConfiguration updateConfiguration)
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
@@ -24,7 +24,7 @@ namespace TaskBasedUpdater.New
             UpdateConfiguration = updateConfiguration;
         }
         
-        ~NewUpdateManager()
+        ~UpdaterEngine()
         {
             Dispose(false);
         }
