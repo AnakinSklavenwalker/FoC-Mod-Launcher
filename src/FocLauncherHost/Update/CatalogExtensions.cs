@@ -1,5 +1,5 @@
 ﻿using System;
-using FocLauncher.UpdateMetadata;
+using FocLauncherHost.Update.Model;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.Verification;

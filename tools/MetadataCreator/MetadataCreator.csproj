@@ -76,6 +76,10 @@
       <Project>{93CDC38A-D74A-4CD5-A5AA-9CE8D953519A}</Project>
       <Name>FocLauncher.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\FocLauncherHost\FocLauncherHost.csproj">
+      <Project>{91330941-11BE-41AA-BD4C-8D3A70399395}</Project>
+      <Name>FocLauncherHost</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

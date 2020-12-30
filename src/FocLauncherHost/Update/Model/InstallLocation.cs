@@ -1,4 +1,4 @@
-﻿namespace FocLauncher.UpdateMetadata
+﻿namespace FocLauncherHost.Update.Model
 {
     public enum InstallLocation
     {

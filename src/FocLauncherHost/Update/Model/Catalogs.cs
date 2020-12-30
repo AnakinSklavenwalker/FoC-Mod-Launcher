@@ -4,7 +4,7 @@ using System.IO;
 using System.Xml.Serialization;
 using FocLauncher.Xml;
 
-namespace FocLauncher.UpdateMetadata
+namespace FocLauncherHost.Update.Model
 {
     [Serializable]
     [XmlRoot("Products", Namespace = "", IsNullable = false)]
@@ -28,18 +28,6 @@ namespace FocLauncher.UpdateMetadata
 
             var parser = new XmlObjectParser<Catalogs>(stream);
             return parser.Parse();
-        }
-
-        public static Catalogs? FromStreamSafe(Stream stream)
-        {
-            try
-            {
-                return FromStream(stream);
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
         }
     }
 }

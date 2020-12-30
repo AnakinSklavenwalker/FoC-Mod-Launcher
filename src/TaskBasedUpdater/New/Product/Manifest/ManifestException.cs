@@ -8,5 +8,10 @@ namespace TaskBasedUpdater.New.Product.Manifest
             : base(message)
         {
         }
+
+        public ManifestException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
     }
 }

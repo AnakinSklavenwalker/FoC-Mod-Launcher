@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml.Serialization;
 
-namespace FocLauncher.UpdateMetadata
+namespace FocLauncherHost.Update.Model
 {
     [Serializable]
     public class Dependency

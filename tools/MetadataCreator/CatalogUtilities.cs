@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using FocLauncher;
-using FocLauncher.UpdateMetadata;
 using FocLauncher.Utilities;
 using FocLauncher.Xml;
+using FocLauncherHost.Update.Model;
 using Microsoft.Extensions.Logging;
 
 namespace MetadataCreator

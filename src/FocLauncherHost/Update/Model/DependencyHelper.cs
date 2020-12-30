@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FocLauncher.UpdateMetadata
+namespace FocLauncherHost.Update.Model
 {
     public static class DependencyHelper
     {

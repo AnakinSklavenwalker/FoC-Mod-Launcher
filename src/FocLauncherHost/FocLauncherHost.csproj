@@ -107,6 +107,12 @@
     <Compile Include="FocLauncherUpdaterManager.cs" />
     <Compile Include="Shared\LauncherRestartOptions_Interface.cs" />
     <Compile Include="LauncherServiceFactory.cs" />
+    <Compile Include="Update\Model\Catalogs.cs" />
+    <Compile Include="Update\Model\Dependency.cs" />
+    <Compile Include="Update\Model\DependencyComparer.cs" />
+    <Compile Include="Update\Model\DependencyHelper.cs" />
+    <Compile Include="Update\Model\InstallLocation.cs" />
+    <Compile Include="Update\Model\ProductCatalog.cs" />
     <Compile Include="Utilities\AssemblyExtractor.cs" />
     <Compile Include="Update\CatalogExtensions.cs" />
     <Compile Include="Utilities\FileExtensions.cs" />

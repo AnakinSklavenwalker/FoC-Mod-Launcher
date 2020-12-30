@@ -9,8 +9,8 @@ using System.Xml.Serialization;
 using CommandLine;
 using FocLauncher;
 using FocLauncher.Properties;
-using FocLauncher.UpdateMetadata;
 using FocLauncher.Xml;
+using FocLauncherHost.Update.Model;
 using Microsoft.Extensions.Logging;
 
 namespace MetadataCreator

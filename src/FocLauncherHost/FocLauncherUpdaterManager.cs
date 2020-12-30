@@ -9,7 +9,6 @@ using System.Windows;
 using FocLauncher;
 using FocLauncher.Properties;
 using FocLauncher.Shared;
-using FocLauncher.UpdateMetadata;
 using FocLauncher.Utilities;
 using FocLauncherHost.Utilities;
 using Newtonsoft.Json;

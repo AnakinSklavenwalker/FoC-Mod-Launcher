@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FocLauncher.UpdateMetadata
+namespace FocLauncherHost.Update.Model
 {
     public class DependencyComparer : IEqualityComparer<Dependency>
     {

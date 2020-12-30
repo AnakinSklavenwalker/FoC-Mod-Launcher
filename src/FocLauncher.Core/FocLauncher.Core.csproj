@@ -56,12 +56,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="UpdateMetadata\Catalogs.cs" />
-    <Compile Include="UpdateMetadata\Dependency.cs" />
-    <Compile Include="UpdateMetadata\DependencyComparer.cs" />
-    <Compile Include="UpdateMetadata\DependencyHelper.cs" />
-    <Compile Include="UpdateMetadata\InstallLocation.cs" />
-    <Compile Include="UpdateMetadata\ProductCatalog.cs" />
     <Compile Include="Utilities\NLogUtils.cs" />
     <Compile Include="Utilities\PathUtilities.cs" />
     <Compile Include="LauncherRegistryHelper.cs" />
