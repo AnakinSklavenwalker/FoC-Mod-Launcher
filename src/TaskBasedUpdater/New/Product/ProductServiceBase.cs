@@ -60,27 +60,31 @@ namespace TaskBasedUpdater.New.Product
             Initialize();
             if (!IsProductCompatible(updateRequest.Product))
                 throw new InvalidOperationException("Not compatible product");
-
-            var engine = new ManifestDownloadEngine(_serviceProvider);
-            var manifestFile = engine.DownloadManifest(updateRequest.UpdateManifestPath);
-
+            
             try
             {
-                Logger?.LogInformation($"Loading manifest form {manifestFile.FullName}");
-                IAvailableProductManifest manifest = LoadManifest(updateRequest.Product, manifestFile);
-                if (manifest is null)
-                    throw new InvalidOperationException("Manifest must not be null");
-                return manifest;
+                Logger?.LogTrace($"Getting manifest file.");
+                var manifestFile = GetAvailableManifestFile(updateRequest);
+                if (manifestFile is null || !manifestFile.Exists)
+                    throw new ManifestNotFoundException("Manifest file not found or null");
+                try
+                {
+                    Logger?.LogTrace($"Loading manifest form {manifestFile.FullName}");
+                    IAvailableProductManifest manifest = LoadManifest(updateRequest, manifestFile);
+                    if (manifest is null)
+                        throw new ManifestException("Manifest cannot be null");
+                    return manifest;
+                }
+                finally
+                {
+                    var fileSystem = _serviceProvider.GetRequiredService<IFileSystem>();
+                    fileSystem.DeleteFileIfInTemp(manifestFile);
+                }
             }
             catch (Exception e)
             {
                 Logger?.LogError(e, e.Message);
                 throw;
-            }
-            finally
-            {
-                var fileSystem = _serviceProvider.GetRequiredService<IFileSystem>();
-                fileSystem.DeleteFileIfInTemp(manifestFile);
             }
         }
 
@@ -96,14 +100,20 @@ namespace TaskBasedUpdater.New.Product
             }
         }
 
+        protected virtual IFileInfo GetAvailableManifestFile(UpdateRequest updateRequest)
+        {
+            var engine = new ManifestDownloadEngine(_serviceProvider);
+            return engine.DownloadManifest(updateRequest.UpdateManifestPath);
+        }
+
         protected virtual bool IsProductCompatible(IProductReference product)
         {
             return !ProductReferenceEqualityComparer.ReleaseAware.Equals(_installedProduct!.ProductReference, product);
         }
         
-        protected virtual IAvailableProductManifest LoadManifest(IProductReference product, IFileInfo manifestFile)
+        protected virtual IAvailableProductManifest LoadManifest(UpdateRequest updateRequest, IFileInfo manifestFile)
         {
-            return AvailableManifestBuilder.Build(product, manifestFile);
+            return AvailableManifestBuilder.Build(updateRequest, manifestFile);
         }
 
         private void Initialize()

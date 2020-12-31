@@ -6,7 +6,7 @@ using Validation;
 
 namespace FocLauncherHost.Update
 {
-    internal class DependencyToComponentConverter : IComponentConverter<LauncherComponent>
+    internal class LauncherComponentConverter : IComponentConverter<LauncherComponent>
     {
         public ProductComponent Convert(LauncherComponent dependency)
         {

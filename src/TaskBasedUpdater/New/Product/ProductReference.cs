@@ -16,5 +16,10 @@ namespace TaskBasedUpdater.New.Product
             Version = version;
             ReleaseType = releaseType;
         }
+
+        public override string ToString()
+        {
+            return $"Product {Name}:v{Version}:r{ReleaseType}";
+        }
     }
 }

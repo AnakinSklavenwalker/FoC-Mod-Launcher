@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product.Manifest;
+using TaskBasedUpdater.New.Update;
 using Validation;
 
 namespace FocLauncherHost.Product
@@ -22,7 +23,8 @@ namespace FocLauncherHost.Product
 
         public LauncherUpdateManifestBuilder(
             ILauncherUpdateManifestFinder updateManifestFinder,
-            ICatalogConverter<LauncherUpdateManifestModel, LauncherComponent> catalogConverter, IServiceProvider serviceProvider)
+            ICatalogConverter<LauncherUpdateManifestModel, LauncherComponent> catalogConverter, 
+            IServiceProvider serviceProvider)
         {
             Requires.NotNull(updateManifestFinder, nameof(updateManifestFinder));
             Requires.NotNull(catalogConverter, nameof(catalogConverter));
@@ -31,9 +33,12 @@ namespace FocLauncherHost.Product
             _logger = serviceProvider.GetService<ILogger>();
         }
 
-        protected override ICatalog BuildManifestCatalog(LauncherUpdateManifestContainer manifestModel)
+        protected override ICatalog BuildManifestCatalog(LauncherUpdateManifestContainer manifestContainer, UpdateRequest updateRequest)
         {
-            var manifest = _updateManifestFinder.FindMatching(manifestModel);
+            var manifest = _updateManifestFinder.FindMatching(manifestContainer, updateRequest);
+            if (manifest is null)
+                throw new ManifestNotFoundException($"Unable to find matching manifest from {manifestContainer} for product {updateRequest.Product}.");
+
             return _catalogConverter.Convert(manifest);
         }
 

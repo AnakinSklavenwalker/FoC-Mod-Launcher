@@ -93,7 +93,7 @@
     <Compile Include="Product\LauncherManifest.cs" />
     <Compile Include="Product\LauncherProductService.cs" />
     <Compile Include="Product\LauncherUpdateManifestBuilder.cs" />
-    <Compile Include="Update\DependencyToComponentConverter.cs" />
+    <Compile Include="Update\LauncherComponentConverter.cs" />
     <Compile Include="LauncherInitializer.cs" />
     <Compile Include="LauncherRestartManager.cs" />
     <Compile Include="Controls\OutlinedTextBlock.cs" />
@@ -110,6 +110,7 @@
     <Compile Include="LauncherServiceFactory.cs" />
     <Compile Include="Update\ILauncherUpdateManifestFinder.cs" />
     <Compile Include="Update\LauncherToProductCatalogConverter.cs" />
+    <Compile Include="Update\LauncherUpdateSearchSettings.cs" />
     <Compile Include="Update\Model\LauncherUpdateManifestContainer.cs" />
     <Compile Include="Update\Model\LauncherComponent.cs" />
     <Compile Include="Update\Model\LauncherComponentComparer.cs" />

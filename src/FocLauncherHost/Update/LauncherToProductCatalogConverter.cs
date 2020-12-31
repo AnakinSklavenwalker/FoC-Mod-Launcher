@@ -11,7 +11,7 @@ namespace FocLauncherHost.Update
         public IComponentConverter<LauncherComponent> ComponentConverter { get; }
 
         public LauncherToProductCatalogConverter() : 
-            this(new DependencyToComponentConverter())
+            this(new LauncherComponentConverter())
         {
         }
 

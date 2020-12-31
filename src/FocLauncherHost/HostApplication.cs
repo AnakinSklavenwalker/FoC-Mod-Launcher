@@ -71,8 +71,17 @@ namespace FocLauncherHost
                         
                         updateInformation = await Task.Run(() =>
                         {
+
+                            var i = FocLauncherInformation.Instance;
+                            
+                            var us = new LauncherUpdateSearchSettings
+                            {
+                                UpdateMode = UpdateMode.AskFallbackStable,
+                                UpdateBranch = ProductReleaseType.Stable
+                            };
+
                             var ps = new LauncherProductService(new LauncherComponentBuilder(), 
-                                new LauncherUpdateManifestBuilder(new LauncherManifestFinder(), new LauncherToProductCatalogConverter(),_services), _services);
+                                new LauncherUpdateManifestBuilder(new LauncherManifestFinder(us), new LauncherToProductCatalogConverter(),_services), _services);
                             var p = ps.GetCurrentInstance();
 
                             var u = new UpdateManager(ps, new UpdateConfiguration(), _services);
