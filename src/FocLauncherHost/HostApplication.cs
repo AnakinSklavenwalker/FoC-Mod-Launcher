@@ -76,19 +76,20 @@ namespace FocLauncherHost
                             
                             var us = new LauncherUpdateSearchSettings
                             {
-                                UpdateMode = UpdateMode.AskFallbackStable,
+                                UpdateMode = UpdateMode.Explicit,
                                 UpdateBranch = ProductReleaseType.Stable
                             };
 
-                            var ps = new LauncherProductService(new LauncherComponentBuilder(), 
-                                new LauncherUpdateManifestBuilder(new LauncherManifestFinder(us), new LauncherToProductCatalogConverter(),_services), _services);
+                            var ps = new LauncherProductService(new LauncherComponentBuilder(),
+                                new LauncherUpdateManifestBuilder(new LauncherManifestFinder(us),
+                                    new LauncherToProductCatalogConverter(_services), _services), _services);
                             var p = ps.GetCurrentInstance();
 
                             var u = new UpdateManager(ps, new UpdateConfiguration(), _services);
 
                             var r = new UpdateRequest
                             {
-                                Product = ps.CreateProductReference(null, ProductReleaseType.Alpha),
+                                Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
                                 UpdateManifestPath = new Uri("file://c:/Test/text.xml", UriKind.Absolute)
                             };
 

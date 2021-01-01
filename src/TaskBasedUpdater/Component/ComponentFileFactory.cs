@@ -9,33 +9,49 @@ namespace TaskBasedUpdater.Component
     public class ComponentFileFactory
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IFullDestinationResolver _destinationResolver;
+        private readonly string _basePath;
 
-        public ComponentFileFactory(IServiceProvider serviceProvider)
+        public ComponentFileFactory(IServiceProvider serviceProvider, IFullDestinationResolver destinationResolver, string basePath)
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            Requires.NotNull(destinationResolver, nameof(destinationResolver));
+            Requires.NotNullOrEmpty(basePath, nameof(basePath));
             _serviceProvider = serviceProvider;
+            _destinationResolver = destinationResolver;
+            _basePath = basePath;
         }
         
-        public ProductComponent FromFile(ProductComponent baseComponent, string path, IProductComponentBuilder builder)
+        public ProductComponent FromFile(ProductComponent baseComponent, IProductComponentBuilder builder)
         {
             Requires.NotNull(baseComponent, nameof(baseComponent));
             Requires.NotNull(builder, nameof(builder));
 
+
+            var realPath = _destinationResolver.GetFullDestination(baseComponent, false, _basePath);
+
             var fs = _serviceProvider.GetRequiredService<IFileSystem>();
-            var file = fs.FileInfo.FromFileName(path);
+
+            var filePath = fs.Path.Combine(realPath, baseComponent.Name);
+            var file = fs.FileInfo.FromFileName(filePath);
             if (!file.Exists)
                 return baseComponent with { CurrentState = CurrentState.Removed };
 
             var version = builder.GetVersion(file);
+            var size = file.Length;
 
-            // TODO: split-project
             var verificationContext = VerificationContext.None;
             if (builder.HashType != HashType.None)
             {
+                var hashingService = new HashingService();
+                var hash = hashingService.GetFileHash(file, builder.HashType);
+                verificationContext = new VerificationContext(hash, builder.HashType);
             }
 
             return baseComponent with
-                {
+            {
+                Destination = realPath,
+                DiskSize = size,
                 CurrentState = CurrentState.Installed,
                 CurrentVersion = version,
                 VerificationContext = verificationContext

@@ -1,5 +1,6 @@
 ﻿using System;
 using FocLauncherHost.Update.Model;
+using TaskBasedUpdater;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Verification;
 using Validation;
@@ -8,34 +9,42 @@ namespace FocLauncherHost.Update
 {
     internal class LauncherComponentConverter : IComponentConverter<LauncherComponent>
     {
-        public ProductComponent Convert(LauncherComponent dependency)
+        private readonly IFullDestinationResolver _destinationResolver;
+
+        public LauncherComponentConverter(IFullDestinationResolver destinationResolver)
         {
-            Requires.NotNullAllowStructs(dependency, nameof(dependency));
-            return null;
+            Requires.NotNull(destinationResolver, nameof(destinationResolver));
+            _destinationResolver = destinationResolver;
         }
 
-        public static ProductComponent? DependencyToComponent(LauncherComponent dependency)
+        public ProductComponent Convert(LauncherComponent launcherComponent)
         {
-            if (string.IsNullOrEmpty(dependency.Name) || string.IsNullOrEmpty(dependency.Destination))
-                return null;
+            Requires.NotNullAllowStructs(launcherComponent, nameof(launcherComponent));
+            var name = launcherComponent.Name;
+            if (string.IsNullOrEmpty(name))
+                throw new ComponentException("Name of a product component cannot be null or empty");
+            if (launcherComponent.Destination is null)
+                throw new ComponentException("Destination of a product component cannot be null.");
 
-            if (string.IsNullOrEmpty(dependency.Origin))
-                return new ProductComponent(dependency.Name, GetRealDependencyDestination(dependency));
-            
-            var newVersion = dependency.GetVersion();
-            var hash = dependency.Sha2;
-            var size = dependency.Size;
+            var destination = _destinationResolver.GetFullDestination(launcherComponent.Destination, null);
+
+
+            var newVersion = launcherComponent.GetVersion();
+            var hash = launcherComponent.Sha2;
+            var size = launcherComponent.Size;
 
             var verificationContext = VerificationContext.None;
             if (hash != null)
                 verificationContext = new VerificationContext(hash, HashType.Sha256);
-            var originInfo = new OriginInfo(new Uri(dependency.Origin, UriKind.Absolute))
+            var originInfo = new OriginInfo(new Uri(launcherComponent.Origin, UriKind.Absolute))
             {
                 Size = size,
                 VerificationContext = verificationContext
             };
 
-            return new ProductComponent(dependency.Name, GetRealDependencyDestination(dependency))
+            
+
+            return new ProductComponent(name, destination)
             {
                 OriginInfo = originInfo,
                 CurrentVersion = newVersion

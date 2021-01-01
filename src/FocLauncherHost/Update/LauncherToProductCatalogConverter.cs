@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using FocLauncherHost.Update.Model;
 using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New;
@@ -10,11 +11,11 @@ namespace FocLauncherHost.Update
     {
         public IComponentConverter<LauncherComponent> ComponentConverter { get; }
 
-        public LauncherToProductCatalogConverter() : 
-            this(new LauncherComponentConverter())
+        public LauncherToProductCatalogConverter(IServiceProvider serviceProvider) : 
+            this(new LauncherComponentConverter(new ComponentFullDestinationResolver(serviceProvider)))
         {
         }
-
+        
         internal LauncherToProductCatalogConverter(IComponentConverter<LauncherComponent> componentConverter)
         {
             Requires.NotNull(componentConverter, nameof(componentConverter));
@@ -23,7 +24,9 @@ namespace FocLauncherHost.Update
 
         public ICatalog Convert(LauncherUpdateManifestModel catalogModel)
         {
-            throw new NotImplementedException();
+            Requires.NotNull(catalogModel, nameof(catalogModel));
+            var components = catalogModel.Components.Select(c => ComponentConverter.Convert(c));
+            return new Catalog(components);
         }
     }
 }

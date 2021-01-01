@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Component;
@@ -23,14 +24,31 @@ namespace TaskBasedUpdater.New.Product
         protected IProductComponentBuilder ComponentBuilder { get; }
 
         protected IAvailableManifestBuilder AvailableManifestBuilder { get; }
-        
-        protected ProductServiceBase(IProductComponentBuilder componentBuilder, IAvailableManifestBuilder availableManifestBuilder, IServiceProvider serviceProvider)
+
+        protected IFullDestinationResolver ComponentFullDestinationResolver { get; }
+
+        protected ProductServiceBase(
+            IProductComponentBuilder componentBuilder, 
+            IAvailableManifestBuilder availableManifestBuilder, 
+            IServiceProvider serviceProvider) 
+            : this(componentBuilder, availableManifestBuilder, new ComponentFullDestinationResolver(serviceProvider), serviceProvider)
+        {
+        }
+
+
+        protected ProductServiceBase(
+            IProductComponentBuilder componentBuilder,
+            IAvailableManifestBuilder availableManifestBuilder,
+            IFullDestinationResolver fullDestinationResolver,
+            IServiceProvider serviceProvider)
         {
             Requires.NotNull(componentBuilder, nameof(componentBuilder));
+            Requires.NotNull(fullDestinationResolver, nameof(fullDestinationResolver));
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             Requires.NotNull(availableManifestBuilder, nameof(availableManifestBuilder));
             ComponentBuilder = componentBuilder;
             AvailableManifestBuilder = availableManifestBuilder;
+            ComponentFullDestinationResolver = fullDestinationResolver;
             _serviceProvider = serviceProvider;
         }
 
@@ -92,12 +110,9 @@ namespace TaskBasedUpdater.New.Product
 
         protected virtual IEnumerable<ProductComponent> FindInstalledComponents(IInstalledProductManifest manifest, string installationPath)
         {
-            foreach (var component in manifest.Items)
-            {
-                var path = component.GetFilePath();
-                path = Path.IsPathRooted(path) ? path : Path.Combine(installationPath, path);
-                yield return new ComponentFileFactory(_serviceProvider).FromFile(component, path, ComponentBuilder);
-            }
+            return manifest.Items.Select(component =>
+                new ComponentFileFactory(_serviceProvider, ComponentFullDestinationResolver, installationPath)
+                    .FromFile(component, ComponentBuilder));
         }
 
         protected virtual IFileInfo GetAvailableManifestFile(UpdateRequest updateRequest)

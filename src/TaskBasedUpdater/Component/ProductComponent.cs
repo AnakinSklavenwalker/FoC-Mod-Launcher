@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using TaskBasedUpdater.Verification;
 using Validation;
 
@@ -9,7 +8,7 @@ namespace TaskBasedUpdater.Component
     {
         private string? _realPath;
         
-        public string Destination { get; }
+        public string Destination { get; internal init; }
 
         public string Name { get; }
 
@@ -52,8 +51,8 @@ namespace TaskBasedUpdater.Component
         {
             if (_realPath is null)
             {
-                var explodedDestination = Environment.ExpandEnvironmentVariables(Destination);
-                _realPath = Path.Combine(explodedDestination, Name);
+                var fs = new System.IO.Abstractions.FileSystem();
+                _realPath = fs.Path.Combine(Destination, Name);
             }
             return _realPath;
         }
