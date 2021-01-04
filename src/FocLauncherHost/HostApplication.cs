@@ -10,7 +10,6 @@ using FocLauncherHost.Update;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
-using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Update;
@@ -68,34 +67,29 @@ namespace FocLauncherHost
                     UpdateResultInformation? updateInformation = null;
                     try
                     {
-                        
-                        updateInformation = await Task.Run(() =>
+                        var i = FocLauncherInformation.Instance;
+
+                        var us = new LauncherUpdateSearchSettings
                         {
+                            UpdateMode = UpdateMode.Explicit,
+                            UpdateBranch = ProductReleaseType.Stable
+                        };
 
-                            var i = FocLauncherInformation.Instance;
-                            
-                            var us = new LauncherUpdateSearchSettings
-                            {
-                                UpdateMode = UpdateMode.Explicit,
-                                UpdateBranch = ProductReleaseType.Stable
-                            };
+                        var ps = new LauncherProductService(new LauncherComponentBuilder(),
+                            new LauncherUpdateManifestBuilder(new LauncherManifestFinder(us),
+                                new LauncherToProductCatalogConverter(_services), _services), _services);
 
-                            var ps = new LauncherProductService(new LauncherComponentBuilder(),
-                                new LauncherUpdateManifestBuilder(new LauncherManifestFinder(us),
-                                    new LauncherToProductCatalogConverter(_services), _services), _services);
-                            var p = ps.GetCurrentInstance();
+                        var cs = new UpdateCheckService(ps, _services);
 
-                            var u = new UpdateManager(ps, new UpdateConfiguration(), _services);
+                        var r = new UpdateRequest
+                        {
+                            Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
+                            UpdateManifestPath = new Uri("file://c:/Test/text.xml", UriKind.Absolute)
+                        };
 
-                            var r = new UpdateRequest
-                            {
-                                Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
-                                UpdateManifestPath = new Uri("file://c:/Test/text.xml", UriKind.Absolute)
-                            };
+                        var updateCheckInformation = await cs.CheckForUpdates(r, cts.Token);
 
-                            return u.CheckAndUpdate(r, cts.Token);
 
-                        }, CancellationToken.None);
 
                         Logger.Info($"Finished automatic update with result {updateInformation}");
                     }

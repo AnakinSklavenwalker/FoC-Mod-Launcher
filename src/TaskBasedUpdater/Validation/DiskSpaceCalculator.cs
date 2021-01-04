@@ -62,20 +62,7 @@ namespace TaskBasedUpdater.Validation
                 }
             }
         }
-
-        // TODO: split-projects: remove method
-        public static void ThrowIfNotEnoughDiskSpaceAvailable(IServiceProvider serviceProvider, ProductComponent productComponent, long additionalBuffer = 0,
-            CalculationOption option = CalculationOption.All)
-        {
-            foreach (var diskData in new DiskSpaceCalculator(serviceProvider, productComponent, additionalBuffer, option).CalculatedDiskSizes)
-            {
-                if (!diskData.Value.HasEnoughDiskSpace)
-                    throw new OutOfDiskspaceException(
-                        $"There is not enough space to install “{productComponent.Name}”. {diskData.Key} is required on drive {diskData.Value.RequestedSize + additionalBuffer} " +
-                        $"but you only have {diskData.Value.AvailableDiskSpace} available.");
-            }
-        }
-
+        
         private void SetSizeMembers(long? actualSize, string drive)
         {
             if (!actualSize.HasValue)
