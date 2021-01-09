@@ -93,6 +93,7 @@
     <Compile Include="Product\LauncherManifest.cs" />
     <Compile Include="Product\LauncherProductService.cs" />
     <Compile Include="Product\LauncherUpdateManifestBuilder.cs" />
+    <Compile Include="Update\FallbackSearchAction.cs" />
     <Compile Include="Update\LauncherComponentConverter.cs" />
     <Compile Include="LauncherInitializer.cs" />
     <Compile Include="LauncherRestartManager.cs" />

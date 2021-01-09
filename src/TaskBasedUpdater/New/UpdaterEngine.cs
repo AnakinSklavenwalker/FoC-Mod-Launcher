@@ -15,6 +15,9 @@ namespace TaskBasedUpdater.New
         public UpdateConfiguration UpdateConfiguration { get; }
 
         public bool IsDisposed { get; private set; }
+        
+        
+        public bool IsRunning { get; set; }
 
         public UpdaterEngine(IServiceProvider serviceProvider, UpdateConfiguration updateConfiguration)
         {
@@ -31,13 +34,11 @@ namespace TaskBasedUpdater.New
         
         public void Initialize()
         {
-            throw new NotImplementedException();
         }
 
-        public IUpdateResultInformation Update(IUpdateCatalog updateCatalog, CancellationToken cancellation)
+        public void Update(IUpdateCatalog updateCatalog, CancellationToken cancellation)
         {
             Task.Run(async () => await Task.Delay(10000, cancellation), cancellation).Wait(cancellation);
-            return null;
         }
 
         protected virtual void Dispose(bool disposing)

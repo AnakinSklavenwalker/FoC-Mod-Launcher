@@ -12,7 +12,7 @@
 
         public bool DiagnosticMode { get; init; }
         
-        public bool DownloadOnlyMode { get; init; }
+        public InstallMode InstallMode { get; init; }
 
         public int DownloadRetryCount { get; init; } = 3;
 

@@ -11,8 +11,6 @@ using Requires = Validation.Requires;
 
 namespace FocLauncherHost.Update
 {
-    internal delegate LauncherUpdateManifestModel? FallbackSearchAction(IEnumerable<LauncherUpdateManifestModel> manifests);
-
     internal class LauncherManifestFinder : ILauncherUpdateManifestFinder
     {
         private readonly LauncherUpdateSearchSettings _updateSearchSettings;

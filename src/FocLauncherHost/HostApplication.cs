@@ -10,6 +10,7 @@ using FocLauncherHost.Update;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using TaskBasedUpdater;
+using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Update;
@@ -63,8 +64,8 @@ namespace FocLauncherHost
                     SplashScreen.ProgressText = "Please wait while the launcher is downloading an update.";
                     SetWhenWaitDialogIsShownAsync(WaitProgressDelay, SplashScreen.CancellationToken).Forget();
                     var cts = CancellationTokenSource.CreateLinkedTokenSource(SplashScreen.CancellationToken);
-                    
-                    UpdateResultInformation? updateInformation = null;
+
+                    UpdateOperationResult? updateInformation = null;
                     try
                     {
                         var i = FocLauncherInformation.Instance;
@@ -89,7 +90,11 @@ namespace FocLauncherHost
 
                         var updateCheckInformation = await cs.CheckForUpdates(r, cts.Token);
 
-
+                        if (updateCheckInformation.IsUpdateAvailable)
+                        {
+                            using var updater = new UpdateService(new UpdateConfiguration());
+                            updateInformation = await updater.UpdateAsync(updateCheckInformation.UpdateCatalog!, cts.Token);
+                        }
 
                         Logger.Info($"Finished automatic update with result {updateInformation}");
                     }
@@ -124,11 +129,11 @@ namespace FocLauncherHost
             SplashScreen.IsProgressVisible = true;
         }
 
-        private void ReportUpdateResult(UpdateResultInformation? updateInformation)
+        private void ReportUpdateResult(UpdateOperationResult? updateInformation)
         {
             if (updateInformation != null)
             {
-                if (updateInformation.RequiresUserNotification && SplashScreen.IsProgressVisible || FocLauncherInformation.Instance.BuildType == BuildType.Debug)
+                if (updateInformation.Result == UpdateResult.Failed && SplashScreen.IsProgressVisible || FocLauncherInformation.Instance.BuildType == BuildType.Debug)
                 {
                     Interlocked.Exchange(ref _shouldShowSplashScreen, 0);
                     SplashScreen.Cancelable = false;
@@ -136,7 +141,7 @@ namespace FocLauncherHost
                     {
                         case UpdateResult.Failed:
                             SplashScreen.ProgressText = "Update Failed";
-                            new UpdateResultDialog("Update Failed", updateInformation.Message).ShowDialog();
+                            new UpdateResultDialog("Update Failed", updateInformation.Error?.Message ?? "Unknown reason").ShowDialog();
                             break;
                         case UpdateResult.Success:
                             SplashScreen.ProgressText = "Update finished";

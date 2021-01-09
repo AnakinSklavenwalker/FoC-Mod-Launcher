@@ -1,55 +1,126 @@
 ﻿using System;
-using System.Linq;
+using System.ComponentModel.Design;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Update;
+using TaskBasedUpdater.Restart;
 using Validation;
 
 namespace TaskBasedUpdater.New
 {
-    public class UpdateService
+    public class UpdateService : IDisposable
     {
-        //InstallerBase
-        //InstallerService
-        //ProductInstaller
-    }
-
-    public class UpdateManager : IDisposable
-    {
-        private readonly IProductService _productService;
         private readonly IServiceProvider _services;
-        private IUpdateCatalog? _updateCatalog;
-        private UpdaterEngine? _updateManager; // TODO: split-projects user interface
+        private bool _initialized;
+        private readonly object _syncRoot = new();
 
-        public UpdateConfiguration UpdateConfiguration { get; }
+        public bool UpdateRunning => Engine.IsRunning;
 
-        public UpdateManager(IProductService productService, UpdateConfiguration updateConfiguration,
-            IServiceProvider services)
+        public bool IsDisposed { get; private set; }
+
+        private UpdaterEngine Engine { get; }
+
+        private ILogger? Logger => _services.GetService<ILogger>();
+
+
+        public UpdateService(UpdateConfiguration updateConfiguration) : this(updateConfiguration, new UpdaterServicesProvider())
         {
-            Requires.NotNull(productService, nameof(productService));
-            Requires.NotNull(services, nameof(services));
+        }
+
+        public UpdateService(UpdateConfiguration updateConfiguration, IUpdaterServices services)
+        {
             Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
-            _productService = productService;
-            _services = services;
-            UpdateConfiguration = updateConfiguration;
+            Requires.NotNull(services, nameof(services));
+            _services = UpdaterServicesProvider.ToServiceProvider(services);
+            Engine = new UpdaterEngine(_services, updateConfiguration);
         }
-        
-        public UpdateResultInformation Update(CancellationToken token)
+
+        ~UpdateService() => Dispose(false);
+
+        public async Task<UpdateOperationResult> UpdateAsync(IUpdateCatalog updateCatalog, CancellationToken token)
         {
-            _updateManager = new UpdaterEngine(_services, UpdateConfiguration);
-
-            if (_updateCatalog is null)
-                throw new InvalidOperationException("Catalog cannot be null");
-
-            _updateManager.Update(_updateCatalog, token);
-
-            return UpdateResultInformation.Success;
+            try
+            {
+                if (UpdateRunning)
+                    throw new InvalidOperationException("Update already running.");
+                Initialize();
+                return !updateCatalog.RequiresUpdate() 
+                    ? CreateResult(updateCatalog.Product, UpdateResult.NoUpdate) 
+                    : CreateResult(await UpdateCoreAsync(updateCatalog, token));
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError(ex, "Updater threw an exception: " + ex.Message);
+                return CreateResult(updateCatalog.Product, ex);
+            }
         }
-        
+
         public void Dispose()
         {
-            _updateManager?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private Task<IProductReference> UpdateCoreAsync(IUpdateCatalog updateCatalog, CancellationToken token)
+        {
+            return Task.Run(() =>
+            {
+                if (updateCatalog.Product == null)
+                    throw new InvalidOperationException("Failed to get the product reference");
+                Engine.Update(updateCatalog, token);
+                return updateCatalog.Product;
+            }, token);
+        }
+
+
+        private UpdateOperationResult CreateResult(IProductReference product, Exception? exception = null)
+        {
+            var cancelled = exception != null && exception.IsExceptionType<OperationCanceledException>();
+            var requiresRestart = _services.GetRequiredService<IRestartNotificationService>().RestartRequired;
+
+            if (cancelled)
+                return CreateResult(product, UpdateResult.Cancelled, exception);
+            if (exception is not null)
+                return CreateResult(product, UpdateResult.Failed, exception);
+            return CreateResult(product, requiresRestart 
+                ? UpdateResult.SuccessRestartRequired 
+                : UpdateResult.Success, exception);
+        }
+
+        private static UpdateOperationResult CreateResult(IProductReference product, UpdateResult result, Exception? exception = null)
+        {
+            return new(product)
+            {
+                Result = result,
+                Error = exception
+            };
+        }
+
+
+        private void Initialize()
+        {
+            if (_initialized)
+                return;
+            lock (_syncRoot)
+            {
+                if (_initialized)
+                    return;
+                _initialized = true;
+                Engine.Initialize();
+            }
+        }
+
+        protected void Dispose(bool disposing)
+        {
+            if (this.IsDisposed)
+                return;
+            if (disposing)
+                Engine.Dispose();
+            IsDisposed = true;
         }
     }
 }

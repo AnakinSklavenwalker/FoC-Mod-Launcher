@@ -59,7 +59,7 @@ namespace TaskBasedUpdater.Tasks
                 Directory.CreateDirectory(directoryName);
             }
 
-            if (Configuration.BackupPolicy != BackupPolicy.NotRequired && Configuration.DownloadOnlyMode)
+            if (Configuration.BackupPolicy != BackupPolicy.NotRequired && Configuration.InstallMode == InstallMode.DownloadOnly)
                 BackupItem();
 
 
@@ -120,7 +120,7 @@ namespace TaskBasedUpdater.Tasks
 
                     lastException = null;
 
-                    if (Configuration.DownloadOnlyMode)
+                    if (Configuration.InstallMode == InstallMode.DownloadOnly)
                     {
                         ProductComponent.CurrentState = CurrentState.Installed;
                         UpdateItemDownloadPathStorage.Instance.Remove(ProductComponent);
@@ -162,7 +162,7 @@ namespace TaskBasedUpdater.Tasks
 
         private string CalculateDownloadPath()
         {
-            if (Configuration.DownloadOnlyMode)
+            if (Configuration.InstallMode == InstallMode.DownloadOnly)
             {
                 var destination = ProductComponent.GetFilePath();
                 return destination;

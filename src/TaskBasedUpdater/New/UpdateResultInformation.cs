@@ -1,28 +1,22 @@
-﻿namespace TaskBasedUpdater.New
-{
-    public record UpdateResultInformation
-    {
-        public static UpdateResultInformation NoUpdate = new()
-        {
-            Result = UpdateResult.NoUpdate,
-            Message = "No update required."
-        };
+﻿using System;
+using System.Xml;
+using TaskBasedUpdater.New.Product;
+using Validation;
 
-        public static UpdateResultInformation Success = new()
-        {
-            Result = UpdateResult.Success,
-            Message = "Update successful."
-        };
+namespace TaskBasedUpdater.New
+{
+    public record UpdateOperationResult
+    {
+        public IProductReference Product { get; }
 
         public UpdateResult Result { get; init; }
 
-        public bool RequiresUserNotification { get; init; }
+        public Exception? Error { get; init; }
 
-        public string? Message { get; init; }
-
-        public override string ToString()
+        public UpdateOperationResult(IProductReference product)
         {
-            return $"Result: {Result}, Message: {Message}";
+            Requires.NotNull(product, nameof(product));
+            Product = product;
         }
     }
 }
