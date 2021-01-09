@@ -1,4 +1,4 @@
-﻿namespace TaskBasedUpdater.New.Update
+﻿namespace TaskBasedUpdater.New.Update.Service
 {
     public enum UpdateCheckState
     {

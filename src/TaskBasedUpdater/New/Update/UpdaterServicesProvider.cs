@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Restart;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update
 {
     internal class UpdaterServicesProvider : IUpdaterServices, IServiceProvider
     {

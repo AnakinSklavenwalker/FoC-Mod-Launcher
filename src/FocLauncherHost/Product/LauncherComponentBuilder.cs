@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO.Abstractions;
 using FocLauncherHost.Utilities;
-using TaskBasedUpdater.Component;
+using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.Verification;
 
 namespace FocLauncherHost.Product

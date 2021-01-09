@@ -1,4 +1,4 @@
-﻿namespace TaskBasedUpdater
+﻿namespace TaskBasedUpdater.New.Update.Service
 {
     public enum UpdateResult
     {

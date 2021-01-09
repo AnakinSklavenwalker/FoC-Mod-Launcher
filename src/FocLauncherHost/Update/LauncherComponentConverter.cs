@@ -1,7 +1,7 @@
 ﻿using System;
 using FocLauncherHost.Update.Model;
 using TaskBasedUpdater;
-using TaskBasedUpdater.Component;
+using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.Verification;
 using Validation;
 

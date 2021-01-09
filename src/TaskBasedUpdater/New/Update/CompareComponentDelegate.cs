@@ -1,6 +1,4 @@
-﻿using TaskBasedUpdater.Component;
-
-namespace TaskBasedUpdater.New.Update
+﻿namespace TaskBasedUpdater.New.Update
 {
     public delegate ComponentAction CompareComponentDelegate(ProductComponent currentComponent, ProductComponent availableComponent);
 }

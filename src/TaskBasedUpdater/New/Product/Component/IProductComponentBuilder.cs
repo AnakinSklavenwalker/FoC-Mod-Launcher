@@ -2,7 +2,7 @@
 using System.IO.Abstractions;
 using TaskBasedUpdater.Verification;
 
-namespace TaskBasedUpdater.Component
+namespace TaskBasedUpdater.New.Product.Component
 {
     public interface IProductComponentBuilder
     {

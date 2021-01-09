@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace TaskBasedUpdater.New.Update
+namespace TaskBasedUpdater.New.Update.Service
 {
     public interface IUpdateCheckService
     {

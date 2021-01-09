@@ -5,7 +5,6 @@ using System.IO.Abstractions;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
 using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.New.Update;

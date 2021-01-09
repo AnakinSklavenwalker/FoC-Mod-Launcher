@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
 using TaskBasedUpdater.Verification;
 

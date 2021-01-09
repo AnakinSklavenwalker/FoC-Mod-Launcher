@@ -1,16 +1,14 @@
 ﻿using System;
-using System.ComponentModel.Design;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.New.Product;
-using TaskBasedUpdater.New.Update;
 using TaskBasedUpdater.Restart;
 using Validation;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update.Service
 {
     public class UpdateService : IDisposable
     {

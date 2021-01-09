@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
 using TaskBasedUpdater.New.Product.Manifest;
 using TaskBasedUpdater.Verification;

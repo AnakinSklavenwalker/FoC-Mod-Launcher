@@ -1,7 +1,7 @@
 ﻿using System;
 using TaskBasedUpdater.Verification;
 
-namespace TaskBasedUpdater.Component
+namespace TaskBasedUpdater.New.Product.Component
 {
     public sealed record OriginInfo(Uri Origin)
     {

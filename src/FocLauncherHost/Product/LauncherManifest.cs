@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using FocLauncher;
 using Microsoft;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.New.Product;
+using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.New.Product.Manifest;
 
 namespace FocLauncherHost.Product

@@ -1,5 +1,4 @@
 ﻿using System;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Restart;
 
 namespace TaskBasedUpdater.Elevation

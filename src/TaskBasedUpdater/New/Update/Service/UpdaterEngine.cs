@@ -3,12 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TaskBasedUpdater.Configuration;
-using TaskBasedUpdater.New.Update;
 using Validation;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update.Service
 {
-    public class UpdaterEngine
+    internal class UpdaterEngine
     {
         private readonly IServiceProvider _serviceProvider;
 

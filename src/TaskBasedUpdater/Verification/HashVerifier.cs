@@ -4,7 +4,6 @@ using System.IO.Abstractions;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TaskBasedUpdater.Component;
 using Validation;
 
 namespace TaskBasedUpdater.Verification

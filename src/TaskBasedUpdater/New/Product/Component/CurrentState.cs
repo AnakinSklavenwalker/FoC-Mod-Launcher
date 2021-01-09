@@ -1,4 +1,4 @@
-﻿namespace TaskBasedUpdater.Component
+﻿namespace TaskBasedUpdater.New.Product.Component
 {
     public enum CurrentState
     {

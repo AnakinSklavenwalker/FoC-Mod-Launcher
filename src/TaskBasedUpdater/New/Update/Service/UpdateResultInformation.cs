@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Xml;
 using TaskBasedUpdater.New.Product;
 using Validation;
 
-namespace TaskBasedUpdater.New
+namespace TaskBasedUpdater.New.Update.Service
 {
     public record UpdateOperationResult
     {

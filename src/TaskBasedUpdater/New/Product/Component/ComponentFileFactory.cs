@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TaskBasedUpdater.Verification;
 using Validation;
 
-namespace TaskBasedUpdater.Component
+namespace TaskBasedUpdater.New.Product.Component
 {
     public class ComponentFileFactory
     {

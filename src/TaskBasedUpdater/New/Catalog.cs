@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using TaskBasedUpdater.Component;
 using Validation;
 
 namespace TaskBasedUpdater.New

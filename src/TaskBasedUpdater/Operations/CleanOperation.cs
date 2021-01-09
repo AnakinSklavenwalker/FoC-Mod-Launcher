@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Tasks;
 
 namespace TaskBasedUpdater.Operations

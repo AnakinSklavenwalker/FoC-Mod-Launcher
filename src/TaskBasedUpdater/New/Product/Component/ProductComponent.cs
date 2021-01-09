@@ -2,7 +2,7 @@
 using TaskBasedUpdater.Verification;
 using Validation;
 
-namespace TaskBasedUpdater.Component
+namespace TaskBasedUpdater.New.Product.Component
 {
     public sealed record ProductComponent
     {

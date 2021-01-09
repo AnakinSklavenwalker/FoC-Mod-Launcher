@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.New.Product;
 using Validation;
 
-namespace TaskBasedUpdater.New.Update
+namespace TaskBasedUpdater.New.Update.Service
 {
     public class UpdateCheckService : IUpdateCheckService
     {
@@ -24,6 +24,7 @@ namespace TaskBasedUpdater.New.Update
             }
         }
 
+        // TODO: split-projects remove sp from ctor and have custom object
         public UpdateCheckService(IProductService productService, IServiceProvider serviceProvider)
         {
             Requires.NotNull(productService, nameof(productService));
@@ -73,7 +74,8 @@ namespace TaskBasedUpdater.New.Update
                 ValidateRequest(updateRequest);
                 var currentCatalog = _productService.GetInstalledProductCatalog();
                 var availableCatalog = _productService.GetAvailableProductCatalog(updateRequest);
-
+                
+                // TODO: split-projects use from services.
                 IUpdateCatalogBuilder builder = new UpdateCatalogBuilder();
                 return builder.Build(currentCatalog, availableCatalog);
             }, token);

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using TaskBasedUpdater.Component;
 using Validation;
 
 namespace TaskBasedUpdater.New.Product.Manifest

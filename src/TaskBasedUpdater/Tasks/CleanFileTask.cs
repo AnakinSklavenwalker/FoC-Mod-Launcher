@@ -3,7 +3,6 @@ using System.IO.Abstractions;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using SimplePipeline.Tasks;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
 using Validation;
 

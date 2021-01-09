@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.FileSystem;
 using Validation;
 

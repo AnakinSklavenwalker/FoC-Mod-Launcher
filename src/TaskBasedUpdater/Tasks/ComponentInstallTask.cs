@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Validation;
 using Validation;

@@ -4,7 +4,7 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Validation;
 
-namespace TaskBasedUpdater.Component
+namespace TaskBasedUpdater.New.Product.Component
 {
     public sealed class ComponentFullDestinationResolver : IFullDestinationResolver
     {

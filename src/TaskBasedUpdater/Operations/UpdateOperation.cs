@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using SimplePipeline;
 using SimplePipeline.Runners;
 using SimplePipeline.Tasks;
-using TaskBasedUpdater.Component;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.Restart;

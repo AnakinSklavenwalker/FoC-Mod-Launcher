@@ -1,6 +1,4 @@
-﻿using TaskBasedUpdater.New;
-
-namespace TaskBasedUpdater.Component
+﻿namespace TaskBasedUpdater.New.Product.Component
 {
     public interface ICatalogConverter<in TCatalogModel, TComponentModel>
     {
