@@ -4,6 +4,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Configuration;
+using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.Validation;
 using Validation;
 

@@ -9,6 +9,7 @@ using SimplePipeline.Runners;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Elevation;
+using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.Restart;
 using TaskBasedUpdater.Tasks;
 using Validation;

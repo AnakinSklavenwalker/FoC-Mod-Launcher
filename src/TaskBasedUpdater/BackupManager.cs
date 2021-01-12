@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.Verification;
 
 namespace TaskBasedUpdater

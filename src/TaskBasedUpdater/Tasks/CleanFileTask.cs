@@ -4,6 +4,7 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using SimplePipeline.Tasks;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.New.Product.Component;
 using Validation;
 
 namespace TaskBasedUpdater.Tasks

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.New.Product.Component;
 using Validation;
 
 namespace TaskBasedUpdater.Validation

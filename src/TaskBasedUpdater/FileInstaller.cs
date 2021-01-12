@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using TaskBasedUpdater.Elevation;
 using TaskBasedUpdater.FileSystem;
+using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.Restart;
 using Validation;
 

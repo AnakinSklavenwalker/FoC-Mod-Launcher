@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TaskBasedUpdater.New.Product;
+using TaskBasedUpdater.New.Product.Component;
 
 namespace TaskBasedUpdater.New.Update
 {

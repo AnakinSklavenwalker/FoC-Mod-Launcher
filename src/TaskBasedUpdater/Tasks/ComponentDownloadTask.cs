@@ -7,6 +7,7 @@ using SimplePipeline.Tasks;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Elevation;
+using TaskBasedUpdater.New.Product.Component;
 using Validation;
 
 namespace TaskBasedUpdater.Tasks
