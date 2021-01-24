@@ -12,6 +12,44 @@ namespace TaskBasedUpdater.FileSystem
 {
     internal static class FileSystemExtensions
     {
+        public static bool IsValidDirectoryPath(this IFileSystem fileSystem, string path)
+        {
+            return !string.IsNullOrEmpty(path) && path.Length <= 248 &&
+                   path.IndexOfAny(fileSystem.Path.GetInvalidPathChars()) < 0;
+        }
+
+        internal static bool IsOpticalDevice(this IFileSystem fileSystem, string dir)
+        {
+            Requires.NotNullOrEmpty(dir, nameof(dir));
+            string pathRoot = fileSystem.Path.GetPathRoot(dir);
+            if (string.IsNullOrEmpty(pathRoot))
+                return false;
+            try
+            {
+                return fileSystem.DriveInfo.FromDriveName(pathRoot).DriveType == DriveType.CDRom;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool IsDriveFixedOrRemovable(this IFileSystem fileSystem, string filePath)
+        {
+            Requires.NotNullOrEmpty(filePath, nameof(filePath));
+            try
+            {
+                string pathRoot = fileSystem.Path.GetPathRoot(filePath);
+                var driveType = fileSystem.DriveInfo.FromDriveName(pathRoot).DriveType;
+                return driveType == DriveType.Fixed || driveType == DriveType.Removable;
+            }
+            catch
+            {
+                // ignored
+            }
+            return false;
+        }
+
         public static void DeleteFileIfInTemp(this IFileSystem fileSystem, IFileInfo file)
         {
             Requires.NotNull(fileSystem, nameof(fileSystem));

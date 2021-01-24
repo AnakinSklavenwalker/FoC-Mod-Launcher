@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
+using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Restart;
 
 namespace TaskBasedUpdater.New.Update
@@ -8,6 +9,8 @@ namespace TaskBasedUpdater.New.Update
     {
 
         IRestartNotificationService RestartNotificationService { get; }
+
+        IDownloadManager DownloadManager { get; }
 
         IFileSystem FileSystem { get; }
 

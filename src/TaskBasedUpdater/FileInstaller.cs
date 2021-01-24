@@ -86,7 +86,8 @@ namespace TaskBasedUpdater
             if (restartPending)
                 return InstallResult.SuccessRestartRequired;
 
-            productComponent.CurrentState = CurrentState.Installed;
+            // TODO: split-projects
+            // productComponent.CurrentState = CurrentState.Installed;
             return InstallResult.Success;
         }
         
@@ -108,7 +109,8 @@ namespace TaskBasedUpdater
             if (restartPending)
                 return InstallResult.SuccessRestartRequired;
 
-            productComponent.CurrentState = CurrentState.Removed;
+            // TODO: split-projects
+            //productComponent.CurrentState = CurrentState.Removed;
             return InstallResult.Success;
         }
 
@@ -279,8 +281,9 @@ namespace TaskBasedUpdater
             switch (requestedAction)
             {
                 case ComponentAction.Update:
-                    if (productComponent.CurrentState == CurrentState.Downloaded)
-                        action = InstallHelper;
+                    // TODO: split-projects
+                    //if (productComponent.CurrentState == CurrentState.Downloaded)
+                    action = InstallHelper;
                     break;
                 case ComponentAction.Delete:
                     if (isPresent)

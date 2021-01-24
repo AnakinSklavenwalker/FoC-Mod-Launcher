@@ -9,7 +9,7 @@ using Validation;
 
 namespace TaskBasedUpdater.Tasks
 {
-    internal class CleanFileTask : SynchronizedPipelineTask, IUpdaterTask
+    internal class CleanFileTask : SynchronizedPipelineTask, IComponentTask
     {
         internal string File { get; set; }
 

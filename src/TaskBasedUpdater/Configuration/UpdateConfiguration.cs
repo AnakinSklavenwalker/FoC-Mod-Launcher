@@ -25,5 +25,7 @@
         public string? ExternalElevatorPath { get; init; }
 
         public bool RequiredElevationCancelsUpdate { get; init; }
+
+        public bool SuspendOsFromSleeping { get; init; }
     }
 }

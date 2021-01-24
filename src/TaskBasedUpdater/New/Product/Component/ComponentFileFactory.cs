@@ -35,7 +35,7 @@ namespace TaskBasedUpdater.New.Product.Component
             var filePath = fs.Path.Combine(realPath, baseComponent.Name);
             var file = fs.FileInfo.FromFileName(filePath);
             if (!file.Exists)
-                return baseComponent with { CurrentState = CurrentState.Removed };
+                return baseComponent with { DetectedState = DetectionState.Absent };
 
             var version = builder.GetVersion(file);
             var size = file.Length;
@@ -52,7 +52,7 @@ namespace TaskBasedUpdater.New.Product.Component
             {
                 Destination = realPath,
                 DiskSize = size,
-                CurrentState = CurrentState.Installed,
+                DetectedState = DetectionState.Present,
                 CurrentVersion = version,
                 VerificationContext = verificationContext
             };

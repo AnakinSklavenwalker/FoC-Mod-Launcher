@@ -12,7 +12,7 @@ using Validation;
 
 namespace TaskBasedUpdater.Tasks
 {
-    internal sealed class ComponentDownloadTask : SynchronizedPipelineTask, IUpdaterTask
+    internal sealed class ComponentDownloadTask : SynchronizedPipelineTask, IComponentTask
     {
         public const string NewFileExtension = ".new";
         internal static readonly long AdditionalSizeBuffer = 20000000;
@@ -122,11 +122,15 @@ namespace TaskBasedUpdater.Tasks
 
                     if (Configuration.InstallMode == InstallMode.DownloadOnly)
                     {
-                        ProductComponent.CurrentState = CurrentState.Installed;
+                        // TODO: split-projects
+                        //ProductComponent.CurrentState = CurrentState.Installed;
                         UpdateItemDownloadPathStorage.Instance.Remove(ProductComponent);
                     }
                     else
-                        ProductComponent.CurrentState = CurrentState.Downloaded;
+                    {
+                        // TODO: split-projects
+                        // ProductComponent.CurrentState = CurrentState.Downloaded;
+                    }
 
                     break;
                 }

@@ -32,10 +32,10 @@ namespace TaskBasedUpdater.New.Update
                 return new UpdateCatalog(availableCatalog.Product, new ProductComponent[0]);
 
             if (!availableItems.Any())
-                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, ComponentAction.Delete);
+                return ShallowCatalogWithAction(availableCatalog.Product, installedCatalog, ComponentAction.Delete, component => component.DetectedState);
 
             if (!currentItems.Any())
-                return ShallowCatalogWithAction(availableCatalog.Product, availableCatalog, ComponentAction.Update);
+                return ShallowCatalogWithAction(availableCatalog.Product, availableCatalog, ComponentAction.Update, _ => DetectionState.Absent);
 
             var catalogItems = new List<ProductComponent>();
             foreach (var availableItem in availableItems)
@@ -45,14 +45,22 @@ namespace TaskBasedUpdater.New.Update
 
                 if (!currentItems.TryGetValue(availableItem, out var current))
                 {
-                    ProductComponent component = availableItem with { RequiredAction = ComponentAction.Update };
+                    ProductComponent component = availableItem with
+                    {
+                        RequiredAction = ComponentAction.Update, 
+                        DetectedState = DetectionState.Absent
+                    };
                     catalogItems.Add(component);
                 }
                 else
                 {
                     currentItems.Remove(current);
                     var componentAction = compareComponents(current, availableItem);
-                    var component = availableItem with { RequiredAction = componentAction };
+                    var component = availableItem with
+                    {
+                        RequiredAction = componentAction, 
+                        DetectedState = DetectionState.Present
+                    };
                     catalogItems.Add(component);
                 }
             }
@@ -60,7 +68,11 @@ namespace TaskBasedUpdater.New.Update
             // Remove deprecated components
             foreach (var currentItem in currentItems)
             {
-                var component = currentItem with { RequiredAction = ComponentAction.Delete };
+                var component = currentItem with
+                {
+                    RequiredAction = ComponentAction.Delete, 
+                    DetectedState = DetectionState.Present
+                };
                 catalogItems.Add(component);
             }
 
@@ -75,7 +87,7 @@ namespace TaskBasedUpdater.New.Update
             if (available.OriginInfo is null)
                 throw new ComponentException("Update Catalog Component must have origin data information.");
 
-            if (current.CurrentState != CurrentState.Installed)
+            if (current.DetectedState != DetectionState.Present)
                 return ComponentAction.Update;
 
             if (available.CurrentVersion is null && available.OriginInfo is null && available.DiskSize is null)
@@ -101,10 +113,14 @@ namespace TaskBasedUpdater.New.Update
         }
 
         private static IUpdateCatalog ShallowCatalogWithAction(IProductReference product, 
-            ICatalog catalog, ComponentAction updateAction)
+            ICatalog catalog, ComponentAction updateAction, Func<ProductComponent,DetectionState> detectionStateFunc)
         {
             return new UpdateCatalog(product,
-                catalog.Items.Select(c => c with { RequiredAction = updateAction}));
+                catalog.Items.Select(c => c with
+                {
+                    RequiredAction = updateAction, 
+                    DetectedState = detectionStateFunc(c)
+                }));
         }
 
         private class VerificationContextComparer : IEqualityComparer<VerificationContext>

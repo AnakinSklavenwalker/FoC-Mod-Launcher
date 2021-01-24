@@ -12,6 +12,7 @@ namespace TaskBasedUpdater.New.Update.Service
 {
     public class UpdateService : IDisposable
     {
+        private readonly IInstalledProduct _product;
         private readonly IServiceProvider _services;
         private bool _initialized;
         private readonly object _syncRoot = new();
@@ -25,16 +26,18 @@ namespace TaskBasedUpdater.New.Update.Service
         private ILogger? Logger => _services.GetService<ILogger>();
 
 
-        public UpdateService(UpdateConfiguration updateConfiguration) : this(updateConfiguration, new UpdaterServicesProvider())
+        public UpdateService(IInstalledProduct product, UpdateConfiguration updateConfiguration) 
+            : this(product, updateConfiguration, new UpdaterServicesProvider(updateConfiguration))
         {
         }
 
-        public UpdateService(UpdateConfiguration updateConfiguration, IUpdaterServices services)
+        public UpdateService(IInstalledProduct product, UpdateConfiguration updateConfiguration, IUpdaterServices services)
         {
+            Requires.NotNull(product, nameof(product));
             Requires.NotNull(updateConfiguration, nameof(updateConfiguration));
             Requires.NotNull(services, nameof(services));
-            _services = UpdaterServicesProvider.ToServiceProvider(services);
-            Engine = new UpdaterEngine(_services, updateConfiguration);
+            _services = UpdaterServicesProvider.ToServiceProvider(services, updateConfiguration);
+            Engine = new UpdaterEngine(product, _services, updateConfiguration);
         }
 
         ~UpdateService() => Dispose(false);

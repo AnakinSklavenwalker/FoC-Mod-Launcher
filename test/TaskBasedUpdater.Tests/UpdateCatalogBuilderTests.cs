@@ -70,12 +70,13 @@ namespace TaskBasedUpdater.Tests
 
         public static IEnumerable<object[]> SameComponents()
         {
-            var current = new ProductComponent("A", "D"){CurrentState = CurrentState.Installed};
+            var current = new ProductComponent("A", "D"){ DetectedState = DetectionState.Present };
             var avail = new ProductComponent("A", "D"){OriginInfo = CreateOriginInfo()};
 
             var expected = new ProductComponent("A", "D")
             {
-                RequiredAction = ComponentAction.Keep
+                RequiredAction = ComponentAction.Keep,
+                DetectedState = DetectionState.Present
             };
 
             yield return new object[]
@@ -88,16 +89,18 @@ namespace TaskBasedUpdater.Tests
 
         public static IEnumerable<object[]> MissingComponent()
         {
-            var current = new ProductComponent("A", "D") { CurrentState = CurrentState.Installed }; ;
+            var current = new ProductComponent("A", "D") { DetectedState = DetectionState.Present };
             var availSame = new ProductComponent("A", "D") { OriginInfo = CreateOriginInfo() };
             var availNew = new ProductComponent("B", "D") { OriginInfo = CreateOriginInfo() };
             var expectedSame = new ProductComponent("A", "D")
             {
-                RequiredAction = ComponentAction.Keep
+                RequiredAction = ComponentAction.Keep,
+                DetectedState = DetectionState.Present
             };
             var expectedNew = new ProductComponent("B", "D")
             {
                 RequiredAction = ComponentAction.Update,
+                DetectedState = DetectionState.Absent,
                 OriginInfo = CreateOriginInfo()
             };
 
@@ -111,32 +114,41 @@ namespace TaskBasedUpdater.Tests
 
         public static IEnumerable<object[]> AllDeprecatedComponent()
         {
-            var current = new ProductComponent("A", "D");
-            var expected = new ProductComponent("A", "D")
+            var currentA = new ProductComponent("A", "D") {DetectedState = DetectionState.Present};
+            var currentB = new ProductComponent("B", "D") {DetectedState = DetectionState.Absent};
+            var expectedA = new ProductComponent("A", "D")
             {
-                RequiredAction = ComponentAction.Delete
+                RequiredAction = ComponentAction.Delete,
+                DetectedState = DetectionState.Present
+            };
+            var expectedB = new ProductComponent("B", "D")
+            {
+                RequiredAction = ComponentAction.Delete,
+                DetectedState = DetectionState.Absent
             };
 
             yield return new object[]
             {
-                new InstalledProductCatalog(Product, new []{current}),
+                new InstalledProductCatalog(Product, new []{currentA, currentB}),
                 new AvailableProductManifest(ProductRef, new ProductComponent[0]),
-                new UpdateCatalogStub(new []{ expected})
+                new UpdateCatalogStub(new []{ expectedA, expectedB})
             };
         }
 
         public static IEnumerable<object[]> SingleDeprecatedComponent()
         {
-            var currentSame = new ProductComponent("A", "D") { CurrentState = CurrentState.Installed }; ;
-            var currentDep = new ProductComponent("B", "D") { CurrentState = CurrentState.Installed }; ;
+            var currentSame = new ProductComponent("A", "D") { DetectedState = DetectionState.Present };
+            var currentDep = new ProductComponent("B", "D") { DetectedState = DetectionState.Present };
             var availSame = new ProductComponent("A", "D") { OriginInfo = CreateOriginInfo() };
             var expectedSame = new ProductComponent("A", "D")
             {
-                RequiredAction = ComponentAction.Keep
+                RequiredAction = ComponentAction.Keep,
+                DetectedState = DetectionState.Present
             };
             var expectedDep = new ProductComponent("B", "D")
             {
-                RequiredAction = ComponentAction.Delete
+                RequiredAction = ComponentAction.Delete,
+                DetectedState = DetectionState.Present
             };
 
             yield return new object[]
@@ -153,6 +165,7 @@ namespace TaskBasedUpdater.Tests
             var expected = new ProductComponent("A", "D")
             {
                 RequiredAction = ComponentAction.Update,
+                DetectedState = DetectionState.Absent,
                 OriginInfo = CreateOriginInfo()
             };
 
@@ -166,21 +179,24 @@ namespace TaskBasedUpdater.Tests
 
         public static IEnumerable<object[]> DeleteUpdateKeep()
         {
-            var currentKeep = new ProductComponent("A", "D") { CurrentState = CurrentState.Installed }; ;
-            var currentDelete = new ProductComponent("B", "D") { CurrentState = CurrentState.Installed }; ;
+            var currentKeep = new ProductComponent("A", "D") { DetectedState = DetectionState.Present };
+            var currentDelete = new ProductComponent("B", "D") { DetectedState = DetectionState.Present };
             var availKeep = new ProductComponent("A", "D") { OriginInfo = CreateOriginInfo() };
             var availUpdate = new ProductComponent("C", "D") { OriginInfo = CreateOriginInfo() };
             var expectedKeep = new ProductComponent("A", "D")
             {
-                RequiredAction = ComponentAction.Keep
+                RequiredAction = ComponentAction.Keep,
+                DetectedState = DetectionState.Present
             };
             var expectedDelete = new ProductComponent("B", "D")
             {
-                RequiredAction = ComponentAction.Delete
+                RequiredAction = ComponentAction.Delete,
+                DetectedState = DetectionState.Present
             };
             var expectedUpdate = new ProductComponent("C", "D")
             {
                 RequiredAction = ComponentAction.Update,
+                DetectedState = DetectionState.Absent,
                 OriginInfo = CreateOriginInfo()
             };
 
@@ -216,21 +232,13 @@ namespace TaskBasedUpdater.Tests
             
             foreach (var item in expected.Items)
             {
-                switch (item.RequiredAction)
-                {
-                    case ComponentAction.Keep:
-                        Assert.Contains(catalog.ComponentsToKeep, x => x.Name.Equals(item.Name));
-                        break;
-                    case ComponentAction.Update:
-                        Assert.Contains(catalog.ComponentsToInstall, x => x.Name.Equals(item.Name));
-                        Assert.NotNull(item.OriginInfo);
-                        break;
-                    case ComponentAction.Delete:
-                        Assert.Contains(catalog.ComponentsToDelete, x => x.Name.Equals(item.Name));
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                var matching = catalog.Items.First(x => x.Name.Equals(item.Name));
+
+                Assert.Equal(item.RequiredAction, matching.RequiredAction);
+                Assert.Equal(item.DetectedState, matching.DetectedState);
+
+                if (item.RequiredAction == ComponentAction.Update)
+                    Assert.NotNull(item.OriginInfo);
             }
         }
 
@@ -239,7 +247,7 @@ namespace TaskBasedUpdater.Tests
         {
             yield return new object[]
             {
-                new ProductComponent("A", "D") {CurrentState = CurrentState.Installed},
+                new ProductComponent("A", "D") {DetectedState = DetectionState.Present},
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo()},
                 ComponentAction.Keep
             };
@@ -248,7 +256,7 @@ namespace TaskBasedUpdater.Tests
             {
                 new ProductComponent("A", "D")
                 {
-                    CurrentState = CurrentState.Installed,
+                    DetectedState = DetectionState.Present,
                     CurrentVersion = new Version(1, 0, 0)
                 },
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo()},
@@ -268,7 +276,7 @@ namespace TaskBasedUpdater.Tests
             {
                 new ProductComponent("A", "D")
                 {
-                    CurrentState = CurrentState.Installed,
+                    DetectedState = DetectionState.Present,
                     CurrentVersion = new Version(1, 0, 0)
                 },
                 new ProductComponent("A", "D")
@@ -306,7 +314,7 @@ namespace TaskBasedUpdater.Tests
             {
                 new ProductComponent("A", "D")
                 {
-                    CurrentState = CurrentState.Installed,
+                    DetectedState = DetectionState.Present,
                     DiskSize = 5
                 },
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(5)},
@@ -331,7 +339,7 @@ namespace TaskBasedUpdater.Tests
             {
                 new ProductComponent("A", "D")
                 {
-                    CurrentState = CurrentState.Installed,
+                    DetectedState = DetectionState.Present,
                     DiskSize = 5, VerificationContext = context1
                 },
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(5, context1)},
@@ -348,7 +356,7 @@ namespace TaskBasedUpdater.Tests
             {
                 new ProductComponent("A", "D")
                 {
-                    CurrentState = CurrentState.Installed,
+                    DetectedState = DetectionState.Present,
                     DiskSize = 5, VerificationContext = context1
                 },
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(5)},
@@ -364,7 +372,7 @@ namespace TaskBasedUpdater.Tests
             {
                 new ProductComponent("A", "D")
                 {
-                    CurrentState = CurrentState.Installed,
+                    DetectedState = DetectionState.Present,
                     VerificationContext = context1
                 },
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(nullableVerificationContext: context1)},
@@ -380,7 +388,7 @@ namespace TaskBasedUpdater.Tests
             var context3 = new VerificationContext((byte[]) context1.Hash.Clone(), HashType.MD5);
             yield return new object[]
             {
-                new ProductComponent("A", "D") {VerificationContext = context1, CurrentState = CurrentState.Installed},
+                new ProductComponent("A", "D") {VerificationContext = context1, DetectedState = DetectionState.Present},
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo(nullableVerificationContext: context3)},
                 ComponentAction.Keep
             };
@@ -390,25 +398,19 @@ namespace TaskBasedUpdater.Tests
         {
             yield return new object[]
             {
-                new ProductComponent("A", "D") {CurrentState = CurrentState.Removed},
+                new ProductComponent("A", "D") {DetectedState = DetectionState.None},
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo()},
                 ComponentAction.Update
             };
             yield return new object[]
             {
-                new ProductComponent("A", "D") {CurrentState = CurrentState.Downloaded},
+                new ProductComponent("A", "D") {DetectedState = DetectionState.Absent},
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo()},
                 ComponentAction.Update
             };
             yield return new object[]
             {
-                new ProductComponent("A", "D") {CurrentState = CurrentState.None},
-                new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo()},
-                ComponentAction.Update
-            };
-            yield return new object[]
-            {
-                new ProductComponent("A", "D") {CurrentState = CurrentState.Installed},
+                new ProductComponent("A", "D") {DetectedState = DetectionState.Present},
                 new ProductComponent("A", "D") {OriginInfo = CreateOriginInfo()},
                 ComponentAction.Keep
             };
@@ -464,7 +466,6 @@ namespace TaskBasedUpdater.Tests
         private class UpdateCatalogStub : IUpdateCatalog
         { 
             public IProductReference Product { get; }
-            public UpdateRequestAction RequestAction { get; }
             public IEnumerable<ProductComponent> ComponentsToInstall { get; }
             public IEnumerable<ProductComponent> ComponentsToKeep { get; }
             public IEnumerable<ProductComponent> ComponentsToDelete { get; }

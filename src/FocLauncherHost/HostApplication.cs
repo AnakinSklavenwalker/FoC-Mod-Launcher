@@ -93,7 +93,7 @@ namespace FocLauncherHost
 
                         if (updateCheckInformation.IsUpdateAvailable)
                         {
-                            using var updater = new UpdateService(new UpdateConfiguration());
+                            using var updater = new UpdateService(ps.GetCurrentInstance(), new UpdateConfiguration());
                             updateInformation = await updater.UpdateAsync(updateCheckInformation.UpdateCatalog!, cts.Token);
                         }
 

@@ -14,7 +14,9 @@ namespace TaskBasedUpdater.New.Product.Component
 
         public ComponentAction RequiredAction { get; init; }
 
-        public CurrentState CurrentState { get; set; }
+        //public CurrentState CurrentState { get; set; }
+
+        public DetectionState DetectedState { get; set; }
 
         public Version? CurrentVersion { get; set; }
 

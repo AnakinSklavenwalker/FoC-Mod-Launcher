@@ -3,7 +3,7 @@ using TaskBasedUpdater.New.Product.Component;
 
 namespace TaskBasedUpdater.Tasks
 {
-    public interface IUpdaterTask : IPipelineTask
+    public interface IComponentTask : IPipelineTask
     {
         public ProductComponent ProductComponent { get; }
     }

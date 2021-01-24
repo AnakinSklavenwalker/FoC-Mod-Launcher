@@ -10,7 +10,7 @@ using Validation;
 
 namespace TaskBasedUpdater.Tasks
 {
-    internal class ComponentInstallTask : SynchronizedPipelineTask, IUpdaterTask
+    internal class ComponentInstallTask : SynchronizedPipelineTask, IComponentTask
     {
         private readonly ComponentDownloadTask? _download;
         internal static readonly long AdditionalSizeBuffer = 20000000;
@@ -85,8 +85,9 @@ namespace TaskBasedUpdater.Tasks
                         string localPath;
                         if (_download != null)
                             localPath = _download.DownloadPath;
-                        else if (ProductComponent.CurrentState == CurrentState.Downloaded && UpdateItemDownloadPathStorage.Instance.TryGetValue(ProductComponent, out var downloadedFile))
-                            localPath = downloadedFile;
+                        // TODO: split-projects
+                        //else if (ProductComponent.CurrentState == CurrentState.Downloaded && UpdateItemDownloadPathStorage.Instance.TryGetValue(ProductComponent, out var downloadedFile))
+                        //    localPath = downloadedFile;
                         else
                             throw new FileNotFoundException("Unable to find the downloaded file.");
 
@@ -124,8 +125,9 @@ namespace TaskBasedUpdater.Tasks
             if (component.RequiredAction == ComponentAction.Keep)
                 return;
             var option = DiskSpaceCalculator.CalculationOption.All;
-            if (component.CurrentState == CurrentState.Downloaded)
-                option &= ~DiskSpaceCalculator.CalculationOption.Download;
+            // TODO: split-projects
+            //if (component.CurrentState == CurrentState.Downloaded)
+            //    option &= ~DiskSpaceCalculator.CalculationOption.Download;
             if (Configuration.BackupPolicy == BackupPolicy.Disable)
                 option &= ~DiskSpaceCalculator.CalculationOption.Backup;
 

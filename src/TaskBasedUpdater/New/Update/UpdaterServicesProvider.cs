@@ -2,12 +2,15 @@
 using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TaskBasedUpdater.Configuration;
+using TaskBasedUpdater.Download;
 using TaskBasedUpdater.Restart;
 
 namespace TaskBasedUpdater.New.Update
 {
     internal class UpdaterServicesProvider : IUpdaterServices, IServiceProvider
     {
+        public UpdateConfiguration UpdateConfiguration { get; }
         private readonly IServiceProvider _serviceProvider;
 
         public IRestartNotificationService RestartNotificationService =>
@@ -16,20 +19,25 @@ namespace TaskBasedUpdater.New.Update
         public IFileSystem FileSystem => _serviceProvider.GetService<IFileSystem>() ?? new System.IO.Abstractions.FileSystem();
         public ILogger? Logger => _serviceProvider.GetService<ILogger>();
 
-        public UpdaterServicesProvider(IServiceProvider serviceProvider)
+        public IDownloadManager DownloadManager =>
+            _serviceProvider.GetService<IDownloadManager>() ??
+            new DownloadManager(this, UpdateConfiguration.DownloadConfiguration);
+
+        private UpdaterServicesProvider(IServiceProvider serviceProvider, UpdateConfiguration updateConfiguration)
         {
+            UpdateConfiguration = updateConfiguration;
             _serviceProvider = serviceProvider;
         }
 
-        public UpdaterServicesProvider()
+        public UpdaterServicesProvider(UpdateConfiguration updateConfiguration) 
+            : this(new ServiceCollection().BuildServiceProvider(), updateConfiguration)
         {
-            _serviceProvider = new ServiceCollection().BuildServiceProvider();
         }
 
-        internal static IServiceProvider ToServiceProvider(IUpdaterServices services)
+        internal static IServiceProvider ToServiceProvider(IUpdaterServices services, UpdateConfiguration updateConfiguration)
         {
             var serviceProvider = CreateServiceProvider(services);
-            return new UpdaterServicesProvider(serviceProvider);
+            return new UpdaterServicesProvider(serviceProvider, updateConfiguration);
         }
 
 
@@ -44,6 +52,7 @@ namespace TaskBasedUpdater.New.Update
             AddExistingService<ILogger>(serviceCollection, services.Logger);
             AddExistingService<IFileSystem>(serviceCollection, services.FileSystem);
             AddExistingService<IRestartNotificationService>(serviceCollection, services.RestartNotificationService);
+            AddExistingService<IDownloadManager>(serviceCollection, services.DownloadManager);
             return serviceCollection.BuildServiceProvider();
         }
 
