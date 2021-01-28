@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using SimplePipeline.Runners;
 using Validation;
 
 namespace SimplePipeline.Tasks
 {
     public class WaitTask : PipelineTask
     {
-        private readonly AsyncTaskRunner _runner;
+        private readonly AsyncPipelineRunner _runner;
 
-        public WaitTask(IServiceProvider serviceProvider, AsyncTaskRunner runner) : base(serviceProvider)
+        public WaitTask(AsyncPipelineRunner runner, ILogger? logger = null) : base(logger)
         {
             Requires.NotNull(runner, nameof(runner));
             _runner = runner;

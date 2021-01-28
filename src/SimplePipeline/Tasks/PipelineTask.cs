@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Validation;
 
 namespace SimplePipeline.Tasks
 {
@@ -11,16 +9,13 @@ namespace SimplePipeline.Tasks
     {
         internal bool IsDisposed { get; private set; }
 
-        protected internal ILogger? Logger { get; private set; }
-
-        protected IServiceProvider ServiceProvider { get; }
+        protected internal ILogger? Logger { get; }
 
         public Exception? Error { get; internal set; }
 
-        protected PipelineTask(IServiceProvider serviceProvider)
+        protected PipelineTask(ILogger? logger = null)
         {
-            Requires.NotNull(serviceProvider, nameof(serviceProvider));
-            ServiceProvider = serviceProvider;
+            Logger = logger;
         }
 
         ~PipelineTask()
@@ -36,7 +31,6 @@ namespace SimplePipeline.Tasks
 
         public void Run(CancellationToken token)
         {
-            Initialize();
             Logger?.LogTrace($"BEGIN: {this}");
             try
             {
@@ -85,12 +79,7 @@ namespace SimplePipeline.Tasks
                 return; 
             IsDisposed = true;
         }
-
-        private void Initialize()
-        {
-            Logger = ServiceProvider.GetService<ILogger>();
-        }
-
+        
         private void LogFaultException(Exception ex)
         { 
             Error = ex; 

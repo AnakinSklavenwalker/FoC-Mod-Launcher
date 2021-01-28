@@ -1,5 +1,5 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace SimplePipeline.Tasks
 {
@@ -9,8 +9,7 @@ namespace SimplePipeline.Tasks
 
         internal string MutexName { get; }
 
-        public AcquireMutexTask(IServiceProvider serviceProvider, string? name = null) 
-            : base(serviceProvider)
+        public AcquireMutexTask(string? name = null, ILogger? logger = null) : base(logger)
         {
             MutexName = name ?? Utilities.GlobalPipelineMutex;
         }

@@ -62,7 +62,7 @@ namespace SimplePipeline
             var mutexSecurity = new MutexSecurity();
             var rule = new MutexAccessRule(securityIdentifier, MutexRights.FullControl, AccessControlType.Allow);
             mutexSecurity.AddAccessRule(rule);
-#if NET
+#if NET || NETSTANDARD || NETCOREAPP
             return MutexAcl.Create(false, name, out _, mutexSecurity);
 #else
             return new Mutex(false, name, out _, mutexSecurity);

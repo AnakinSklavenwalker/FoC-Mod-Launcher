@@ -6,7 +6,6 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimplePipeline;
-using SimplePipeline.Runners;
 using TaskBasedUpdater.Configuration;
 using TaskBasedUpdater.Download;
 using TaskBasedUpdater.New.Product;
@@ -30,9 +29,9 @@ namespace TaskBasedUpdater.Operations
 
         private bool? _planSuccessful;
         private bool _scheduled;
-        private AsyncTaskRunner? _downloadsRunner;
-        private TaskRunner? _installsRunner;
-        private TaskRunner? _cancelCleanupRunner;
+        private AsyncPipelineRunner? _downloadsRunner;
+        private PipelineRunner? _installsRunner;
+        private PipelineRunner? _cancelCleanupRunner;
         private IDownloadManager? _downloadManager;
         private ILogger? _logger;
 
@@ -134,17 +133,17 @@ namespace TaskBasedUpdater.Operations
                     threads = 2;
                 }
                 _logger?.LogTrace($"Concurrent downloads: {threads}");
-                _downloadsRunner = new AsyncTaskRunner(_serviceProvider, threads);
+                _downloadsRunner = new AsyncPipelineRunner(_serviceProvider, threads);
                 _downloadsRunner.Error += OnError;
             }
             if (_installsRunner == null)
             {
-                _installsRunner = new TaskRunner(_serviceProvider);
+                _installsRunner = new PipelineRunner(_serviceProvider);
                 _installsRunner.Error += OnError;
             }
             if (_cancelCleanupRunner == null)
             {
-                _cancelCleanupRunner = new TaskRunner(_serviceProvider);
+                _cancelCleanupRunner = new PipelineRunner(_serviceProvider);
                 _cancelCleanupRunner.Error += OnError;
             }
 
@@ -329,7 +328,7 @@ namespace TaskBasedUpdater.Operations
         //    {
         //        var workers = ParallelDownload;
         //        _logger?.LogTrace($"Concurrent downloads: {workers}");
-        //        _downloads = new AsyncTaskRunner(_serviceProvider, workers);
+        //        _downloads = new AsyncPipelineRunner(_serviceProvider, workers);
         //        _downloads.Error += OnError;
         //    }
         //    if (_installs is null)

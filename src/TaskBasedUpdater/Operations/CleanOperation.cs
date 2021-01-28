@@ -7,7 +7,6 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimplePipeline;
-using SimplePipeline.Runners;
 using TaskBasedUpdater.New.Product.Component;
 using TaskBasedUpdater.Tasks;
 
@@ -21,7 +20,7 @@ namespace TaskBasedUpdater.Operations
         private ILogger? _logger;
        
         private readonly IList<CleanFileTask> _cleanFileTasks;
-        private readonly AsyncTaskRunner _taskRunner;
+        private readonly AsyncPipelineRunner _pipelineRunner;
         private readonly IList<string> _filesToBeCleaned = new List<string>();
         private readonly ConcurrentBag<string> _filesFailedToBeCleaned = new();
         private bool _planSuccessful;
@@ -30,8 +29,8 @@ namespace TaskBasedUpdater.Operations
         public CleanOperation(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _taskRunner = new AsyncTaskRunner(serviceProvider, ConcurrentClean);
-            _taskRunner.Error += OnCleaningError;
+            _pipelineRunner = new AsyncPipelineRunner(serviceProvider, ConcurrentClean);
+            _pipelineRunner.Error += OnCleaningError;
             _cleanFileTasks = new List<CleanFileTask>();
         }
 
@@ -57,7 +56,7 @@ namespace TaskBasedUpdater.Operations
                     continue;
                 var cleanTask = new CleanFileTask(_serviceProvider, data.Key, file);
                 _cleanFileTasks.Add(cleanTask);
-                _taskRunner.Queue(cleanTask);
+                _pipelineRunner.Queue(cleanTask);
                 _filesToBeCleaned.Add(file);
             }
 
@@ -78,10 +77,10 @@ namespace TaskBasedUpdater.Operations
                 foreach (var file in _filesToBeCleaned)
                     _logger.LogTrace(file);
 
-                _taskRunner.Run(token);
+                _pipelineRunner.Run(token);
                 try
                 {
-                    _taskRunner.Wait();
+                    _pipelineRunner.Wait();
                 }
                 catch (Exception)
                 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace SimplePipeline.Tasks
 {
@@ -9,7 +10,7 @@ namespace SimplePipeline.Tasks
 
         private readonly ManualResetEvent _handle;
 
-        protected SynchronizedPipelineTask(IServiceProvider serviceProvider) : base(serviceProvider)
+        protected SynchronizedPipelineTask(ILogger? logger = null) : base(logger)
         {
             _handle = new ManualResetEvent(false);
         }
@@ -24,11 +25,13 @@ namespace SimplePipeline.Tasks
             Wait(Timeout.InfiniteTimeSpan);
         }
 
-        internal void Wait(TimeSpan timeout)
+        public void Wait(TimeSpan timeout)
         {
             if (!_handle.WaitOne(timeout))
                 throw new TimeoutException();
         }
+
+        protected abstract void SynchronizedInvoke(CancellationToken token);
 
         protected override void Dispose(bool disposing)
         {
@@ -54,7 +57,5 @@ namespace SimplePipeline.Tasks
                 _handle.Set();
             }
         }
-
-        protected abstract void SynchronizedInvoke(CancellationToken token);
     }
 }
