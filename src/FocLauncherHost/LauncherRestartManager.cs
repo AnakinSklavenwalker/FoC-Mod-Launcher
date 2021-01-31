@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 using FocLauncherHost.Dialogs;
-using TaskBasedUpdater.Restart;
+using ProductUpdater.Restart;
 
 namespace FocLauncherHost
 {

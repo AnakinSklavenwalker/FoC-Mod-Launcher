@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Abstractions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,39 +12,10 @@ using Validation;
 
 namespace SimpleDownloadManager
 {
-    public interface IDownloadManagerServices 
-    {
-        IFileSystem FileSystem { get; }
-
-        ILogger? Logger { get; }
-
-        IVerifier DownloadVerifier { get; }
-    }
-
-
-    public class DefaultDownloadManagerServices : IDownloadManagerServices
-    {
-        private IVerifier? _verifier;
-
-        public IFileSystem FileSystem { get; } = new FileSystem();
-
-        public ILogger? Logger => null;
-
-        public IVerifier DownloadVerifier
-        {
-            get
-            {
-                _verifier ??= new HashVerifier(FileSystem, Logger);
-                return _verifier;
-            }
-        }
-    }
-
-    internal class DownloadManager : IDownloadManager
+    public class DownloadManager : IDownloadManager
     {
         private readonly IDownloadManagerServices _services;
 
-        //private readonly IServiceProvider _serviceProvider;
         private readonly ILogger? _logger;
         private readonly List<IDownloadEngine> _allEngines = new();
         private readonly List<IDownloadEngine> _defaultEngines = new();

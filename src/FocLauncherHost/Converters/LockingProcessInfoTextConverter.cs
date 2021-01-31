@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
-using TaskBasedUpdater.Restart;
+using ProductUpdater.Restart;
 
 namespace FocLauncherHost.Converters
 {

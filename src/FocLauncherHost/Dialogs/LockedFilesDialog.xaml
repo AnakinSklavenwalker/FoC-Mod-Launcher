@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:restart="clr-namespace:TaskBasedUpdater.Restart;assembly=TaskBasedUpdater"
              xmlns:utilities="clr-namespace:FocLauncherHost.Utilities"
              xmlns:dialogs="clr-namespace:FocLauncherHost.Dialogs"
              xmlns:converters="clr-namespace:FocLauncherHost.Converters"
+             xmlns:restart="clr-namespace:ProductUpdater.Restart;assembly=ProductUpdater"
              mc:Ignorable="d" d:DesignHeight="175" d:DesignWidth="480" 
              MinHeight="180" Width="490" Background="#FF252526" Foreground="#FFF1F1F1"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">

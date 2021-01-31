@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using FocLauncher;
-using TaskBasedUpdater.New.Product;
-using TaskBasedUpdater.New.Product.Component;
-using TaskBasedUpdater.New.Product.Manifest;
+using ProductMetadata;
+using ProductMetadata.Component;
+using ProductMetadata.Manifest;
+using ProductMetadata.Services;
 
 namespace FocLauncherHost.Product
 {

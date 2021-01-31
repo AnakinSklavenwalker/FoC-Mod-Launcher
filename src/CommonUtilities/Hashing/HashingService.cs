@@ -2,7 +2,6 @@
 using System.IO;
 using System.IO.Abstractions;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 using Validation;
 
 #if NET

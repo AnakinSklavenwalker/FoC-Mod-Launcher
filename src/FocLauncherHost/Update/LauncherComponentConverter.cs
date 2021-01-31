@@ -1,8 +1,8 @@
 ﻿using System;
+using CommonUtilities;
 using FocLauncherHost.Update.Model;
-using TaskBasedUpdater;
-using TaskBasedUpdater.New.Product.Component;
-using TaskBasedUpdater.Verification;
+using ProductMetadata.Component;
+using ProductUpdater;
 using Validation;
 
 namespace FocLauncherHost.Update

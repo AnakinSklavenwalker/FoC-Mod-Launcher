@@ -20,8 +20,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\TaskBasedUpdater\TaskBasedUpdater.csproj" />
-  </ItemGroup>
-
 </Project>

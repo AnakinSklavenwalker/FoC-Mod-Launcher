@@ -4,9 +4,8 @@ using System.Linq;
 using System.Windows;
 using FocLauncher;
 using FocLauncherHost.Update.Model;
-using TaskBasedUpdater.New.Product;
-using TaskBasedUpdater.New.Product.Manifest;
-using TaskBasedUpdater.New.Update;
+using ProductMetadata;
+using ProductMetadata.Manifest;
 using Requires = Validation.Requires;
 
 namespace FocLauncherHost.Update
@@ -29,18 +28,18 @@ namespace FocLauncherHost.Update
             _fallbackSearchAction = fallbackSearchAction;
         }
 
-        public LauncherUpdateManifestModel FindMatching(LauncherUpdateManifestContainer container, UpdateRequest updateRequest)
+        public LauncherUpdateManifestModel FindMatching(LauncherUpdateManifestContainer container, ProductManifestLocation manifestLocation)
         {
             Requires.NotNull(container, nameof(container));
-            Requires.NotNull(updateRequest, nameof(updateRequest));
+            Requires.NotNull(manifestLocation, nameof(manifestLocation));
             
             var matchingProductsByName = container.Manifests.Where(x =>
-                x.Name.Equals(updateRequest.Product.Name, StringComparison.InvariantCultureIgnoreCase)).ToList();
+                x.Name.Equals(manifestLocation.Product.Name, StringComparison.InvariantCultureIgnoreCase)).ToList();
 
             if (!matchingProductsByName.Any())
-                throw new ManifestNotFoundException($"Unable to find matching manifest from {container} for product {updateRequest.Product}");
+                throw new ManifestNotFoundException($"Unable to find matching manifest from {container} for product {manifestLocation.Product}");
 
-            var applicationType = ConvertReleaseType(updateRequest.Product.ReleaseType);
+            var applicationType = ConvertReleaseType(manifestLocation.Product.ReleaseType);
 
             var matchingManifest = matchingProductsByName.FirstOrDefault(x => x.ApplicationType == applicationType);
             if (matchingManifest != null)
@@ -49,7 +48,7 @@ namespace FocLauncherHost.Update
             if (_fallbackSearchAction is null || _updateSearchSettings.UpdateMode == UpdateMode.Explicit ||
                 _updateSearchSettings.UpdateMode == UpdateMode.NoFallback)
                 throw new ManifestNotFoundException(
-                    $"Unable to find matching manifest from {container} for product {updateRequest.Product} with settings: {_updateSearchSettings}");
+                    $"Unable to find matching manifest from {container} for product {manifestLocation.Product} with settings: {_updateSearchSettings}");
 
             var useFallback = true;
             if (_updateSearchSettings.UpdateMode == UpdateMode.AskFallbackStable)
@@ -63,12 +62,12 @@ namespace FocLauncherHost.Update
 
             if (!useFallback)
                 throw new ManifestNotFoundException(
-                    $"Unable to find matching manifest from {container} for product {updateRequest.Product} with settings: {_updateSearchSettings}");
+                    $"Unable to find matching manifest from {container} for product {manifestLocation.Product} with settings: {_updateSearchSettings}");
 
             var manifest = _fallbackSearchAction(matchingProductsByName);
             if (manifest is null)
                 throw new ManifestNotFoundException(
-                    $"Unable to find matching manifest from {container} for product {updateRequest.Product} using fallback option.");
+                    $"Unable to find matching manifest from {container} for product {manifestLocation.Product} using fallback option.");
 
             return manifest;
         }

@@ -1,10 +1,10 @@
 ﻿using FocLauncherHost.Update.Model;
-using TaskBasedUpdater.New.Update;
+using ProductMetadata.Manifest;
 
 namespace FocLauncherHost.Update
 {
     internal interface ILauncherUpdateManifestFinder
     {
-        LauncherUpdateManifestModel? FindMatching(LauncherUpdateManifestContainer container, UpdateRequest updateRequest);
+        LauncherUpdateManifestModel? FindMatching(LauncherUpdateManifestContainer container, ProductManifestLocation manifestLocation);
     }
 }

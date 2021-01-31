@@ -9,12 +9,10 @@ using FocLauncherHost.Product;
 using FocLauncherHost.Update;
 using Microsoft.VisualStudio.Threading;
 using NLog;
-using TaskBasedUpdater;
-using TaskBasedUpdater.Configuration;
-using TaskBasedUpdater.New;
-using TaskBasedUpdater.New.Product;
-using TaskBasedUpdater.New.Update;
-using TaskBasedUpdater.New.Update.Service;
+using ProductMetadata;
+using ProductUpdater;
+using ProductUpdater.Configuration;
+using ProductUpdater.New.Update.Service;
 
 
 namespace FocLauncherHost

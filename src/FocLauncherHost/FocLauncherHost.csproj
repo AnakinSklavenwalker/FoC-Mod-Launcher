@@ -89,6 +89,7 @@
       <DependentUpon>LockedFilesDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\WindowHost.cs" />
+    <Compile Include="IsExternalInit.cs" />
     <Compile Include="Product\LauncherComponentBuilder.cs" />
     <Compile Include="Product\LauncherManifest.cs" />
     <Compile Include="Product\LauncherProductService.cs" />
@@ -169,11 +170,18 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.IO.Abstractions">
+      <HintPath>..\..\..\..\..\..\.nuget\packages\system.io.abstractions\13.2.9\lib\net461\System.IO.Abstractions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CommonUtilities\CommonUtilities.csproj">
+      <Project>{41D63E03-CC1B-4246-A4E7-BC99E52DBE00}</Project>
+      <Name>CommonUtilities</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FocLauncher.AppUpdater\FocLauncher.AppUpdater.csproj">
       <Project>{9ebd4d73-3c76-4d60-b156-04fe46d7b9de}</Project>
       <Name>FocLauncher.AppUpdater</Name>
@@ -195,9 +203,13 @@
       <Project>{511EA4F6-7C7A-4242-9986-16F28F126D11}</Project>
       <Name>FocLauncher</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TaskBasedUpdater\TaskBasedUpdater.csproj">
-      <Project>{0855d868-8864-47a4-aad2-d89056ad536f}</Project>
-      <Name>TaskBasedUpdater</Name>
+    <ProjectReference Include="..\ProductMetadata\ProductMetadata.csproj">
+      <Project>{BCA88A75-581D-4E37-BC74-FCDF98E5F66C}</Project>
+      <Name>ProductMetadata</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProductUpdater\ProductUpdater.csproj">
+      <Project>{ba97d73b-4e5f-4f66-8928-383a48f4a9cd}</Project>
+      <Name>ProductUpdater</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -233,6 +245,9 @@
     </PackageReference>
     <PackageReference Include="dnlib">
       <Version>3.3.2</Version>
+    </PackageReference>
+    <PackageReference Include="System.IO.Abstractions">
+      <Version>13.2.9</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

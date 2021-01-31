@@ -1,4 +1,4 @@
-﻿using TaskBasedUpdater.Restart;
+﻿using ProductUpdater.Restart;
 
 // ReSharper disable once CheckNamespace
 namespace FocLauncher.Shared
