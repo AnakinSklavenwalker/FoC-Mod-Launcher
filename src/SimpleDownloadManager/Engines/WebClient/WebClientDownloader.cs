@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Cache;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Validation;
 
@@ -23,10 +24,10 @@ namespace SimpleDownloadManager.Engines
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
-        public WebClientDownloader(IDownloadManagerServices services) : base(DownloadEngineNames.WebClientEngine, new[] {DownloadSource.Internet})
+        public WebClientDownloader(IServiceProvider services) : base(DownloadEngineNames.WebClientEngine, new[] {DownloadSource.Internet})
         {
             Requires.NotNull(services, nameof(services));
-            _logger = services.Logger;
+            _logger = services.GetService<ILogger>();
         }
 
         protected override DownloadSummary DownloadCore(Uri uri, Stream outputStream, ProgressUpdateCallback? progress,

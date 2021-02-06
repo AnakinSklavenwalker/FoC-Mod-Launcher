@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimpleDownloadManager.Configuration;
 using SimpleDownloadManager.Engines;
@@ -14,7 +16,7 @@ namespace SimpleDownloadManager
 {
     public class DownloadManager : IDownloadManager
     {
-        private readonly IDownloadManagerServices _services;
+        private readonly IServiceProvider _services;
 
         private readonly ILogger? _logger;
         private readonly List<IDownloadEngine> _allEngines = new();
@@ -44,18 +46,20 @@ namespace SimpleDownloadManager
             }
         }
 
-        public DownloadManager(DownloadManagerConfiguration configuration) : 
-            this(new DefaultDownloadManagerServices(), configuration)
+        public DownloadManagerConfiguration Configuration { get; }
+
+        internal DownloadManager(DownloadManagerConfiguration configuration) : 
+            this(DefaultServices(), configuration)
         {
             
         }
         
-        public DownloadManager(IDownloadManagerServices services, DownloadManagerConfiguration configuration)
+        public DownloadManager(IServiceProvider services, DownloadManagerConfiguration configuration)
         {
            
             Requires.NotNull(services, nameof(services));
             Requires.NotNull(configuration, nameof(configuration));
-            _logger = services.Logger;
+            _logger = services.GetService<ILogger>();
             _services = services;
             AddDownloadEngine(new WebClientDownloader(services));
             AddDownloadEngine(new FileDownloader(services));
@@ -63,8 +67,14 @@ namespace SimpleDownloadManager
             Configuration = configuration;
         }
 
-        public DownloadManagerConfiguration Configuration { get; }
-
+        public static IServiceProvider DefaultServices()
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSingleton<IFileSystem>(new FileSystem());
+            serviceCollection.AddTransient<IVerifier>((sp) => new HashVerifier(sp));
+            return serviceCollection.BuildServiceProvider();
+        }
+        
         public Task<DownloadSummary> DownloadAsync(Uri uri, Stream outputStream, ProgressUpdateCallback? progress, CancellationToken cancellationToken,
             VerificationContext? productComponent = default)
         {
@@ -148,7 +158,7 @@ namespace SimpleDownloadManager
                         verificationContext.HasValue &&
                         outputStream.Length != 0)
                     {
-                        _verifier ??= _services.DownloadVerifier;
+                        _verifier ??= _services.GetRequiredService<IVerifier>();
 
                         var valid = verificationContext.Value.Verify();
                         if (valid)

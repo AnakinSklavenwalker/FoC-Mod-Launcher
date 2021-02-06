@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.IO.Abstractions;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 
 #if NET
 using System.Buffers;
@@ -10,9 +12,9 @@ namespace SimpleDownloadManager.Engines
 {
     internal class FileDownloader : DownloadEngineBase
     {
-        private readonly IDownloadManagerServices _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
 
-        public FileDownloader(IDownloadManagerServices services) : base(DownloadEngineNames.FileEngine, new DownloadSource[1])
+        public FileDownloader(IServiceProvider services) : base(DownloadEngineNames.FileEngine, new DownloadSource[1])
         {
             _serviceProvider = services;
         }
@@ -31,7 +33,7 @@ namespace SimpleDownloadManager.Engines
         private long CopyFileToStream(string filePath, Stream outStream, ProgressUpdateCallback? progress,
             CancellationToken cancellationToken)
         {
-            var fileSystem = _serviceProvider.FileSystem;
+            var fileSystem = _serviceProvider.GetRequiredService<IFileSystem>();
             if (!fileSystem.File.Exists(filePath))
                 throw new FileNotFoundException(nameof(filePath));
 

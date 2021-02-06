@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using CommonUtilities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Validation;
 
@@ -12,13 +13,12 @@ namespace SimpleDownloadManager.Verification
     {
         private readonly ILogger? _logger;
         private readonly IFileSystem _fileSystem;
-        private readonly HashingService _hashingService;
+        private readonly IHashingService _hashingService;
 
-        public HashVerifier(IFileSystem fileSystem, ILogger? logger = null)
+        public HashVerifier(IServiceProvider serviceProvider)
         {
-            Requires.NotNull(fileSystem, nameof(fileSystem));
-            _logger = logger;
-            _fileSystem = fileSystem;
+            _logger = serviceProvider.GetService<ILogger>();
+            _fileSystem = serviceProvider.GetService<IFileSystem>() ?? new FileSystem();
             _hashingService = new HashingService();
         }
 

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace CommonUtilities
 {
-    public class HashingService
+    public class HashingService : IHashingService
     {
         public byte[] GetFileHash(IFileInfo file, HashType hashType)
         {
