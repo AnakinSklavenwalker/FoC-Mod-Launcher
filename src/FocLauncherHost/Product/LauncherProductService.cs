@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.IO.Abstractions;
 using FocLauncher;
+using Microsoft.Extensions.Logging;
 using ProductMetadata;
-using ProductMetadata.Component;
 using ProductMetadata.Manifest;
 using ProductMetadata.Services;
 
@@ -13,7 +14,10 @@ namespace FocLauncherHost.Product
         public LauncherProductService(
             IProductComponentBuilder componentBuilder, 
             IAvailableManifestBuilder updateManifestBuilder, 
-            IServiceProvider serviceProvider) : base(componentBuilder, updateManifestBuilder, serviceProvider)
+            IFileSystem fileSystem, 
+            ILogger? logger = null) 
+            : base(componentBuilder, new LocalManifestFileResolver(fileSystem, logger), updateManifestBuilder, 
+                new ComponentFileFactory(new ComponentFullDestinationResolver(fileSystem), fileSystem, Directory.GetCurrentDirectory()), fileSystem, logger)
         {
         }
 

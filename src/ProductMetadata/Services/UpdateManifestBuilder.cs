@@ -1,7 +1,8 @@
 ﻿using System.IO;
 using System.IO.Abstractions;
+using ProductMetadata.Manifest;
 
-namespace ProductMetadata.Manifest
+namespace ProductMetadata.Services
 {
     public abstract class UpdateManifestBuilder<T> : IAvailableManifestBuilder
     {

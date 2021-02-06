@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO.Abstractions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,8 +11,10 @@ using FocLauncherHost.Update;
 using Microsoft.VisualStudio.Threading;
 using NLog;
 using ProductMetadata;
+using ProductMetadata.Manifest;
 using ProductUpdater;
 using ProductUpdater.Configuration;
+using ProductUpdater.New.Update;
 using ProductUpdater.New.Update.Service;
 
 
@@ -77,15 +80,14 @@ namespace FocLauncherHost
 
                         var ps = new LauncherProductService(new LauncherComponentBuilder(),
                             new LauncherUpdateManifestBuilder(new LauncherManifestFinder(us),
-                                new LauncherToProductCatalogConverter(_services), _services), _services);
+                                new LauncherToProductCatalogConverter(new FileSystem()), _services), new FileSystem());
 
                         var cs = new UpdateCheckService(ps, _services);
 
-                        var r = new UpdateRequest
-                        {
-                            Product = ps.CreateProductReference(null, ProductReleaseType.Stable),
-                            UpdateManifestPath = new Uri("file://c:/Test/text.xml", UriKind.Absolute)
-                        };
+                        var r = new UpdateRequest(
+                            new ProductManifestLocation(
+                                ps.CreateProductReference(null, ProductReleaseType.Stable),
+                                    new Uri("file://c:/Test/text.xml", UriKind.Absolute)));
 
                         var updateCheckInformation = await cs.CheckForUpdates(r, cts.Token);
 

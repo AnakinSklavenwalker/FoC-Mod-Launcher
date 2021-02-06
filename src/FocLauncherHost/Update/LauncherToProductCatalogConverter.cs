@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO.Abstractions;
 using System.Linq;
 using FocLauncherHost.Update.Model;
 using ProductMetadata;
@@ -12,8 +13,8 @@ namespace FocLauncherHost.Update
     {
         public IComponentConverter<LauncherComponent> ComponentConverter { get; }
 
-        public LauncherToProductCatalogConverter(IServiceProvider serviceProvider) : 
-            this(new LauncherComponentConverter(new ComponentFullDestinationResolver(serviceProvider)))
+        public LauncherToProductCatalogConverter(IFileSystem fileSystem) : 
+            this(new LauncherComponentConverter(new ComponentFullDestinationResolver(fileSystem)))
         {
         }
         

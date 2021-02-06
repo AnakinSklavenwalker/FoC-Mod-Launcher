@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ProductMetadata;
 using ProductMetadata.Component;
 using ProductMetadata.Manifest;
+using ProductMetadata.Services;
 using Validation;
 
 namespace FocLauncherHost.Product

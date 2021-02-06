@@ -2,6 +2,8 @@
 using CommonUtilities;
 using FocLauncherHost.Update.Model;
 using ProductMetadata.Component;
+using ProductMetadata.Manifest;
+using ProductMetadata.Services;
 using ProductUpdater;
 using Validation;
 
@@ -33,13 +35,13 @@ namespace FocLauncherHost.Update
             var hash = launcherComponent.Sha2;
             var size = launcherComponent.Size;
 
-            var verificationContext = VerificationContext.None;
+            var integrityInformation = ComponentIntegrityInformation.None;
             if (hash != null)
-                verificationContext = new VerificationContext(hash, HashType.Sha256);
+                integrityInformation = new ComponentIntegrityInformation(hash, HashType.Sha256);
             var originInfo = new OriginInfo(new Uri(launcherComponent.Origin, UriKind.Absolute))
             {
                 Size = size,
-                VerificationContext = verificationContext
+                IntegrityInformation = integrityInformation
             };
 
             
@@ -49,14 +51,6 @@ namespace FocLauncherHost.Update
                 OriginInfo = originInfo,
                 CurrentVersion = newVersion
             };
-        }
-
-        private static string GetRealDependencyDestination(LauncherComponent dependency)
-        {
-            var destination = Environment.ExpandEnvironmentVariables(dependency.Destination);
-            if (!Uri.TryCreate(destination, UriKind.Absolute, out var uri))
-                throw new InvalidOperationException($"No absolute dependency destination: {destination}");
-            return uri.LocalPath;
         }
     }
 }

@@ -9,5 +9,8 @@ namespace ProductMetadata
         Version? Version { get; }
         
         ProductReleaseType ReleaseType { get; }
+
+        // TODO:
+        //string? Branch { get; }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace ProductMetadata.Component
+﻿namespace ProductMetadata.Services
 {
     public interface ICatalogConverter<in TCatalogModel, TComponentModel>
     {

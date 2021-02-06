@@ -23,35 +23,24 @@ namespace ProductMetadata.Services
         protected IAvailableManifestBuilder AvailableManifestBuilder { get; }
         protected IManifestFileResolver ManifestFileResolver { get; }
 
-        protected IFullDestinationResolver ComponentFullDestinationResolver { get; }
-
-        protected ProductServiceBase(
-            IProductComponentBuilder componentBuilder, 
-            IManifestFileResolver manifestFileResolver,
-            IAvailableManifestBuilder availableManifestBuilder,
-            IFileSystem fileSystem,
-            ILogger? logger = null) 
-            : this(componentBuilder, manifestFileResolver, availableManifestBuilder, new ComponentFullDestinationResolver(fileSystem), fileSystem, logger)
-        {
-        }
-
+        protected IComponentFactory InstalledComponentFactory { get; }
 
         protected ProductServiceBase(
             IProductComponentBuilder componentBuilder,
             IManifestFileResolver manifestFileResolver,
             IAvailableManifestBuilder availableManifestBuilder,
-            IFullDestinationResolver fullDestinationResolver,
+            IComponentFactory installedComponentFactory,
             IFileSystem fileSystem,
             ILogger? logger = null)
         {
             Requires.NotNull(componentBuilder, nameof(componentBuilder));
-            Requires.NotNull(fullDestinationResolver, nameof(fullDestinationResolver));
+            Requires.NotNull(installedComponentFactory, nameof(installedComponentFactory));
             Requires.NotNull(manifestFileResolver, nameof(manifestFileResolver));
             Requires.NotNull(availableManifestBuilder, nameof(availableManifestBuilder));
             ComponentBuilder = componentBuilder;
             ManifestFileResolver = manifestFileResolver;
             AvailableManifestBuilder = availableManifestBuilder;
-            ComponentFullDestinationResolver = fullDestinationResolver;
+            InstalledComponentFactory = installedComponentFactory;
             FileSystem = fileSystem;
             Logger = logger;
         }
@@ -85,7 +74,7 @@ namespace ProductMetadata.Services
             
             try
             {
-                Logger?.LogTrace($"Getting manifest file.");
+                Logger?.LogTrace("Getting manifest file.");
                 var manifestFile = GetAvailableManifestFile(manifestLocation);
                 if (manifestFile is null || !manifestFile.Exists)
                     throw new ManifestNotFoundException("Manifest file not found or null");
@@ -113,9 +102,7 @@ namespace ProductMetadata.Services
 
         protected virtual IEnumerable<ProductComponent> FindInstalledComponents(IInstalledProductManifest manifest, string installationPath)
         {
-            return manifest.Items.Select(component =>
-                new ComponentFileFactory(ComponentFullDestinationResolver, FileSystem, installationPath)
-                    .Create(component, ComponentBuilder));
+            return manifest.Items.Select(component => InstalledComponentFactory.Create(component, ComponentBuilder));
         }
 
         protected virtual IFileInfo GetAvailableManifestFile(ProductManifestLocation manifestLocation)

@@ -1,5 +1,4 @@
 ﻿using System.IO.Abstractions;
-using CommonUtilities;
 using ProductMetadata.Component;
 using Validation;
 
@@ -21,31 +20,25 @@ namespace ProductMetadata.Services
             _basePath = basePath;
         }
         
-        public ProductComponent Create(ProductComponent baseComponent, IProductComponentBuilder builder)
+        public ProductComponent Create(ProductComponent manifestComponent, IProductComponentBuilder builder)
         {
-            Requires.NotNull(baseComponent, nameof(baseComponent));
+            Requires.NotNull(manifestComponent, nameof(manifestComponent));
             Requires.NotNull(builder, nameof(builder));
 
+            // TODO : Remove interface
+            var realPath = _destinationResolver.GetFullDestination(manifestComponent, false, _basePath);
 
-            var realPath = _destinationResolver.GetFullDestination(baseComponent, false, _basePath);
-
-            var filePath = _fileSystem.Path.Combine(realPath, baseComponent.Name);
+            var filePath = _fileSystem.Path.Combine(realPath, manifestComponent.Name);
             var file = _fileSystem.FileInfo.FromFileName(filePath);
             if (!file.Exists)
-                return baseComponent with { DetectedState = DetectionState.Absent };
+                return manifestComponent with { DetectedState = DetectionState.Absent };
 
             var version = builder.GetVersion(file);
-            var size = file.Length;
+            var size = builder.GetSize(file);
+            var integrityInformation = builder.GetIntegrityInformation(file);
+            
 
-            var integrityInformation = ComponentIntegrityInformation.None;
-            if (builder.HashType != HashType.None)
-            {
-                var hashingService = new HashingService();
-                var hash = hashingService.GetFileHash(file, builder.HashType);
-                integrityInformation = new ComponentIntegrityInformation(hash, builder.HashType);
-            }
-
-            return baseComponent with
+            return manifestComponent with
             {
                 Destination = realPath,
                 DiskSize = size,
@@ -54,10 +47,5 @@ namespace ProductMetadata.Services
                 IntegrityInformation = integrityInformation
             };
         }
-    }
-
-    public interface IComponentFactory
-    {
-        ProductComponent Create(ProductComponent baseComponent, IProductComponentBuilder builder);
     }
 }
