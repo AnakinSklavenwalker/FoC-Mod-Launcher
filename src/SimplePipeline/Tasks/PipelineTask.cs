@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Validation;
 
 namespace SimplePipeline.Tasks
 {
@@ -9,13 +11,17 @@ namespace SimplePipeline.Tasks
     {
         internal bool IsDisposed { get; private set; }
 
+        protected internal IServiceProvider Services { get; }
+
         protected internal ILogger? Logger { get; }
 
         public Exception? Error { get; internal set; }
 
-        protected PipelineTask(ILogger? logger = null)
+        protected PipelineTask(IServiceProvider serviceProvider)
         {
-            Logger = logger;
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            Services = serviceProvider;
+            Logger = serviceProvider.GetService<ILogger>();
         }
 
         ~PipelineTask()

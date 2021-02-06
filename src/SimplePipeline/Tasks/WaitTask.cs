@@ -9,7 +9,7 @@ namespace SimplePipeline.Tasks
     {
         private readonly AsyncPipelineRunner _runner;
 
-        public WaitTask(AsyncPipelineRunner runner, ILogger? logger = null) : base(logger)
+        public WaitTask(IServiceProvider serviceProvider, AsyncPipelineRunner runner) : base(serviceProvider)
         {
             Requires.NotNull(runner, nameof(runner));
             _runner = runner;

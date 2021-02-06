@@ -16,7 +16,7 @@ namespace SimplePipeline
 
         public AggregateException? Exception => _exceptions.Count > 0 ? new AggregateException(_exceptions) : null;
 
-        public AsyncPipelineRunner(int workerCount, ILogger? logger = null) : base(logger)
+        public AsyncPipelineRunner(int workerCount, IServiceProvider serviceProvider) : base(serviceProvider)
         {
             if (workerCount < 1)
                 throw new ArgumentOutOfRangeException(nameof(workerCount));

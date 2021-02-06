@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Microsoft.Extensions.Logging;
 
 namespace SimplePipeline.Tasks
 {
@@ -10,7 +9,7 @@ namespace SimplePipeline.Tasks
 
         private readonly ManualResetEvent _handle;
 
-        protected SynchronizedPipelineTask(ILogger? logger = null) : base(logger)
+        protected SynchronizedPipelineTask(IServiceProvider serviceProvider) : base(serviceProvider)
         {
             _handle = new ManualResetEvent(false);
         }

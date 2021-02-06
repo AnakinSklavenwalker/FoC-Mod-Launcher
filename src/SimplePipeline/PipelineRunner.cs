@@ -4,7 +4,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Validation;
 
 namespace SimplePipeline
 {
@@ -22,11 +24,12 @@ namespace SimplePipeline
 
         internal bool IsCancelled { get; private set; }
 
-        public PipelineRunner(ILogger? logger = null)
+        public PipelineRunner(IServiceProvider services)
         {
+            Requires.NotNull(services, nameof(services));
             TaskQueue = new ConcurrentQueue<IPipelineTask>();
             TaskList = new List<IPipelineTask>();
-            Logger = logger;
+            Logger = services.GetService<ILogger>();
         }
 
         public void Run(CancellationToken token)
