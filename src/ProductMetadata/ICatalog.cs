@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using ProductMetadata.Component;
 
 namespace ProductMetadata
 {

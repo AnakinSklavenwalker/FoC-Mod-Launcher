@@ -1,4 +1,6 @@
-﻿using System.IO.Abstractions;
+﻿using System;
+using System.IO.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using ProductMetadata.Component;
 using Validation;
 
@@ -7,40 +9,35 @@ namespace ProductMetadata.Services
     public class ComponentFileFactory : IComponentFactory
     {
         private readonly IFileSystem _fileSystem;
-        private readonly IFullDestinationResolver _destinationResolver;
-        private readonly string _basePath;
+        private readonly IProductComponentBuilder _builder;
 
-        public ComponentFileFactory(IFullDestinationResolver destinationResolver, IFileSystem fileSystem, string basePath)
+        public ComponentFileFactory(IServiceProvider serviceProvider)
         {
-            Requires.NotNull(fileSystem, nameof(fileSystem));
-            Requires.NotNull(destinationResolver, nameof(destinationResolver));
-            Requires.NotNullOrEmpty(basePath, nameof(basePath));
-            _fileSystem = fileSystem;
-            _destinationResolver = destinationResolver;
-            _basePath = basePath;
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _fileSystem = serviceProvider.GetRequiredService<IFileSystem>();
+            _builder = serviceProvider.GetRequiredService<IProductComponentBuilder>();
         }
         
-        public ProductComponent Create(ProductComponent manifestComponent, IProductComponentBuilder builder)
+        public ProductComponent Create(ProductComponent manifestComponent, IInstalledProduct product)
         {
             Requires.NotNull(manifestComponent, nameof(manifestComponent));
-            Requires.NotNull(builder, nameof(builder));
+            Requires.NotNull(product, nameof(product));
 
             // TODO : Remove interface
-            var realPath = _destinationResolver.GetFullDestination(manifestComponent, false, _basePath);
+            var componentPath = _builder.ResolveComponentDestination(manifestComponent, product);
 
-            var filePath = _fileSystem.Path.Combine(realPath, manifestComponent.Name);
-            var file = _fileSystem.FileInfo.FromFileName(filePath);
+            var file = _fileSystem.FileInfo.FromFileName(componentPath);
             if (!file.Exists)
                 return manifestComponent with { DetectedState = DetectionState.Absent };
 
-            var version = builder.GetVersion(file);
-            var size = builder.GetSize(file);
-            var integrityInformation = builder.GetIntegrityInformation(file);
+            var version = _builder.GetVersion(file);
+            var size = _builder.GetSize(file);
+            var integrityInformation = _builder.GetIntegrityInformation(file);
             
 
             return manifestComponent with
             {
-                Destination = realPath,
+                Destination = componentPath,
                 DiskSize = size,
                 DetectedState = DetectionState.Present,
                 CurrentVersion = version,

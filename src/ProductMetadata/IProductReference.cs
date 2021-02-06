@@ -10,7 +10,6 @@ namespace ProductMetadata
         
         ProductReleaseType ReleaseType { get; }
 
-        // TODO:
         //string? Branch { get; }
     }
 }

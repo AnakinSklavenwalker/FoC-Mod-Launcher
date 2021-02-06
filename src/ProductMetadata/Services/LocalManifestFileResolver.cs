@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProductMetadata.Manifest;
 using Validation;
@@ -11,11 +12,11 @@ namespace ProductMetadata.Services
         private readonly IFileSystem _fileSystem;
         private readonly ILogger? _logger;
 
-        public LocalManifestFileResolver(IFileSystem fileSystem, ILogger? logger = null)
+        public LocalManifestFileResolver(IServiceProvider serviceProvider)
         {
-            Requires.NotNull(fileSystem, nameof(fileSystem));
-            _fileSystem = fileSystem;
-            _logger = logger;
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _fileSystem = serviceProvider.GetRequiredService<IFileSystem>();
+            _logger = serviceProvider.GetService<ILogger>();
         }
 
         public IFileInfo GetManifest(Uri manifestPath)

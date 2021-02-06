@@ -4,6 +4,6 @@ namespace ProductMetadata.Services
 {
     public interface IComponentFactory
     {
-        ProductComponent Create(ProductComponent manifestComponent, IProductComponentBuilder builder);
+        ProductComponent Create(ProductComponent manifestComponent, IInstalledProduct product);
     }
 }

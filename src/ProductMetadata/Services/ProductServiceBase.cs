@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
 using CommonUtilities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProductMetadata.Component;
 using ProductMetadata.Manifest;
@@ -18,31 +19,20 @@ namespace ProductMetadata.Services
         protected ILogger? Logger;
         protected readonly IFileSystem FileSystem;
 
-        protected IProductComponentBuilder ComponentBuilder { get; }
-
         protected IAvailableManifestBuilder AvailableManifestBuilder { get; }
+        
         protected IManifestFileResolver ManifestFileResolver { get; }
 
         protected IComponentFactory InstalledComponentFactory { get; }
 
-        protected ProductServiceBase(
-            IProductComponentBuilder componentBuilder,
-            IManifestFileResolver manifestFileResolver,
-            IAvailableManifestBuilder availableManifestBuilder,
-            IComponentFactory installedComponentFactory,
-            IFileSystem fileSystem,
-            ILogger? logger = null)
+        protected ProductServiceBase(IServiceProvider serviceProvider)
         {
-            Requires.NotNull(componentBuilder, nameof(componentBuilder));
-            Requires.NotNull(installedComponentFactory, nameof(installedComponentFactory));
-            Requires.NotNull(manifestFileResolver, nameof(manifestFileResolver));
-            Requires.NotNull(availableManifestBuilder, nameof(availableManifestBuilder));
-            ComponentBuilder = componentBuilder;
-            ManifestFileResolver = manifestFileResolver;
-            AvailableManifestBuilder = availableManifestBuilder;
-            InstalledComponentFactory = installedComponentFactory;
-            FileSystem = fileSystem;
-            Logger = logger;
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            ManifestFileResolver = serviceProvider.GetRequiredService<IManifestFileResolver>();
+            AvailableManifestBuilder = serviceProvider.GetRequiredService<IAvailableManifestBuilder>();
+            InstalledComponentFactory = serviceProvider.GetRequiredService<IComponentFactory>();
+            FileSystem = serviceProvider.GetRequiredService<IFileSystem>();
+            Logger = serviceProvider.GetService<ILogger>();
         }
 
         public IInstalledProduct GetCurrentInstance()
@@ -102,7 +92,7 @@ namespace ProductMetadata.Services
 
         protected virtual IEnumerable<ProductComponent> FindInstalledComponents(IInstalledProductManifest manifest, string installationPath)
         {
-            return manifest.Items.Select(component => InstalledComponentFactory.Create(component, ComponentBuilder));
+            return manifest.Items.Select(component => InstalledComponentFactory.Create(component, GetCurrentInstance()));
         }
 
         protected virtual IFileInfo GetAvailableManifestFile(ProductManifestLocation manifestLocation)
