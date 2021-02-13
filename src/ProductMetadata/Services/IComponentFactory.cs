@@ -2,8 +2,8 @@
 
 namespace ProductMetadata.Services
 {
-    public interface IComponentFactory
+    public interface IComponentDetectorFactory
     {
-        ProductComponent Create(ProductComponent manifestComponent, IInstalledProduct product);
+        IComponentDetector GetDetector(ComponentType type);
     }
 }

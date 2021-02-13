@@ -8,8 +8,6 @@ namespace ProductMetadata
 
         Version? Version { get; }
         
-        ProductReleaseType ReleaseType { get; }
-
-        //string? Branch { get; }
+        string? Branch { get; }
     }
 }

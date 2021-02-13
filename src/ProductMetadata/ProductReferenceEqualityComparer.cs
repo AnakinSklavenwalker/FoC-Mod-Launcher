@@ -8,17 +8,17 @@ namespace ProductMetadata
     public class ProductReferenceEqualityComparer : IEqualityComparer<IProductReference>, IEqualityComparer<IInstalledProduct>
     {
         private readonly bool _compareVersion;
-        private readonly bool _compareRelease;
+        private readonly bool _compareBranch;
         public static ProductReferenceEqualityComparer Default = new(true, true);
         public static ProductReferenceEqualityComparer VersionAware = new(true, false);
-        public static ProductReferenceEqualityComparer ReleaseAware = new(true, true);
+        public static ProductReferenceEqualityComparer BranchAware = new(true, true);
         public static ProductReferenceEqualityComparer NameOnly = new(false, false);
 
 
-        private ProductReferenceEqualityComparer(bool compareVersion, bool compareRelease)
+        private ProductReferenceEqualityComparer(bool compareVersion, bool compareBranch)
         {
             _compareVersion = compareVersion;
-            _compareRelease = compareRelease;
+            _compareBranch = compareBranch;
         }
 
         public bool Equals(IProductReference? x, IProductReference? y)
@@ -31,9 +31,9 @@ namespace ProductMetadata
             if (!x.Name.Equals(y.Name))
                 return false;
 
-            if (_compareRelease)
+            if (_compareBranch)
             {
-                if (!x.ReleaseType.Equals(y.ReleaseType))
+                if (!Equals(x.Branch, y.Branch))
                     return false;
             }
 
@@ -46,10 +46,10 @@ namespace ProductMetadata
         public int GetHashCode(IProductReference obj)
         {
 #if NET || NETSTANDARD2_1
-            if (_compareRelease && _compareVersion)
-                return HashCode.Combine(obj.Name, obj.ReleaseType, obj.Version);
-            if (_compareRelease)
-                return HashCode.Combine(obj.Name, obj.ReleaseType);
+            if (_compareBranch && _compareVersion)
+                return HashCode.Combine(obj.Name, obj.Branch, obj.Version);
+            if (_compareBranch)
+                return HashCode.Combine(obj.Name, obj.Branch);
             if (_compareVersion)
                 return HashCode.Combine(obj.Name, obj.Version);
             return obj.Name.GetHashCode();
@@ -58,7 +58,7 @@ namespace ProductMetadata
             {
                 var hashCode = obj.Name.GetHashCode();
                 hashCode = (hashCode * 397) ^ (obj.Version != null ? obj.Version.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (int) obj.ReleaseType;
+                hashCode = (hashCode * 397) ^ (obj.Branch != null ? obj.Branch.GetHashCode() : 0);
                 return hashCode;
             }
 #endif

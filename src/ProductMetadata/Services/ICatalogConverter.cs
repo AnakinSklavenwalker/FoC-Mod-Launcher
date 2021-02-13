@@ -1,9 +1,7 @@
 ﻿namespace ProductMetadata.Services
 {
-    public interface ICatalogConverter<in TCatalogModel, TComponentModel>
+    public interface ICatalogConverter<in TCatalogModel>
     {
-        public IComponentConverter<TComponentModel> ComponentConverter { get; }
-
         public ICatalog Convert(TCatalogModel catalogModel);
 
     }

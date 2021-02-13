@@ -6,16 +6,15 @@ namespace ProductMetadata.Services
 {
     public abstract class UpdateManifestBuilder<T> : IAvailableManifestBuilder
     {
-        public IAvailableProductManifest Build(ProductManifestLocation manifestLocation, IFileInfo manifestFile)
+        public IManifest Build(ManifestLocation manifestLocation, IFileInfo manifestFile)
         {
             var manifestModel = SerializeManifestFile(manifestFile);
             if (manifestModel is null)
                 throw new ManifestException($"Failed to get manifest from '{manifestFile.FullName}'.");
-            var catalog = BuildManifestCatalog(manifestModel, manifestLocation);
-            return AvailableProductManifest.FromCatalog(manifestLocation.Product, catalog);
+            return BuildManifestCatalog(manifestModel, manifestLocation);
         }
 
-        protected abstract ICatalog BuildManifestCatalog(T manifestModel, ProductManifestLocation manifestLocation);
+        protected abstract IManifest BuildManifestCatalog(T manifestModel, ManifestLocation manifestLocation);
 
         protected abstract T SerializeManifestModel(Stream manifestData);
 

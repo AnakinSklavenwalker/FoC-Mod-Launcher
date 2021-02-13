@@ -8,7 +8,7 @@ namespace ProductMetadata
     {
         public IInstalledProduct Product { get; }
 
-        public InstalledProductCatalog(IInstalledProduct product, IEnumerable<ProductComponent> components) : base(components)
+        public InstalledProductCatalog(IInstalledProduct product, IEnumerable<IProductComponent> components) : base(components)
         {
             Requires.NotNull(product, nameof(product));
             Product = product;

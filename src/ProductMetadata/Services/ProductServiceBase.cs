@@ -23,14 +23,14 @@ namespace ProductMetadata.Services
         
         protected IManifestFileResolver ManifestFileResolver { get; }
 
-        protected IComponentFactory InstalledComponentFactory { get; }
+        protected IComponentDetectorFactory ComponentDetectorFactory{ get; }
 
         protected ProductServiceBase(IServiceProvider serviceProvider)
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             ManifestFileResolver = serviceProvider.GetRequiredService<IManifestFileResolver>();
             AvailableManifestBuilder = serviceProvider.GetRequiredService<IAvailableManifestBuilder>();
-            InstalledComponentFactory = serviceProvider.GetRequiredService<IComponentFactory>();
+
             FileSystem = serviceProvider.GetRequiredService<IFileSystem>();
             Logger = serviceProvider.GetService<ILogger>();
         }
@@ -46,17 +46,17 @@ namespace ProductMetadata.Services
             throw new NotImplementedException();
         }
 
-        public abstract IProductReference CreateProductReference(Version? newVersion, ProductReleaseType newReleaseType);
+        public abstract IProductReference CreateProductReference(Version? newVersion, string? branch);
 
         public IInstalledProductCatalog GetInstalledProductCatalog()
         {
             Initialize();
-            var manifest = _installedProduct!.ProductManifest;
+            var manifest = _installedProduct!.CurrentManifest;
             var installPath = _installedProduct.InstallationPath;
             return new InstalledProductCatalog(_installedProduct!, FindInstalledComponents(manifest, installPath));
         }
 
-        public IAvailableProductManifest GetAvailableProductManifest(ProductManifestLocation manifestLocation)
+        public IManifest GetAvailableProductManifest(ManifestLocation manifestLocation)
         {
             Initialize();
             if (!IsProductCompatible(manifestLocation.Product))
@@ -71,7 +71,7 @@ namespace ProductMetadata.Services
                 try
                 {
                     Logger?.LogTrace($"Loading manifest form {manifestFile.FullName}");
-                    IAvailableProductManifest manifest = LoadManifest(manifestLocation, manifestFile);
+                    var manifest = LoadManifest(manifestLocation, manifestFile);
                     if (manifest is null)
                         throw new ManifestException("Manifest cannot be null");
                     return manifest;
@@ -90,22 +90,27 @@ namespace ProductMetadata.Services
 
         protected abstract IInstalledProduct BuildProduct();
 
-        protected virtual IEnumerable<ProductComponent> FindInstalledComponents(IInstalledProductManifest manifest, string installationPath)
+        protected virtual IEnumerable<IProductComponent> FindInstalledComponents(IManifest manifest, string installationPath)
         {
-            return manifest.Items.Select(component => InstalledComponentFactory.Create(component, GetCurrentInstance()));
+            var currentInstance = GetCurrentInstance();
+            return manifest.Items.Select(component =>
+            {
+                var detector = ComponentDetectorFactory.GetDetector(component.Type);
+                return detector.Find(component, currentInstance);
+            });
         }
 
-        protected virtual IFileInfo GetAvailableManifestFile(ProductManifestLocation manifestLocation)
+        protected virtual IFileInfo GetAvailableManifestFile(ManifestLocation manifestLocation)
         {
-            return ManifestFileResolver.GetManifest(manifestLocation.UpdateManifestPath);
+            return ManifestFileResolver.GetManifest(manifestLocation.ManifestUri);
         }
         
         protected virtual bool IsProductCompatible(IProductReference product)
         {
-            return !ProductReferenceEqualityComparer.ReleaseAware.Equals(_installedProduct!.ProductReference, product);
+            return !ProductReferenceEqualityComparer.NameOnly.Equals(_installedProduct!.ProductReference, product);
         }
         
-        protected virtual IAvailableProductManifest LoadManifest(ProductManifestLocation manifestLocation, IFileInfo manifestFile)
+        protected virtual IManifest LoadManifest(ManifestLocation manifestLocation, IFileInfo manifestFile)
         {
             return AvailableManifestBuilder.Build(manifestLocation, manifestFile);
         }

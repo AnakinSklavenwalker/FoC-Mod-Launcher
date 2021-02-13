@@ -9,12 +9,14 @@ namespace ProductMetadata
         
         string InstallationPath { get; }
 
-        IInstalledProductManifest ProductManifest { get; }
+        IManifest CurrentManifest { get; }
         
         string? Author { get; }
 
         DateTime? UpdateDate { get; }
 
         DateTime? InstallDate { get; }
+
+        ProductReleaseType ReleaseType { get; }
     }
 }

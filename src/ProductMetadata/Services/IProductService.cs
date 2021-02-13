@@ -9,10 +9,10 @@ namespace ProductMetadata.Services
 
         void UpdateCurrentInstance(IInstalledProduct product);
 
-        IProductReference CreateProductReference(Version? newVersion, ProductReleaseType newReleaseType);
+        IProductReference CreateProductReference(Version? newVersion, string? branch);
 
         IInstalledProductCatalog GetInstalledProductCatalog();
 
-        IAvailableProductManifest GetAvailableProductManifest(ProductManifestLocation updateRequest);
+        IManifest GetAvailableProductManifest(ManifestLocation updateRequest);
     }
 }

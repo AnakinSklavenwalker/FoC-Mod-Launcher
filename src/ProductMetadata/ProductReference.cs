@@ -7,19 +7,19 @@ namespace ProductMetadata
     {
         public string Name { get; }
         public Version? Version { get; init; }
-        public ProductReleaseType ReleaseType { get; init; }
+        public string? Branch { get; }
 
-        public ProductReference(string name, Version? version = null, ProductReleaseType releaseType = ProductReleaseType.Stable)
+        public ProductReference(string name, Version? version = null, string? branch = null)
         {
             Requires.NotNullOrEmpty(name, nameof(name));
             Name = name;
             Version = version;
-            ReleaseType = releaseType;
+            Branch = branch;
         }
 
         public override string ToString()
         {
-            return $"Product {Name}:v{Version}:r{ReleaseType}";
+            return $"Product {Name};v{Version};branch:{Branch}";
         }
     }
 }

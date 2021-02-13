@@ -2,8 +2,8 @@
 
 namespace ProductMetadata.Services
 {
-    public interface IComponentConverter<T>
+    public interface IComponentConverter<in TModel, out TComponent> where TComponent : IProductComponentIdentity
     {
-        ProductComponent Convert(T metaModel);
+        TComponent Convert(TModel metaModel);
     }
 }
