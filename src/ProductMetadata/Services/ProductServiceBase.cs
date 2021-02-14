@@ -7,12 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProductMetadata.Component;
 using ProductMetadata.Manifest;
+using ProductMetadata.Services.Detectors;
 using Validation;
 
 namespace ProductMetadata.Services
 {
     public abstract class ProductServiceBase : IProductService
     {
+        private readonly IServiceProvider _serviceProvider;
         private bool _isInitialized;
         private IInstalledProduct? _installedProduct;
 
@@ -21,14 +23,15 @@ namespace ProductMetadata.Services
 
         protected IAvailableManifestBuilder AvailableManifestBuilder { get; }
         
-        protected IManifestFileResolver ManifestFileResolver { get; }
+        protected IManifestFileResolver ManifestFileResolver { get; private set; }
 
-        protected IComponentDetectorFactory ComponentDetectorFactory{ get; }
+        protected IComponentDetectorFactory? ComponentDetectorFactory { get; private set; }
 
         protected ProductServiceBase(IServiceProvider serviceProvider)
         {
+            
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
-            ManifestFileResolver = serviceProvider.GetRequiredService<IManifestFileResolver>();
+            _serviceProvider = serviceProvider;
             AvailableManifestBuilder = serviceProvider.GetRequiredService<IAvailableManifestBuilder>();
 
             FileSystem = serviceProvider.GetRequiredService<IFileSystem>();
@@ -89,13 +92,13 @@ namespace ProductMetadata.Services
         }
 
         protected abstract IInstalledProduct BuildProduct();
-
-        protected virtual IEnumerable<IProductComponent> FindInstalledComponents(IManifest manifest, string installationPath)
+        
+        private IEnumerable<IProductComponent> FindInstalledComponents(IManifest manifest, string installationPath)
         {
             var currentInstance = GetCurrentInstance();
             return manifest.Items.Select(component =>
             {
-                var detector = ComponentDetectorFactory.GetDetector(component.Type);
+                var detector = ComponentDetectorFactory!.GetDetector(component.Type, _serviceProvider);
                 return detector.Find(component, currentInstance);
             });
         }
@@ -119,10 +122,32 @@ namespace ProductMetadata.Services
         {
             if (_isInitialized)
                 return;
+            ManifestFileResolver = _serviceProvider.GetService<IManifestFileResolver>() ?? new LocalManifestFileResolver(_serviceProvider);
+            ComponentDetectorFactory = _serviceProvider.GetService<IComponentDetectorFactory>() ?? new ComponentDetectorFactory();
             _installedProduct ??= BuildProduct();
+            AddProductVariables(_installedProduct);
             if (_installedProduct is null)
                 throw new InvalidOperationException("Created Product must not be null!");
             _isInitialized = true;
         }
+
+        private void AddProductVariables(IInstalledProduct product)
+        {
+            var fs = _serviceProvider.GetService<IFileSystem>() ?? new FileSystem();
+            product.ProductVariables.Add(KnownProductVariablesKeys.InstallDir, product.InstallationPath);
+            product.ProductVariables.Add(KnownProductVariablesKeys.InstallDrive, fs.Path.GetPathRoot(product.InstallationPath));
+            AddAdditionalProductVariables(product);
+        }
+
+        protected virtual void AddAdditionalProductVariables(IInstalledProduct product)
+        {
+        }
+    }
+
+    public static class KnownProductVariablesKeys
+    {
+        public const string InstallDir = "InstallDir";
+        public const string InstallDrive = "InstallDrive";
+        public const string AppDataPath = "AppDataPath";
     }
 }

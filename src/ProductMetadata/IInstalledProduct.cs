@@ -18,5 +18,7 @@ namespace ProductMetadata
         DateTime? InstallDate { get; }
 
         ProductReleaseType ReleaseType { get; }
+
+        VariableCollection ProductVariables { get; }
     }
 }

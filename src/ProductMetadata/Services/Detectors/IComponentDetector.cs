@@ -1,6 +1,6 @@
 ﻿using ProductMetadata.Component;
 
-namespace ProductMetadata.Services
+namespace ProductMetadata.Services.Detectors
 {
     public interface IComponentDetector
     {

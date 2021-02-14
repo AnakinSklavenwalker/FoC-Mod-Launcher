@@ -9,7 +9,7 @@ namespace ProductMetadata.Component
         public Version? Version { get; }
         public string? Branch { get; }
         public abstract ComponentType Type { get; }
-        public DetectionState DetectedState { get; private protected set; }
+        public DetectionState DetectedState { get; protected internal set; }
 
         protected ProductComponent(IProductComponentIdentity identity)
         {

@@ -13,6 +13,7 @@ namespace ProductMetadata
         public DateTime? UpdateDate { get; init; }
         public DateTime? InstallDate { get; init; }
         public ProductReleaseType ReleaseType { get; init; }
+        public VariableCollection ProductVariables { get; }
 
         public InstalledProduct(IProductReference reference, IManifest manifest, string installationPath)
         {
@@ -22,6 +23,7 @@ namespace ProductMetadata
             ProductReference = reference;
             InstallationPath = installationPath;
             CurrentManifest = manifest;
+            ProductVariables = new VariableCollection();
         }
 
         public override string ToString()

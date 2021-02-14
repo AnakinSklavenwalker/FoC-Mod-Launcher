@@ -4,15 +4,20 @@ using Microsoft.Extensions.Logging;
 using ProductMetadata.Component;
 using Validation;
 
-namespace ProductMetadata.Services
+namespace ProductMetadata.Services.Detectors
 {
     public abstract class ComponentDetectorBase : IComponentDetector
     {
+        protected IServiceProvider ServiceProvider { get; }
+
         protected ILogger? Logger { get; }
+
+        protected abstract ComponentType SupportedType { get; }
 
         protected ComponentDetectorBase(IServiceProvider serviceProvider)
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            ServiceProvider = serviceProvider;
             Logger = serviceProvider.GetService<ILogger>();
         }
         
@@ -20,9 +25,16 @@ namespace ProductMetadata.Services
         {
             Requires.NotNull(manifestComponent, nameof(manifestComponent));
             Requires.NotNull(product, nameof(product));
-            return FindCore();
+            ValidateSupported(manifestComponent.Type);
+            return FindCore(manifestComponent, product);
         }
 
-        protected abstract IProductComponent FindCore();
+        protected abstract IProductComponent FindCore(IProductComponent manifestComponent, IInstalledProduct product);
+
+        protected void ValidateSupported(ComponentType type)
+        {
+            if (type != SupportedType)
+                throw new NotSupportedException();
+        }
     }
 }
