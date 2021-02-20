@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Validation;
 
@@ -12,9 +13,37 @@ namespace ProductMetadata
         private readonly ReaderWriterLockSlim _collectionLock = new();
         private readonly IDictionary<string, Variable> _variables;
 
-        public IEnumerable<string> Keys => throw new NotImplementedException();
+        public IEnumerable<string> Keys
+        {
+            get
+            {
+                _collectionLock.EnterReadLock();
+                try
+                {
+                    return _variables.Keys;
+                }
+                finally
+                {
+                    _collectionLock.ExitReadLock();
+                }
+            }
+        }
 
-        public IEnumerable<string> Values => throw new NotImplementedException();
+        public IEnumerable<string?> Values
+        {
+            get
+            {
+                _collectionLock.EnterReadLock();
+                try
+                {
+                    return _variables.Select(v => v.Value.Value);
+                }
+                finally
+                {
+                    _collectionLock.ExitReadLock();
+                }
+            }
+        }
 
         public int Count
         {
@@ -150,13 +179,13 @@ namespace ProductMetadata
             }
         }
 
-        public IDictionary<string, string> ToDictionary()
+        public IDictionary<string, string?> ToDictionary()
         {
             _collectionLock.EnterReadLock();
             try
             {
-                Dictionary<string, string> dictionary = new(Comparer);
-                foreach (KeyValuePair<string, string> keyValuePair in this)
+                Dictionary<string, string?> dictionary = new(Comparer);
+                foreach (var keyValuePair in this)
                     dictionary.Add(keyValuePair.Key, keyValuePair.Value);
                 return dictionary;
             }
