@@ -3,10 +3,8 @@ using ProductMetadata.Manifest;
 
 namespace ProductMetadata
 {
-    public interface IInstalledProduct
-    {
-        IProductReference ProductReference { get; }
-        
+    public interface IInstalledProduct : IProductReference
+    { 
         string InstallationPath { get; }
 
         IManifest CurrentManifest { get; }

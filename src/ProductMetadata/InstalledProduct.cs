@@ -6,7 +6,12 @@ namespace ProductMetadata
 {
     public sealed class InstalledProduct : IInstalledProduct
     {
-        public IProductReference ProductReference { get; }
+        private readonly IProductReference _reference;
+
+        public string Name => _reference.Name;
+        public Version? Version => _reference.Version;
+        public string? Branch => _reference.Branch;
+
         public string InstallationPath { get; }
         public IManifest CurrentManifest { get; }
         public string? Author { get; init; }
@@ -20,7 +25,7 @@ namespace ProductMetadata
             Requires.NotNull(reference, nameof(reference));
             Requires.NotNullOrEmpty(installationPath, nameof(installationPath));
             Requires.NotNull(manifest, nameof(manifest));
-            ProductReference = reference;
+            _reference = reference;
             InstallationPath = installationPath;
             CurrentManifest = manifest;
             ProductVariables = new VariableCollection();
@@ -28,7 +33,8 @@ namespace ProductMetadata
 
         public override string ToString()
         {
-            return $"Product '{ProductReference}' at {InstallationPath}";
+            return $"Product '{_reference.Name} v{_reference.Version} Branch:{_reference.Branch?? string.Empty}' " +
+                   $"at {InstallationPath}";
         }
     }
 }

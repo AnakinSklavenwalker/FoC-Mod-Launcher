@@ -5,7 +5,7 @@ using System;
 
 namespace ProductMetadata
 {
-    public class ProductReferenceEqualityComparer : IEqualityComparer<IProductReference>, IEqualityComparer<IInstalledProduct>
+    public class ProductReferenceEqualityComparer : IEqualityComparer<IProductReference>
     {
         private readonly bool _compareVersion;
         private readonly bool _compareBranch;
@@ -64,18 +64,5 @@ namespace ProductMetadata
 #endif
         }
 
-        public bool Equals(IInstalledProduct? x, IInstalledProduct? y)
-        {
-            if (ReferenceEquals(x, y))
-                return true;
-            if (x is null || y is null)
-                return false;
-            return Equals(x.ProductReference, y.ProductReference);
-        }
-
-        public int GetHashCode(IInstalledProduct obj)
-        {
-            return obj.ProductReference.GetHashCode();
-        }
     }
 }

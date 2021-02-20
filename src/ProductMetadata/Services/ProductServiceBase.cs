@@ -23,13 +23,12 @@ namespace ProductMetadata.Services
 
         protected IAvailableManifestBuilder AvailableManifestBuilder { get; }
         
-        protected IManifestFileResolver ManifestFileResolver { get; private set; }
+        protected IManifestFileResolver? ManifestFileResolver { get; private set; }
 
         protected IComponentDetectorFactory? ComponentDetectorFactory { get; private set; }
 
         protected ProductServiceBase(IServiceProvider serviceProvider)
         {
-            
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             _serviceProvider = serviceProvider;
             AvailableManifestBuilder = serviceProvider.GetRequiredService<IAvailableManifestBuilder>();
@@ -105,12 +104,12 @@ namespace ProductMetadata.Services
 
         protected virtual IFileInfo GetAvailableManifestFile(ManifestLocation manifestLocation)
         {
-            return ManifestFileResolver.GetManifest(manifestLocation.ManifestUri);
+            return ManifestFileResolver!.GetManifest(manifestLocation.ManifestUri);
         }
         
         protected virtual bool IsProductCompatible(IProductReference product)
         {
-            return !ProductReferenceEqualityComparer.NameOnly.Equals(_installedProduct!.ProductReference, product);
+            return !ProductReferenceEqualityComparer.NameOnly.Equals(_installedProduct!, product);
         }
         
         protected virtual IManifest LoadManifest(ManifestLocation manifestLocation, IFileInfo manifestFile)
@@ -142,12 +141,5 @@ namespace ProductMetadata.Services
         protected virtual void AddAdditionalProductVariables(IInstalledProduct product)
         {
         }
-    }
-
-    public static class KnownProductVariablesKeys
-    {
-        public const string InstallDir = "InstallDir";
-        public const string InstallDrive = "InstallDrive";
-        public const string AppDataPath = "AppDataPath";
     }
 }
