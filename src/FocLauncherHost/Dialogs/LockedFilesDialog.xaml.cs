@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using ProductUpdater.Restart;
 
 namespace FocLauncherHost.Dialogs
 {
@@ -53,36 +50,36 @@ namespace FocLauncherHost.Dialogs
             }
         }
 
-        public ObservableCollection<ILockingProcessInfo> Processes { get; }
+        //public ObservableCollection<ILockingProcessInfo> Processes { get; }
 
-        public LockedFilesDialog(IEnumerable<ILockingProcessInfo> processes) : this(processes, true) 
-        {
-        }
+        //public LockedFilesDialog(IEnumerable<ILockingProcessInfo> processes) : this(processes, true) 
+        //{
+        //}
 
-        public LockedFilesDialog(IEnumerable<ILockingProcessInfo> processes, bool retry)
-        {
-            Retry = retry;
-            Processes = new ObservableCollection<ILockingProcessInfo>(processes);
-            ButtonText = Processes.Count == 1 ? "End Process" : "End Processes";
-            InitializeComponent();
+        //public LockedFilesDialog(IEnumerable<ILockingProcessInfo> processes, bool retry)
+        //{
+        //    Retry = retry;
+        //    Processes = new ObservableCollection<ILockingProcessInfo>(processes);
+        //    ButtonText = Processes.Count == 1 ? "End Process" : "End Processes";
+        //    InitializeComponent();
 
-            if (retry)
-            {
-                Description = "Please end the following processes to continue the update.";
-                ButtonText = Processes.Count == 1 ? "End Process" : "End Processes";
-            }
-            else if (Processes.Count == 1)
-            {
-                Description = "The launcher needs be restarted.";
-                ButtonText = "Restart Launcher";
-            }
-            else
-            {
-                Description = "The launcher needs to be restarted. Other processes need to be ended.";
-                ButtonText = "End and restart";
-            }
+        //    if (retry)
+        //    {
+        //        Description = "Please end the following processes to continue the update.";
+        //        ButtonText = Processes.Count == 1 ? "End Process" : "End Processes";
+        //    }
+        //    else if (Processes.Count == 1)
+        //    {
+        //        Description = "The launcher needs be restarted.";
+        //        ButtonText = "Restart Launcher";
+        //    }
+        //    else
+        //    {
+        //        Description = "The launcher needs to be restarted. Other processes need to be ended.";
+        //        ButtonText = "End and restart";
+        //    }
 
-        }
+        //}
 
         public override void ShowDialog()
         {

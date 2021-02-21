@@ -6,7 +6,6 @@
              xmlns:utilities="clr-namespace:FocLauncherHost.Utilities"
              xmlns:dialogs="clr-namespace:FocLauncherHost.Dialogs"
              xmlns:converters="clr-namespace:FocLauncherHost.Converters"
-             xmlns:restart="clr-namespace:ProductUpdater.Restart;assembly=ProductUpdater"
              mc:Ignorable="d" d:DesignHeight="175" d:DesignWidth="480" 
              MinHeight="180" Width="490" Background="#FF252526" Foreground="#FFF1F1F1"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
@@ -22,9 +21,9 @@
             <Setter Property="Padding" Value="10,1,10,1" />
         </Style>
 
-        <DataTemplate x:Key="ProcessItemTemplate" DataType="{x:Type restart:ILockingProcessInfo}">
+        <!--<DataTemplate x:Key="ProcessItemTemplate" DataType="{x:Type restart:ILockingProcessInfo}">
             <TextBlock Margin="12,0,0,0" Text="{Binding ., Converter={StaticResource LockingProcessInfoTextConverter}}" Foreground="White" FontStyle="Italic"/>
-        </DataTemplate>
+        </DataTemplate>-->
 
     </FrameworkElement.Resources>
 
@@ -54,8 +53,8 @@
                     <TextBlock Grid.Row="2" Text="{Binding Description}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
                                    FontSize="13"/>
                     <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl Background="Transparent" BorderBrush="Transparent" ItemsSource="{Binding Processes}"
-                                      ItemTemplate="{StaticResource ProcessItemTemplate}"/>
+                        <!--<ItemsControl Background="Transparent" BorderBrush="Transparent" ItemsSource="{Binding Processes}"
+                                      ItemTemplate="{StaticResource ProcessItemTemplate}"/>-->
                     </ScrollViewer>
                 </Grid>
             </Grid>

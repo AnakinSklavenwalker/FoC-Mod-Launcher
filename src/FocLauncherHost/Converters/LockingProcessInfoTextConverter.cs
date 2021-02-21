@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
-using ProductUpdater.Restart;
 
 namespace FocLauncherHost.Converters
 {
@@ -9,10 +8,12 @@ namespace FocLauncherHost.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (!(value is ILockingProcessInfo lockingProcessInfo))
-                throw new NotSupportedException();
+            // TODO:
+            //if (!(value is ILockingProcessInfo lockingProcessInfo))
+            //    throw new NotSupportedException();
 
-            return $"{lockingProcessInfo.Description}.exe [{lockingProcessInfo.Id}]";
+            //return $"{lockingProcessInfo.Description}.exe [{lockingProcessInfo.Id}]";
+            return new();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

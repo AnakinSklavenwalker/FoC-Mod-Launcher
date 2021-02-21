@@ -5,6 +5,6 @@ namespace FocLauncherHost.Update
 {
     internal interface ILauncherUpdateManifestFinder
     {
-        LauncherUpdateManifestModel? FindMatching(LauncherUpdateManifestContainer container, ProductManifestLocation manifestLocation);
+        LauncherUpdateManifestModel? FindMatching(LauncherUpdateManifestContainer container, ManifestLocation manifestLocation);
     }
 }
