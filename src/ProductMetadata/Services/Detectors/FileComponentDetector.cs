@@ -17,8 +17,9 @@ namespace ProductMetadata.Services.Detectors
 
         protected override IProductComponent FindCore(IProductComponent manifestComponent, IInstalledProduct product)
         {
-            if (!(manifestComponent is SingleFileComponent fileComponent))
-                throw new NotSupportedException();
+            if (manifestComponent is not SingleFileComponent fileComponent)
+                throw new InvalidOperationException($"Component {manifestComponent.GetType().Name} is of wrong type. " +
+                                                    $"Expected {nameof(SingleFileComponent)}");
 
             if (fileComponent.OriginInfos.Count != 1)
                 throw new InvalidOperationException("SingleFile component must have only one origin info");
@@ -26,22 +27,27 @@ namespace ProductMetadata.Services.Detectors
             var variableResolver = ServiceProvider.GetService<IVariableResolver>() ?? VariableResolver.Default;
 
             var fileSystem = ServiceProvider.GetRequiredService<IFileSystem>();
-            var fileToDetect = fileSystem.Path.Combine(fileComponent.Path, fileComponent.OriginInfos[0].FileName);
+
+            var originInfo = fileComponent.OriginInfos[0];
+            var fileToDetect = fileSystem.Path.Combine(fileComponent.Path, originInfo.FileName);
 
             var filePath = variableResolver.ResolveVariables(fileToDetect, product.ProductVariables.ToDictionary());
 
-
-
-            FileItem? file = null;
-
+            var detectionState = DetectionState.Absent;
             IList<FileItem> files;
-            if (file is null)
-                files = ImmutableList<FileItem>.Empty;
+            if (fileSystem.File.Exists(filePath))
+            {
+                files = new FileItem[] {new(filePath, originInfo.IntegrityInformation)};
+                detectionState = DetectionState.Present;
+            }
             else
-                files = new List<FileItem>(1) {file};
+                files = ImmutableList<FileItem>.Empty;
 
 
-            var detectedFileComponent = new SingleFileComponent(manifestComponent, fileComponent.Path, files);
+            var detectedFileComponent = new SingleFileComponent(manifestComponent, fileComponent.Path, files)
+            {
+                DetectedState = detectionState
+            };
             return detectedFileComponent;
         }
     }

@@ -15,13 +15,13 @@ using Validation;
 
 namespace FocLauncherHost.Product
 {
-    internal class LauncherUpdateManifestBuilder : UpdateManifestBuilder<LauncherUpdateManifestContainer>
+    internal class LauncherManifestBuilder : ManifestBuilder<LauncherUpdateManifestContainer>
     {
         private readonly ILauncherUpdateManifestFinder _updateManifestFinder;
         private readonly ICatalogConverter<LauncherUpdateManifestModel, LauncherComponent> _catalogConverter;
         private readonly ILogger? _logger;
 
-        public LauncherUpdateManifestBuilder(
+        public LauncherManifestBuilder(
             ILauncherUpdateManifestFinder updateManifestFinder,
             ICatalogConverter<LauncherUpdateManifestModel, LauncherComponent> catalogConverter, 
             IServiceProvider serviceProvider)

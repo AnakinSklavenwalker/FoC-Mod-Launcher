@@ -5,6 +5,6 @@ namespace ProductMetadata.Services
 {
     public interface IAvailableManifestBuilder
     {
-        IManifest Build(ManifestLocation manifestLocation, IFileInfo manifestFile);
+        IManifest Build(IFileInfo manifestFile, IProductReference product);
     }
 }

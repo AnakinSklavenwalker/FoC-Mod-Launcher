@@ -34,7 +34,7 @@ namespace ProductMetadata.Services.Detectors
         protected void ValidateSupported(ComponentType type)
         {
             if (type != SupportedType)
-                throw new NotSupportedException();
+                throw new InvalidOperationException();
         }
     }
 }

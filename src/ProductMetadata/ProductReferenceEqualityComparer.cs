@@ -11,7 +11,7 @@ namespace ProductMetadata
         private readonly bool _compareBranch;
         public static ProductReferenceEqualityComparer Default = new(true, true);
         public static ProductReferenceEqualityComparer VersionAware = new(true, false);
-        public static ProductReferenceEqualityComparer BranchAware = new(true, true);
+        public static ProductReferenceEqualityComparer BranchAware = new(false, true);
         public static ProductReferenceEqualityComparer NameOnly = new(false, false);
 
 

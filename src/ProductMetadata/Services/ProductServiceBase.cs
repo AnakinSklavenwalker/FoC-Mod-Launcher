@@ -73,7 +73,7 @@ namespace ProductMetadata.Services
                 try
                 {
                     Logger?.LogTrace($"Loading manifest form {manifestFile.FullName}");
-                    var manifest = LoadManifest(manifestLocation, manifestFile);
+                    var manifest = LoadManifest(manifestFile, manifestLocation.Product);
                     if (manifest is null)
                         throw new ManifestException("Manifest cannot be null");
                     return manifest;
@@ -112,9 +112,9 @@ namespace ProductMetadata.Services
             return !ProductReferenceEqualityComparer.NameOnly.Equals(_installedProduct!, product);
         }
         
-        protected virtual IManifest LoadManifest(ManifestLocation manifestLocation, IFileInfo manifestFile)
+        protected virtual IManifest LoadManifest(IFileInfo manifestFile, IProductReference productReference)
         {
-            return AvailableManifestBuilder.Build(manifestLocation, manifestFile);
+            return AvailableManifestBuilder.Build(manifestFile, productReference);
         }
 
         private void Initialize()

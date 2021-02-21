@@ -79,7 +79,7 @@ namespace FocLauncherHost
                         };
 
                         var ps = new LauncherProductService(new LauncherComponentBuilder(),
-                            new LauncherUpdateManifestBuilder(new LauncherManifestFinder(us),
+                            new LauncherManifestBuilder(new LauncherManifestFinder(us),
                                 new LauncherToProductCatalogConverter(new FileSystem()), _services), new FileSystem());
 
                         var cs = new UpdateCheckService(ps, _services);

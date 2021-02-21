@@ -18,8 +18,8 @@ namespace ProductMetadata.Services.Detectors
 
         protected override IProductComponent FindCore(IProductComponent manifestComponent, IInstalledProduct product)
         {
-            if (!(manifestComponent is IComponentGroup groupComponent))
-                throw new NotSupportedException();
+            if (manifestComponent is not IComponentGroup groupComponent)
+                throw new InvalidOperationException();
 
             var childComponents = new List<IProductComponent>();
             ComponentGroup detectedGroup = new(manifestComponent, childComponents);
@@ -33,8 +33,8 @@ namespace ProductMetadata.Services.Detectors
                 if (detectedChildComponent.DetectedState != DetectionState.Present)
                     isAbsent = true;
             }
-            if (isAbsent)
-                detectedGroup.DetectedState = DetectionState.Absent;
+
+            detectedGroup.DetectedState = isAbsent ? DetectionState.Absent : DetectionState.Present;
 
             return detectedGroup;
         }
