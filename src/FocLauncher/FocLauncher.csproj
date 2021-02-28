@@ -81,28 +81,14 @@
     <Compile Include="Converters\IsNullOrEmptyConverter.cs" />
     <Compile Include="Converters\LauncherItemMarginConverter.cs" />
     <Compile Include="Converters\SystemLangEmojiConverter.cs" />
-    <Compile Include="Game\Language\GameLanguageFinder.cs" />
-    <Compile Include="Game\Language\GenericModLanguageFinder.cs" />
-    <Compile Include="Game\Language\LanguageFinderUtilities.cs" />
-    <Compile Include="Game\Language\LanguageInfo.cs" />
     <Compile Include="Settings\LanguageFallback.cs" />
     <Compile Include="Settings\LanguageFallbackData.cs" />
     <Compile Include="Settings\LauncherSettingsConstants.cs" />
-    <Compile Include="Game\GameStartedEventArgs.cs" />
-    <Compile Include="Game\Language\LanguageFinderBase.cs" />
-    <Compile Include="Game\SteamGameBase.cs" />
-    <Compile Include="Game\SteamGameEaw.cs" />
     <Compile Include="Items\LauncherItemEventSink.cs" />
-    <Compile Include="Mods\ModDependencyResolveStrategy.cs" />
-    <Compile Include="Mods\ModDependencyUtilities.cs" />
-    <Compile Include="Mods\ModEqualityComparer.cs" />
     <Compile Include="SteamModNamePersister.cs" />
     <Compile Include="Utilities\DisposableObject.cs" />
     <Compile Include="Utilities\ExtensionMethods.cs" />
     <Compile Include="Utilities\FocusHelper.cs" />
-    <Compile Include="Game\GameSetupOptions.cs" />
-    <Compile Include="Game\GameStartException.cs" />
-    <Compile Include="Game\ModSearchOptions.cs" />
     <Compile Include="Items\ILauncherItem.cs" />
     <Compile Include="Items\ILauncherItemManager.cs" />
     <Compile Include="Items\LauncherGameObjectCommandHandler.cs" />
@@ -124,40 +110,10 @@
     <Compile Include="Dialogs\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Game\Detection\GameDetector.cs" />
-    <Compile Include="Game\Detection\LocalGameDetector.cs" />
-    <Compile Include="Game\Detection\RegistryGameDetector.cs" />
-    <Compile Include="Game\EaWRegistryHelper.cs" />
-    <Compile Include="Game\EawSteamGameSlim.cs" />
-    <Compile Include="Game\Detection\GameDetectionOptions.cs" />
-    <Compile Include="Game\FocRegistryHelper.cs" />
-    <Compile Include="Game\GameArgumentException.cs" />
-    <Compile Include="Game\GameBuildType.cs" />
-    <Compile Include="Game\GameCommandArgumentsUtilities.cs" />
-    <Compile Include="Game\GameStartingEventArgs.cs" />
-    <Compile Include="Game\GameTypeHelper.cs" />
-    <Compile Include="Game\IDebugable.cs" />
-    <Compile Include="Game\IHasDirectory.cs" />
-    <Compile Include="Game\IModContainer.cs" />
-    <Compile Include="Game\IPetroglyhGameableObject.cs" />
-    <Compile Include="Game\LauncherSteamHelper.cs" />
-    <Compile Include="Game\ModCollectionChangedAction.cs" />
-    <Compile Include="Game\ModCollectionChangedEventArgs.cs" />
-    <Compile Include="Game\ModCreationDelegate.cs" />
-    <Compile Include="Game\PetroglyphException.cs" />
-    <Compile Include="Game\PetroglyphGameException.cs" />
-    <Compile Include="Game\PetroglyphGameRegistry.cs" />
-    <Compile Include="Mods\ModBase.cs" />
-    <Compile Include="Mods\ModDependencyTraverser.cs" />
-    <Compile Include="Mods\PetroglyphModException.cs" />
-    <Compile Include="Game\RegistryHelper.cs" />
-    <Compile Include="Game\SteamClient.cs" />
     <Compile Include="Controls\Controllers\IHasInvocationController.cs" />
     <Compile Include="Controls\Controllers\IInvocationController.cs" />
     <Compile Include="IsolatingLauncherBootstrapper.cs" />
     <Compile Include="Controls\LauncherStatusBar.cs" />
-    <Compile Include="Game\GameCommandArguments.cs" />
-    <Compile Include="Game\PetroglyphGame.cs" />
     <Compile Include="LauncherGameManager.cs" />
     <Compile Include="LauncherApp.cs" />
     <Compile Include="Converters\GameTypeToStringConverter.cs" />
@@ -166,18 +122,9 @@
     <Compile Include="Dialogs\ChangeThemeDialog.xaml.cs">
       <DependentUpon>ChangeThemeDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Game\Eaw.cs" />
-    <Compile Include="Game\Foc.cs" />
-    <Compile Include="Game\GameStartHelper.cs" />
-    <Compile Include="Game\SteamGameFoc.cs" />
-    <Compile Include="Game\WorkshopNameResolver.cs" />
     <Compile Include="LauncherException.cs" />
     <Compile Include="Items\LauncherItem.cs" />
-    <Compile Include="Mods\Mod.cs" />
-    <Compile Include="Mods\ModFactory.cs" />
-    <Compile Include="Mods\VirtualMod.cs" />
     <Compile Include="NativeMethods\User32.cs" />
-    <Compile Include="Game\GameFactory.cs" />
     <Compile Include="Theming\ThemeManager.cs" />
     <Compile Include="Utilities\FileUtilities.cs" />
     <Compile Include="Utilities\HashCodeCombiner.cs" />
@@ -215,21 +162,11 @@
     <Compile Include="Dialogs\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Game\Detection\DetectionResult.cs" />
-    <Compile Include="Game\Detection\GameDetection.cs" />
-    <Compile Include="Game\Detection\GameDetectionHelper.cs" />
-    <Compile Include="Game\GameProcessWatcher.cs" />
-    <Compile Include="Game\GameType.cs" />
-    <Compile Include="Game\ProcessHelper.cs" />
-    <Compile Include="Game\SteamClientException.cs" />
-    <Compile Include="Game\IGame.cs" />
-    <Compile Include="Mods\IMod.cs" />
     <Compile Include="Input\AbstractCommandWrapper.cs" />
     <Compile Include="Input\Command.cs" />
     <Compile Include="Input\CommandBase.cs" />
     <Compile Include="Input\UICommand.cs" />
     <Compile Include="Input\WeakEventHandlerManager.cs" />
-    <Compile Include="Mods\SteamModNamePersister.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
