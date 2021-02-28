@@ -96,6 +96,7 @@
     <Compile Include="Mods\ModDependencyResolveStrategy.cs" />
     <Compile Include="Mods\ModDependencyUtilities.cs" />
     <Compile Include="Mods\ModEqualityComparer.cs" />
+    <Compile Include="SteamModNamePersister.cs" />
     <Compile Include="Utilities\DisposableObject.cs" />
     <Compile Include="Utilities\ExtensionMethods.cs" />
     <Compile Include="Utilities\FocusHelper.cs" />
