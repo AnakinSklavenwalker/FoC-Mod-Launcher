@@ -1,4 +1,4 @@
-﻿namespace PetroGlyph.Games.EawFoc.Mods
+﻿namespace PetroGlyph.Games.EawFoc.Services.Dependencies
 {
     internal static class ModDependencyUtilities
     {

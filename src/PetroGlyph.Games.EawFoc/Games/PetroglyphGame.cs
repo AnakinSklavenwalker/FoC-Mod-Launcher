@@ -6,6 +6,8 @@ using System.Linq;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games.Language;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services;
+using PetroGlyph.Games.EawFoc.Services.Dependencies;
 
 namespace PetroGlyph.Games.EawFoc.Games
 {

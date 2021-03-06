@@ -31,7 +31,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
             if (modDirectory is null)
                 throw new ArgumentNullException(nameof(modDirectory));
             if (!modDirectory.Exists)
-                throw new PetroglyphModException($"The mod's directory '{modDirectory.FullName}' does not exists.");
+                throw new ModException($"The mod's directory '{modDirectory.FullName}' does not exists.");
             Directory = modDirectory;
             InternalPath = CreateInternalPath(modDirectory);
         }
@@ -47,7 +47,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
                     case ModType.Workshops: 
                         return Directory.Name;
                     case ModType.Virtual:
-                        throw new PetroglyphModException($"Instance of {typeof(Mod)} must not be virtual.");
+                        throw new ModException($"Instance of {typeof(Mod)} must not be virtual.");
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

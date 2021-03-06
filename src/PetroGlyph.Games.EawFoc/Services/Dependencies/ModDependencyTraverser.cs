@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Mods
+namespace PetroGlyph.Games.EawFoc.Services.Dependencies
 {
     public class ModDependencyTraverser
     {

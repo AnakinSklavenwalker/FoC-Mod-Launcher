@@ -5,41 +5,40 @@ using System.IO;
 using System.Linq;
 using EawModinfo.Spec;
 using EawModinfo.Spec.Steam;
-using FocLauncher.Game;
-using FocLauncher.Mods;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NuGet.Versioning;
+using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services;
+using PetroGlyph.Games.EawFoc.Services.Dependencies;
+using Xunit;
 
-namespace FocLauncher.Tests
+namespace PetroGlyph.Games.EawFoc.Tests
 {
-    [TestClass]
     public class ModDependencyTests
     {
         private static readonly string TestScenariosPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..\\..\\..\\TestScenarios"));
-        private IGame _game;
-        private IMod _modA;
-        private IMod _modB;
-        private IMod _modC;
-        private IMod _modE;
-        private IMod _modD;
+        private readonly IMod _modA;
+        private readonly IMod _modB;
+        private readonly IMod _modC;
+        private readonly IMod _modE;
+        private readonly IMod _modD;
 
-        [TestInitialize]
-        public void CreateGame()
+        public ModDependencyTests()
         {
-            _game = new Foc(new DirectoryInfo(Path.Combine(TestScenariosPath, "FiveMods")), GameType.Disk);
-            _modA = ModFactory.CreateMod(_game, ModType.Default, Path.Combine(_game.Directory.FullName, "Mods\\ModA"), false);
-            _modB = ModFactory.CreateMod(_game, ModType.Default, Path.Combine(_game.Directory.FullName, "Mods\\ModB"), false);
-            _modC = ModFactory.CreateMod(_game, ModType.Default, Path.Combine(_game.Directory.FullName, "Mods\\ModC"), false);
-            _modD = ModFactory.CreateMod(_game, ModType.Default, Path.Combine(_game.Directory.FullName, "Mods\\ModD"), false);
-            _modE = ModFactory.CreateMod(_game, ModType.Default, Path.Combine(_game.Directory.FullName, "Mods\\ModE"), false);
-            _game.AddMod(_modA);
-            _game.AddMod(_modB);
-            _game.AddMod(_modC);
-            _game.AddMod(_modD);
-            _game.AddMod(_modE);
+            IGame game = new Foc(new DirectoryInfo(Path.Combine(TestScenariosPath, "FiveMods")), GameType.Disk);
+            _modA = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModA"), false);
+            _modB = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModB"), false);
+            _modC = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModC"), false);
+            _modD = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModD"), false);
+            _modE = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModE"), false);
+            game.AddMod(_modA);
+            game.AddMod(_modB);
+            game.AddMod(_modC);
+            game.AddMod(_modD);
+            game.AddMod(_modE);
         }
 
-        [TestMethod]
+        [Fact]
         public void SingleDependency()
         {
             SetModInfo((a, b, c, d, e) =>
@@ -47,13 +46,13 @@ namespace FocLauncher.Tests
                 a.Dependencies.Add(_modB);
             });
 
-            Assert.AreEqual(1, _modA.ExpectedDependencies);
-            Assert.IsTrue(_modA.DependenciesResolved);
-            Assert.IsTrue(_modA.HasDependencies);
-            Assert.AreEqual(_modA.ExpectedDependencies, _modA.Dependencies.Count);
+            Assert.Equal(1, _modA.ExpectedDependencies);
+            Assert.True(_modA.DependenciesResolved);
+            Assert.True(_modA.HasDependencies);
+            Assert.Equal(_modA.ExpectedDependencies, _modA.Dependencies.Count);
         }
         
-        [TestMethod]
+        [Fact]
         public void TestNoCycle()
         {
             // A : B, C
@@ -71,11 +70,11 @@ namespace FocLauncher.Tests
             
             var resolver = new ModDependencyTraverser(_modA);
             var mods = resolver.Traverse();
-            CollectionAssert.AreEqual(expected, mods.ToList());
+            Assert.Equal(expected, mods.ToList());
             AssertRecursive(expected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestNoCycle2()
         {
 
@@ -95,11 +94,11 @@ namespace FocLauncher.Tests
 
             var resolver = new ModDependencyTraverser(_modA);
             var mods = resolver.Traverse();
-            CollectionAssert.AreEqual(expected, mods.ToList());
+            Assert.Equal(expected, mods.ToList());
             AssertRecursive(expected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestNoCycle3()
         {
             // A : B, C
@@ -121,12 +120,12 @@ namespace FocLauncher.Tests
 
             var resolver = new ModDependencyTraverser(_modA);
             var mods = resolver.Traverse();
-            CollectionAssert.AreEqual(expected, mods.ToList());
+            Assert.Equal(expected, mods.ToList());
             AssertRecursive(expected);
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TestNoCycle4()
         {
             // A : B, C, D
@@ -148,11 +147,11 @@ namespace FocLauncher.Tests
 
             var resolver = new ModDependencyTraverser(_modA);
             var mods = resolver.Traverse();
-            CollectionAssert.AreEqual(expected, mods.ToList());
+            Assert.Equal(expected, mods.ToList());
             AssertRecursive(expected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestNoCycle5()
         {
             // A : B, C
@@ -173,26 +172,26 @@ namespace FocLauncher.Tests
             
             var resolver = new ModDependencyTraverser(_modA);
             var mods = resolver.Traverse();
-            CollectionAssert.AreEqual(expected, mods.ToList());
+            Assert.Equal(expected, mods.ToList());
             AssertRecursive(expected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCycleSelf()
         {
             // A : A
             // Cycle!
-            Assert.ThrowsException<PetroglyphModException>(() =>
+            Assert.Throws<ModException>(() =>
             {
                 SetModInfo((a, b, c, d, e) =>
                 {
                     a.Dependencies.Add(_modA);
                 });
             });
-            Assert.ThrowsException<PetroglyphModException>(() => AssertRecursive(null));
+            Assert.Throws<ModException>(() => AssertRecursive(null));
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCycle()
         {
             // A : B
@@ -205,11 +204,11 @@ namespace FocLauncher.Tests
             });
             
             var resolver = new ModDependencyTraverser(_modA);
-            Assert.ThrowsException<PetroglyphModException>(() => resolver.Traverse());
-            Assert.ThrowsException<PetroglyphModException>(() => AssertRecursive(null));
+            Assert.Throws<ModException>(() => resolver.Traverse());
+            Assert.Throws<ModException>(() => AssertRecursive(null));
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCycleComlex()
         {
             // A : B
@@ -227,8 +226,8 @@ namespace FocLauncher.Tests
             });
 
             var resolver = new ModDependencyTraverser(_modA);
-            Assert.ThrowsException<PetroglyphModException>(() => resolver.Traverse());
-            Assert.ThrowsException<PetroglyphModException>(() => AssertRecursive(null));
+            Assert.Throws<ModException>(() => resolver.Traverse());
+            Assert.Throws<ModException>(() => AssertRecursive(null));
         }
 
         private void SetModInfo(Action<IModIdentity, IModIdentity, IModIdentity, IModIdentity, IModIdentity> setAction)
@@ -267,10 +266,10 @@ namespace FocLauncher.Tests
         private void AssertRecursive(ICollection expected)
         {
             ResetDependencies();
-            Assert.IsTrue(_modA.ResolveDependencies(ModDependencyResolveStrategy.FromExistingModsRecursive));
+            Assert.True(_modA.ResolveDependencies(ModDependencyResolveStrategy.FromExistingModsRecursive));
             var resolver = new ModDependencyTraverser(_modA);
             var mods = resolver.Traverse();
-            CollectionAssert.AreEqual(expected, mods.ToList());
+            Assert.Equal(expected, mods.ToList());
         }
 
         private class MyModinfo : IModinfo

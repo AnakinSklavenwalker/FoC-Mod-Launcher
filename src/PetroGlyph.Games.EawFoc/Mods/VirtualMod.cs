@@ -39,7 +39,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
         public override string ToArgs(bool includeDependencies)
         {
             if (Virtual && !includeDependencies)
-                throw new InvalidOperationException("A virtual mod cannot yield arguments. Use parameter 'includeDependencies' instead!");
+                throw new InvalidOperationException("A virtual mod cannot yield arguments. " +
+                                                    $"Use parameter '{nameof(includeDependencies)}' instead!");
 
             return string.Empty;
         }

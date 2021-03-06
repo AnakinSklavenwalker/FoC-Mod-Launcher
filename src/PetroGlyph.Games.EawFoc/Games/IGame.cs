@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services;
 
 namespace PetroGlyph.Games.EawFoc.Games
 {
-    public interface IGame : IPetroglyhGameableObject, IModContainer, IHasDirectory
+    public interface IGame : IPlayableObject, IModContainer, IHasDirectory
     {
         event EventHandler<GameStartedEventArgs> GameStarted;
 
@@ -18,6 +19,9 @@ namespace PetroGlyph.Games.EawFoc.Games
         /// Contains Data of the Process
         /// </summary>
         GameProcessWatcher GameProcessWatcher { get; }
+
+
+        IModTypeDetector ModTypeDetector { get; }
 
         /// <summary>
         /// Checks whether a mod exists

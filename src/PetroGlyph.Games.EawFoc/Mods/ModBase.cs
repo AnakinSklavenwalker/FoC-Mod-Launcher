@@ -8,6 +8,7 @@ using EawModinfo.Spec;
 using EawModinfo.Utilities;
 using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Services.Dependencies;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
@@ -48,7 +49,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
                     return _languageInfos;
                 _languageInfos = ResolveInstalledLanguages();
                 if (!_languageInfos.Any())
-                    _languageInfos.Add(EawModinfo.Model.LanguageInfo.Default);
+                    _languageInfos.Add(LanguageInfo.Default);
                 return _languageInfos.ToList();
             }
         }
@@ -142,7 +143,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
         protected ModBase(string name, IGame game, ModType type) : this(game, type)
         {
             if (string.IsNullOrEmpty(name))
-                throw new PetroglyphModException("The mod's name must not be null or empty!");
+                throw new ModException("The mod's name must not be null or empty!");
             _name = name;
         }
 
@@ -193,7 +194,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
         public bool ResolveDependencies(ModDependencyResolveStrategy resolveStrategy)
         {
             if (_isResolving)
-                throw new PetroglyphModException("Detected a cycle while resolving Mod dependencies.");
+                throw new ModException("Detected a cycle while resolving Mod dependencies.");
 
             var result = true;
             try
@@ -219,7 +220,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
                     if (dm is null)
                         return false;
                     if (dm.Equals(this))
-                        throw new PetroglyphModException($"The mod '{Name}' can not be dependent on itself!");
+                        throw new ModException($"The mod '{Name}' can not be dependent on itself!");
                     
                     DependenciesInternal.Add(dm);
 

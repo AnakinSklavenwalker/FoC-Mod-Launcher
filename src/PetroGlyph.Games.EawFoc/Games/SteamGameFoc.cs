@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services;
 
 namespace PetroGlyph.Games.EawFoc.Games
 {
