@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using EawModinfo.Model;
 using EawModinfo.Spec;
 
@@ -7,19 +8,19 @@ namespace PetroGlyph.Games.EawFoc.Mods
 {
     public class ModEqualityComparer : IEqualityComparer<IMod>, IEqualityComparer<IModIdentity>, IEqualityComparer<IModReference>
     {
-        public static readonly ModEqualityComparer Default = new(true, false);
-        public static readonly ModEqualityComparer NameAndIdentifier = new(true, true);
-        public static readonly ModEqualityComparer NamEqualityComparer = new ModEqualityComparer(false, true);
+        public static readonly ModEqualityComparer Default = new(true, true);
+        public static readonly ModEqualityComparer ExcludeDependencies = new(false, true);
+        public static readonly ModEqualityComparer ExcludeGame = new(true, false);
 
-        private readonly bool _default;
-        private readonly bool _useName;
+        private readonly bool _includeDependencies;
+        private readonly bool _includeGameReference;
 
         private readonly StringComparer _ignoreCaseComparer = StringComparer.OrdinalIgnoreCase;
 
-        public ModEqualityComparer(bool useIdentifier, bool useName)
+        public ModEqualityComparer(bool includeDependencies, bool includeGameReference)
         {
-            _default = useIdentifier;
-            _useName = useName;
+            _includeDependencies = includeDependencies;
+            _includeGameReference = includeGameReference;
         }
 
         public bool Equals(IMod? x, IMod? y)
@@ -29,23 +30,36 @@ namespace PetroGlyph.Games.EawFoc.Mods
             if (x == y)
                 return true;
 
-            if (_useName)
-                if (!_ignoreCaseComparer.Equals(x.Name, y.Name))
+            if (!x.Identifier.Equals(y.Identifier, StringComparison.Ordinal))
+                return false;
+
+            if (_includeGameReference)
+            {
+                if (!x.Game.Equals(y.Game))
+                    return false;
+            }
+
+            if (_includeDependencies)
+            {
+                if (!x.Dependencies.Count.Equals(y.Dependencies.Count))
                     return false;
 
-            if (_default)
-                return x.Equals(y);
-            throw new NotImplementedException();
+                if (!x.Dependencies.SequenceEqual(y.Dependencies))
+                    return false;
+            }
+
+            return true;
         }
 
         public int GetHashCode(IMod obj)
         {
             var num = 0;
-            var name = obj.Name;
-            if (name != null)
-                num ^= _ignoreCaseComparer.GetHashCode(name);
-            if (_default)
-                num ^= obj.GetHashCode();
+            var id = obj.Identifier;
+            num ^= _ignoreCaseComparer.GetHashCode(id);
+            if (_includeGameReference)
+                num ^= obj.Game.GetHashCode();
+            if (_includeDependencies)
+                num ^= obj.Dependencies.GetHashCode();
             return num;
         }
 
