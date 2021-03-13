@@ -20,7 +20,7 @@ namespace PetroGlyph.Games.EawFoc.Games
         /// Set of all mods this instance is associated with.
         /// For an <see cref="IGame"/> this is a flattened set of all Mods and their respective submods.
         /// </summary>
-        ISet<IMod> Mods { get; }
+        IReadOnlyCollection<IMod> Mods { get; }
 
         /// <summary>
         /// Associates an <see cref="IMod"/> to the this <see cref="IModContainer"/> 

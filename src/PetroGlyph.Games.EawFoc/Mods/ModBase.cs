@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using EawModinfo;
 using EawModinfo.Model;
@@ -9,27 +9,36 @@ using EawModinfo.Utilities;
 using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services.Dependencies;
+using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
-    [DebuggerDisplay("Mod:{Name};{Type}")]
+    /// <summary>
+    /// Base implementation for Mods
+    /// </summary>
     public abstract class ModBase : IMod
     {
-        private ICollection<ILanguageInfo>? _languageInfos;
-        private IModinfo? _modInfo;
-        private string? _name;
-        private string? _description;
+        /// <inheritdoc/>
+        public event EventHandler<ModCollectionChangedEventArgs>? ModCollectionModified;
+
         private string? _iconFile;
         private SemanticVersion? _modVersion;
-        private bool _expectedDependenciesCalculated;
-        private int _expectedDependencyCount;
-        private bool _isResolving;
+        private IModinfo? _modInfo;
+        private ICollection<ILanguageInfo>? _installedLanguages;
 
-        public event EventHandler<ModCollectionChangedEventArgs> ModCollectionModified;
-
+        /// <inheritdoc/>
         public abstract string Identifier { get; }
 
+        /// <inheritdoc/>
+        public IGame Game { get; }
 
+        /// <inheritdoc/>
+        public ModType Type { get; }
+
+        /// <inheritdoc/>
+        public string Name { get; }
+
+        /// <inheritdoc/>
         public IModinfo? ModInfo
         {
             get
@@ -40,247 +49,114 @@ namespace PetroGlyph.Games.EawFoc.Mods
                 return _modInfo;
             }
         }
-
-        public ICollection<ILanguageInfo> InstalledLanguages
-        {
-            get
-            {
-                if (_languageInfos != null)
-                    return _languageInfos;
-                _languageInfos = ResolveInstalledLanguages();
-                if (!_languageInfos.Any())
-                    _languageInfos.Add(LanguageInfo.Default);
-                return _languageInfos.ToList();
-            }
-        }
         
-        public string Name
-        {
-            get
-            {
-                if (_name != null)
-                    return _name;
-                _name = InitializeName();
-                return _name;
-            }
-        }
+        /// <inheritdoc/>
+        public string? IconFile => _iconFile ??= InitializeIcon();
 
-        public string Description
-        {
-            get
-            {
-                if (_description != null)
-                    return _description;
-                _description = InitializeDescription();
-                return _description;
-            }
-        }
+        /// <inheritdoc/>
+        public SemanticVersion? Version => _modVersion ??= InitializeVersion();
 
-        public string? IconFile
-        {
-            get
-            {
-                if (_iconFile != null)
-                    return _iconFile;
-                _iconFile = InitializeIcon();
-                return _iconFile;
-            }
-        }
-
-        public SemanticVersion? Version
-        {
-            get
-            {
-                if (_modVersion != null)
-                    return _modVersion;
-                _modVersion = InitializeVersion();
-                return _modVersion;
-            }
-        }
-
-        public int ExpectedDependencies
-        {
-            get
-            {
-                if (_expectedDependenciesCalculated)
-                    return _expectedDependencyCount;
-                _expectedDependencyCount = CalculateExpectedDependencyCount();
-                _expectedDependenciesCalculated = true;
-                return _expectedDependencyCount;
-            }
-        }
+        /// <inheritdoc/>
+        public ICollection<ILanguageInfo> InstalledLanguages => _installedLanguages ??= ResolveInstalledLanguages();
 
 
-        public IReadOnlyCollection<IMod> Mods => ModsInternal.ToList();
+        IList<IModReference> IModIdentity.Dependencies => Dependencies.ToList();
 
-        public bool DependenciesResolved { get; protected set; }
+        /// <inheritdoc cref="IModIdentity.Dependencies"/>
+        public IReadOnlyList<IModReference> Dependencies { get; }
 
-        IList<IModReference> IModIdentity.Dependencies => new List<IModReference>(DependenciesInternal);
-
-        public bool WorkshopMod => Type == ModType.Workshops;
-
-        public bool Virtual => Type == ModType.Virtual;
-
-        public bool HasDependencies => DependenciesInternal.Count > 0;
+        /// <inheritdoc/>
+        public IReadOnlyCollection<IMod> Mods { get; }
         
-
-        public IGame Game { get; }
-
-        public ModType Type { get; }
-
-
-        protected internal HashSet<IMod> ModsInternal { get; } = new HashSet<IMod>();
-
-        protected internal List<IMod> DependenciesInternal { get; } = new List<IMod>();
-
-
-        internal ModBase(IGame game, ModType type)
+        /// <summary>
+        /// Creates a new <see cref="IMod"/> instances with a constant name
+        /// </summary>
+        /// <param name="game">The game of the mod</param>
+        /// <param name="type">The mod's type</param>
+        /// <param name="name">The name of the mod.</param>
+        protected ModBase(IGame game, ModType type, string name)
         {
-            Game = game ?? throw new ArgumentNullException(nameof(game));
+            Requires.NotNull(game, nameof(game));
+            Requires.NotNullOrEmpty(name, nameof(name));
+            Name = name;
+            Game = game;
             Type = type;
         }
 
-        protected ModBase(string name, IGame game, ModType type) : this(game, type)
+        /// <summary>
+        /// Creates a new <see cref="IMod"/> instances from a modinfo. The modinfo must not be <see langword="null"/>!
+        /// </summary>
+        /// <param name="game">The game of the mod</param>
+        /// <param name="type">The mod's type</param>
+        /// <param name="modinfo">The modinfo data.</param>
+        /// <exception cref="ModinfoException">when <paramref name="modinfo"/> is not valid.</exception>
+        protected ModBase(IGame game, ModType type, IModinfo modinfo)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ModException("The mod's name must not be null or empty!");
-            _name = name;
+            Requires.NotNull(modinfo, nameof(modinfo));
+            Requires.NotNull(game, nameof(game));
+            modinfo.Validate();
+            _modInfo = modinfo;
+            Game = game;
+            Name = modinfo.Name;
+
         }
 
-        protected ModBase(IGame game, ModType type, IModinfo? modInfoData) : this(game, type)
+        /// <inheritdoc/>
+        public bool ResolveDependencies(IDependencyResolver resolver)
         {
-            if (modInfoData != null)
-            {
-                try
-                {
-                    modInfoData.Validate();
-                    _modInfo = modInfoData;
-                }
-                catch (ModinfoException)
-                {
-                    _modInfo = null;
-                }
-            }
+            throw new NotImplementedException();
         }
 
-        public virtual bool AddMod(IMod mod)
+        /// <inheritdoc/>
+        public bool AddMod(IMod mod)
         {
-            var result = ModsInternal.Add(mod);
-            if (result)
-                OnModCollectionModified(new ModCollectionChangedEventArgs(mod, ModCollectionChangedAction.Add));
-            return result;
+            throw new NotImplementedException();
         }
 
-        public virtual bool RemoveMod(IMod mod)
+        /// <inheritdoc/>
+        public bool RemoveMod(IMod mod)
         {
-            var result = ModsInternal.Remove(mod);
-            if (result)
-                OnModCollectionModified(new ModCollectionChangedEventArgs(mod, ModCollectionChangedAction.Remove));
-            return result;
+            throw new NotImplementedException();
         }
-        
+
+        /// <inheritdoc/>
         public IMod? SearchMod(IModReference modReference, ModSearchOptions modSearchOptions, bool add)
         {
             throw new NotImplementedException();
         }
 
-        public abstract bool Equals(IMod other);
-
-        public abstract bool Equals(IModIdentity other);
-
-        public abstract bool Equals(IModReference other);
-
-
-        public bool ResolveDependencies(ModDependencyResolveStrategy resolveStrategy)
+        /// <inheritdoc/>
+        public bool Equals(IMod other)
         {
-            if (_isResolving)
-                throw new ModException("Detected a cycle while resolving Mod dependencies.");
-
-            var result = true;
-            try
-            {
-                _isResolving = true;
-                if (ExpectedDependencies == 0 || DependenciesResolved)
-                    return true;
-
-
-                if (ModInfo is null)
-                    return true;
-
-                foreach (var dependency in ModInfo.Dependencies)
-                {
-                    if (dependency.Type == ModType.Virtual)
-                        throw new NotImplementedException("Virtual linking not supported yet");
-
-                    var searchOptions = ModSearchOptions.Registered;
-                    if (resolveStrategy.IsCreative())
-                        searchOptions |= ModSearchOptions.FileSystem;
-
-                    var dm = Game.SearchMod(dependency, searchOptions, true);
-                    if (dm is null)
-                        return false;
-                    if (dm.Equals(this))
-                        throw new ModException($"The mod '{Name}' can not be dependent on itself!");
-                    
-                    DependenciesInternal.Add(dm);
-
-                    if (resolveStrategy.IsRecursive())
-                    {
-                        dm.ResolveDependencies(resolveStrategy);
-                    }
-                }
-            }
-            finally
-            {
-                _isResolving = false;
-                DependenciesResolved = true;
-            }
-
-            return result;
+            return ModEqualityComparer.Default.Equals(this, other);
         }
 
-        public abstract string ToArgs(bool includeDependencies);
-
-        internal void SetModInfo(IModinfo modInfo)
+        /// <inheritdoc/>
+        public bool Equals(IModIdentity other)
         {
-            _modInfo = modInfo;
+            return ModEqualityComparer.Default.Equals(this, other);
         }
 
-        internal void ResetDependencies()
+        /// <inheritdoc/>
+        public bool Equals(IModReference other)
         {
-            DependenciesInternal.Clear();
-            DependenciesResolved = false;
+            return ModEqualityComparer.Default.Equals(this, other);
         }
 
-        protected abstract bool ResolveDependenciesCore();
-
-
-        protected virtual ICollection<ILanguageInfo> ResolveInstalledLanguages()
+        /// <inheritdoc/>
+        public IEnumerator<IMod> GetEnumerator()
         {
-            return ModInfo != null ? 
-                ModInfo.Languages.ToList() : 
-                new List<ILanguageInfo>();
+            return Mods.GetEnumerator();
         }
 
-        protected virtual ModinfoData? ResolveModInfo()
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        protected virtual IModinfo? ResolveModInfo()
         {
             return null;
-        }
-
-        protected virtual string InitializeName()
-        {
-            var name = string.Empty;
-            if (ModInfo != null)
-                name = ModInfo.Name;
-            return name;
-        }
-
-        protected virtual string InitializeDescription()
-        {
-            var name = string.Empty;
-            if (ModInfo != null)
-                name = ModInfo.Summary;
-            return name;
         }
 
         protected virtual SemanticVersion? InitializeVersion()
@@ -290,60 +166,12 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
         protected virtual string? InitializeIcon()
         {
-            var name = string.Empty;
-            if (ModInfo != null)
-                name = ModInfo.Icon;
-            return name;
+            return ModInfo?.Icon;
         }
 
-        protected virtual int CalculateExpectedDependencyCount()
+        protected virtual ICollection<ILanguageInfo> ResolveInstalledLanguages()
         {
-            return ModInfo?.Dependencies.Count ?? 0;
+            return ModInfo?.Languages.ToList() ?? new List<ILanguageInfo>{LanguageInfo.Default};
         }
-
-        protected virtual IEnumerable<IMod> SearchModsCore()
-        {
-            return Enumerable.Empty<IMod>();
-        }
-
-
-        protected virtual void OnModCollectionModified(ModCollectionChangedEventArgs e)
-        {
-            ModCollectionModified?.Invoke(this, e);
-        }
-
-
-
-
-        //public ModInfoData? ModInfo
-        //{
-        //    get
-        //    {
-        //        if (_modInfo != null || _modInfoFileLookupFlag || ModInfoFile is null)
-        //            return _modInfo;
-        //        _modInfoFileLookupFlag = true;
-        //        ModInfoFile.TryGetModInfo(out var modInfo);
-        //        _modInfo = modInfo;
-        //        return _modInfo;
-        //    }
-        //}
-
-        //public ModInfoFile? ModInfoFile { get; }
-
-        //protected ModBase(IGame game, ModType type, ModInfoFile? modInfoFile) : this(game, type)
-        //{
-        //    if (modInfoFile != null)
-        //    {
-        //        try
-        //        {
-        //            modInfoFile.Validate();
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            throw new PetroglyphModException(e.Message, e);
-        //        }
-        //        ModInfoFile = modInfoFile;
-        //    }
-        //}
     }
 }

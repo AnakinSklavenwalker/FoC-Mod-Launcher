@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Mods\ModBase.cs.old" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Mods\ModBase.cs.old" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="eaw.modinfo" Version="2.2.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Roslyn.System.IO.Abstractions.Analyzers" Version="12.2.19">
