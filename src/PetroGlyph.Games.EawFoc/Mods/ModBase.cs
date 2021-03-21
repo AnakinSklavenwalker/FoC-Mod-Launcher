@@ -19,15 +19,25 @@ namespace PetroGlyph.Games.EawFoc.Mods
     public abstract class ModBase : IMod
     {
         /// <inheritdoc/>
-        public event EventHandler<ModCollectionChangedEventArgs>? ModCollectionModified;
+        public event EventHandler<ModCollectionChangedEventArgs>? ModsCollectionModified;
+        /// <inheritdoc/>
+        public event EventHandler<ResolvingModinfoEventArgs>? ResolvingModinfo;
+        /// <inheritdoc/>
+        public event EventHandler<ModinfoResolvedEventArgs>? ModinfoResolved;
+        /// <inheritdoc/>
+        public event EventHandler<ModDependenciesChangedEventArgs>? DependenciesChanged;
 
         private string? _iconFile;
         private SemanticVersion? _modVersion;
         private IModinfo? _modInfo;
         private ICollection<ILanguageInfo>? _installedLanguages;
+        private readonly List<IMod> _dependencies = new();
+
+        protected readonly HashSet<IMod> ModsInternal = new();
 
         /// <inheritdoc/>
         public abstract string Identifier { get; }
+
 
         /// <inheritdoc/>
         public IGame Game { get; }
@@ -60,13 +70,13 @@ namespace PetroGlyph.Games.EawFoc.Mods
         public ICollection<ILanguageInfo> InstalledLanguages => _installedLanguages ??= ResolveInstalledLanguages();
 
 
-        IList<IModReference> IModIdentity.Dependencies => Dependencies.ToList();
+        IList<IModReference> IModIdentity.Dependencies => Dependencies.OfType<IModReference>().ToList();
 
         /// <inheritdoc cref="IModIdentity.Dependencies"/>
-        public IReadOnlyList<IModReference> Dependencies { get; }
+        public IReadOnlyList<IMod> Dependencies => _dependencies.ToList();
 
         /// <inheritdoc/>
-        public IReadOnlyCollection<IMod> Mods { get; }
+        public IReadOnlyCollection<IMod> Mods => ModsInternal.ToList();
         
         /// <summary>
         /// Creates a new <see cref="IMod"/> instances with a constant name
@@ -98,47 +108,66 @@ namespace PetroGlyph.Games.EawFoc.Mods
             _modInfo = modinfo;
             Game = game;
             Name = modinfo.Name;
+            Type = type;
 
         }
 
         /// <inheritdoc/>
         public bool ResolveDependencies(IDependencyResolver resolver)
         {
-            throw new NotImplementedException();
+            var modinfo = ModInfo;
+            if (modinfo is null)
+                return false;
+            if (!Equals(modinfo))
+                throw new ModException("Unable to resolve mod dependencies. Modinfo is not matching the current mod.");
+
+            try
+            {
+                var dependencies = resolver.Resolve(this, new DependencyResolverOptions());
+                var oldList = _dependencies.ToList();
+                _dependencies.Clear();
+                _dependencies.AddRange(dependencies);
+                OnDependenciesChanged(new ModDependenciesChangedEventArgs(this, oldList, dependencies));
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <inheritdoc/>
-        public bool AddMod(IMod mod)
+        public virtual bool AddMod(IMod mod)
         {
-            throw new NotImplementedException();
+            var result = ModsInternal.Add(mod);
+            if (result)
+                OnModsCollectionModified(new ModCollectionChangedEventArgs(mod, ModCollectionChangedAction.Add));
+            return result;
         }
 
         /// <inheritdoc/>
-        public bool RemoveMod(IMod mod)
+        public virtual bool RemoveMod(IMod mod)
         {
-            throw new NotImplementedException();
+            var result = ModsInternal.Remove(mod);
+            if (result)
+                OnModsCollectionModified(new ModCollectionChangedEventArgs(mod, ModCollectionChangedAction.Remove));
+            return result;
         }
 
         /// <inheritdoc/>
-        public IMod? SearchMod(IModReference modReference, ModSearchOptions modSearchOptions, bool add)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public bool Equals(IMod other)
+        public virtual bool Equals(IMod other)
         {
             return ModEqualityComparer.Default.Equals(this, other);
         }
 
         /// <inheritdoc/>
-        public bool Equals(IModIdentity other)
+        public virtual bool Equals(IModIdentity other)
         {
             return ModEqualityComparer.Default.Equals(this, other);
         }
 
         /// <inheritdoc/>
-        public bool Equals(IModReference other)
+        public virtual bool Equals(IModReference other)
         {
             return ModEqualityComparer.Default.Equals(this, other);
         }
@@ -154,7 +183,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
             return GetEnumerator();
         }
 
-        protected virtual IModinfo? ResolveModInfo()
+        protected virtual IModinfo? ResolveModInfoCore()
         {
             return null;
         }
@@ -172,6 +201,37 @@ namespace PetroGlyph.Games.EawFoc.Mods
         protected virtual ICollection<ILanguageInfo> ResolveInstalledLanguages()
         {
             return ModInfo?.Languages.ToList() ?? new List<ILanguageInfo>{LanguageInfo.Default};
+        }
+
+        private IModinfo? ResolveModInfo()
+        {
+            var resolvingArgs = new ResolvingModinfoEventArgs(this);
+            OnResolvingModinfo(resolvingArgs);
+            IModinfo? modinfo = null;
+            if (!resolvingArgs.Cancel)
+                modinfo =  ResolveModInfoCore();
+            OnModinfoResolved(new ModinfoResolvedEventArgs(this, modinfo));
+            return modinfo;
+        }
+
+        protected virtual void OnResolvingModinfo(ResolvingModinfoEventArgs e)
+        {
+            ResolvingModinfo?.Invoke(this, e);
+        }
+
+        protected virtual void OnModinfoResolved(ModinfoResolvedEventArgs e)
+        {
+            ModinfoResolved?.Invoke(this, e);
+        }
+
+        protected virtual void OnModsCollectionModified(ModCollectionChangedEventArgs e)
+        {
+            ModsCollectionModified?.Invoke(this, e);
+        }
+
+        protected virtual void OnDependenciesChanged(ModDependenciesChangedEventArgs e)
+        {
+            DependenciesChanged?.Invoke(this, e);
         }
     }
 }

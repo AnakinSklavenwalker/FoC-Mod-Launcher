@@ -63,7 +63,7 @@ namespace PetroGlyph.Games.EawFoc.Games
         /// Searches for mods for this game on disk and creates a new instance of an <see cref="IMod"/> when necessary
         /// </summary>
         /// <param name="add">When set to <c>true</c> the mods will get added to the <see cref="IGame.Mods"/> collection if not present already.
-        /// This will raise the <see cref="IGame.ModCollectionModified"/> event </param>
+        /// This will raise the <see cref="IModContainer.ModsCollectionModified"/> event </param>
         /// <returns>An unsorted collection of all mods found.</returns>
         ICollection<IMod> GetPhysicalMods(bool add);
 

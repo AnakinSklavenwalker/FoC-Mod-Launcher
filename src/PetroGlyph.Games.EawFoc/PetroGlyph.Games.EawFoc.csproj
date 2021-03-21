@@ -15,13 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="eaw.modinfo" Version="2.2.0.3" />
+    <PackageReference Include="eaw.modinfo" Version="3.0.0-beta" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Roslyn.System.IO.Abstractions.Analyzers" Version="12.2.19">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.IO.Abstractions" Version="13.2.23" />
+    <PackageReference Include="System.IO.Abstractions" Version="13.2.25" />
   </ItemGroup>
 
   <ItemGroup>

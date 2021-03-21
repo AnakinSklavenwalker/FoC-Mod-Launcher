@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services.Dependencies;
@@ -7,6 +8,24 @@ namespace PetroGlyph.Games.EawFoc.Mods
 {
     public interface IMod : IModIdentity, IModReference, IPlayableObject, IModContainer, IEquatable<IMod>
     {
+        /// <summary>
+        /// Gets fired when this instance is about to lazy-load <see cref="ModInfo"/>.
+        /// <br></br>
+        /// This operation can be cancelled by settings <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/>. 
+        /// In this case <see cref="ModInfo"/> will be set to <see langword="null"/>
+        /// </summary>
+        event EventHandler<ResolvingModinfoEventArgs> ResolvingModinfo;
+
+        /// <summary>
+        /// Gets fired after the lazy-load of <see cref="ModInfo"/> was completed.
+        /// </summary>
+        event EventHandler<ModinfoResolvedEventArgs> ModinfoResolved;
+
+        /// <summary>
+        /// Gets fired when the <see cref="IModIdentity.Dependencies"/> list was altered.
+        /// </summary>
+        event EventHandler<ModDependenciesChangedEventArgs> DependenciesChanged;
+
         /// <summary>
         /// The <see cref="IGame"/> this mod is associated with.
         /// </summary>

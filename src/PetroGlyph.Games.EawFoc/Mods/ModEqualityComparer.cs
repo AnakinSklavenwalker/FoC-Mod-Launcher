@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EawModinfo.Model;
 using EawModinfo.Spec;
+using EawModinfo.Utilities;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
@@ -65,12 +66,14 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
         public bool Equals(IModIdentity x, IModIdentity y)
         {
-            throw new NotImplementedException();
+            return _includeDependencies
+                ? new ModIdentityEqualityComparer(true, false, StringComparison.Ordinal).Equals(x, y)
+                : ModIdentityEqualityComparer.Default.Equals(x, y);
         }
 
         public int GetHashCode(IModIdentity obj)
         {
-            throw new NotImplementedException();
+            return ModIdentityEqualityComparer.Default.GetHashCode(obj);
         }
 
         public bool Equals(IModReference? x, IModReference? y)

@@ -16,7 +16,7 @@ namespace PetroGlyph.Games.EawFoc.Games
         public event EventHandler<GameStartedEventArgs> GameStarted;
         public event EventHandler<GameStartingEventArgs> GameStarting;
         public event EventHandler GameClosed;
-        public event EventHandler<ModCollectionChangedEventArgs> ModCollectionModified;
+        public event EventHandler<ModCollectionChangedEventArgs> ModsCollectionModified;
 
         private readonly LanguageFinderBase _languageFinder;
         
@@ -217,7 +217,7 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         protected virtual void OnModCollectionModified(ModCollectionChangedEventArgs e)
         {
-            ModCollectionModified?.Invoke(this, e);
+            ModsCollectionModified?.Invoke(this, e);
         }
 
         private Process StartGameProcess(ProcessStartInfo startInfo, string? iconFile)

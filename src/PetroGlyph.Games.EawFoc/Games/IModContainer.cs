@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Mods;
 
 namespace PetroGlyph.Games.EawFoc.Games
@@ -14,7 +13,7 @@ namespace PetroGlyph.Games.EawFoc.Games
         /// <summary>
         /// Notifies any handler when <see cref="Mods"/> was altered.
         /// </summary>
-        event EventHandler<ModCollectionChangedEventArgs> ModCollectionModified;
+        event EventHandler<ModCollectionChangedEventArgs> ModsCollectionModified;
 
         /// <summary>
         /// Set of all mods this instance is associated with.
@@ -37,15 +36,5 @@ namespace PetroGlyph.Games.EawFoc.Games
         /// <returns><see langword="true"/> if the mod was removed; otherwise <see langword="false"/> if the mod did not exists.</returns>
         /// <exception cref="ArgumentNullException"> when <paramref name="mod"/> is null</exception>
         bool RemoveMod(IMod mod);
-
-        /// <summary>
-        /// Searches a specific mod and optionally creates a new instance of an <see cref="IMod"/> when necessary
-        /// </summary>
-        /// <param name="modReference">The data that identifies the mod.</param>
-        /// <param name="modSearchOptions">Option to specify how to look for the mod</param>
-        /// <param name="add">When set to <c>true</c> the mod will get added to the <see cref="Mods"/> collection if not present already.
-        /// This will raise the <see cref="IGame.ModCollectionModified"/> event </param>
-        /// <returns>The mod found or <see langword="null"/></returns>
-        IMod? SearchMod(IModReference modReference, ModSearchOptions modSearchOptions, bool add);
     }
 }
