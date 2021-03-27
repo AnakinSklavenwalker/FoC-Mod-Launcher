@@ -1,26 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Services.Dependencies;
 using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
     public sealed class VirtualMod : ModBase
     {
-        public override string Identifier => throw new NotImplementedException();
+        public override string Identifier { get; }
 
         public VirtualMod(IGame game, IModinfo modInfoData) : base(game, ModType.Virtual, modInfoData)
         {
-            // TODO: modinfo dependencies must not be null or empty!
-            throw new NotImplementedException();
+            if (modInfoData.Dependencies is null || !modInfoData.Dependencies.Any())
+                throw new ModException("Virtual mods must be initialized with pre-defined dependencies");
+
+            foreach (var dependency in modInfoData.Dependencies)
+            {
+                var mod = game.Mods.FirstOrDefault(m => m.Equals(dependency));
+                if (mod is null)
+                    throw new ModException(
+                        $"Could not find dependency '{dependency.Identifier}-{dependency.Type}' in {game}");
+                DependenciesInternal.Add(mod);
+            }
+            if (new ModDependencyTraverser(this).HasDependencyCycles())
+                throw new ModException("Dependency Cycle detected");
+
+            Identifier = CalculateIdentifier();
         }
 
         public VirtualMod(string name, IGame game, IList<IMod> dependencies) : base(game, ModType.Virtual, name)
         {
             Requires.NotNullOrEmpty(dependencies, nameof(dependencies));
-            // TODO: dependencies must not be null or empty!
-            throw new NotImplementedException();
+
+            foreach (var dependency in dependencies)
+            {
+                if (!dependency.Game.Equals(game))
+                    throw new ModException($"Game of mod {dependency} does not match this mod's game.");
+                DependenciesInternal.Add(dependency);
+            }
+
+            if (new ModDependencyTraverser(this).HasDependencyCycles())
+                throw new ModException("Dependency Cycle detected");
+            Identifier = CalculateIdentifier();
+        }
+
+        public override string ToString()
+        {
+            return Name + "-" + Identifier;
         }
 
         public override bool Equals(IMod other)
@@ -41,6 +70,17 @@ namespace PetroGlyph.Games.EawFoc.Mods
         protected override void OnResolvingModinfo(ResolvingModinfoEventArgs e)
         {
             throw new InvalidOperationException("Virtual mods cannot lazy load modinfo data");
+        }
+
+        protected override void OnDependenciesChanged(ModDependenciesChangedEventArgs e)
+        {
+            throw new InvalidOperationException("Virtual mods cannot lazy load modinfo data");
+        }
+        
+        private string CalculateIdentifier()
+        {
+            var id = Dependencies.Aggregate(Name, (current, dependency) => current + dependency.GetHashCode());
+            return id.GetHashCode().ToString();
         }
     }
 }

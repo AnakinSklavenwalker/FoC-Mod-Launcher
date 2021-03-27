@@ -31,7 +31,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
         private SemanticVersion? _modVersion;
         private IModinfo? _modInfo;
         private ICollection<ILanguageInfo>? _installedLanguages;
-        private readonly List<IMod> _dependencies = new();
+        
+        protected readonly List<IMod> DependenciesInternal = new();
 
         protected readonly HashSet<IMod> ModsInternal = new();
 
@@ -73,7 +74,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
         IList<IModReference> IModIdentity.Dependencies => Dependencies.OfType<IModReference>().ToList();
 
         /// <inheritdoc cref="IModIdentity.Dependencies"/>
-        public IReadOnlyList<IMod> Dependencies => _dependencies.ToList();
+        public IReadOnlyList<IMod> Dependencies => DependenciesInternal.ToList();
 
         /// <inheritdoc/>
         public IReadOnlyCollection<IMod> Mods => ModsInternal.ToList();
@@ -125,9 +126,9 @@ namespace PetroGlyph.Games.EawFoc.Mods
             {
                 var options = new DependencyResolverOptions {Recursive = recursive};
                 var dependencies = resolver.Resolve(this, options);
-                var oldList = _dependencies.ToList();
-                _dependencies.Clear();
-                _dependencies.AddRange(dependencies);
+                var oldList = DependenciesInternal.ToList();
+                DependenciesInternal.Clear();
+                DependenciesInternal.AddRange(dependencies);
                 OnDependenciesChanged(new ModDependenciesChangedEventArgs(this, oldList, dependencies));
                 return true;
             }
