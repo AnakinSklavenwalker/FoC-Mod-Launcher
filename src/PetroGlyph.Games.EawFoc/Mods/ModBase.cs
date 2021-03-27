@@ -113,7 +113,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
         }
 
         /// <inheritdoc/>
-        public bool ResolveDependencies(IDependencyResolver resolver)
+        public bool ResolveDependencies(IDependencyResolver resolver, bool recursive, bool addModContainer)
         {
             var modinfo = ModInfo;
             if (modinfo is null)
@@ -123,7 +123,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
             try
             {
-                var dependencies = resolver.Resolve(this, new DependencyResolverOptions());
+                var options = new DependencyResolverOptions {Recursive = recursive};
+                var dependencies = resolver.Resolve(this, options);
                 var oldList = _dependencies.ToList();
                 _dependencies.Clear();
                 _dependencies.AddRange(dependencies);
@@ -139,6 +140,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// <inheritdoc/>
         public virtual bool AddMod(IMod mod)
         {
+            if (Game != mod.Game)
+                throw new InvalidOperationException("Game instances of the two mods must be equal");
             var result = ModsInternal.Add(mod);
             if (result)
                 OnModsCollectionModified(new ModCollectionChangedEventArgs(mod, ModCollectionChangedAction.Add));

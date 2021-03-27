@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Mods;
 
 namespace PetroGlyph.Games.EawFoc.Games
@@ -22,7 +23,11 @@ namespace PetroGlyph.Games.EawFoc.Games
         IReadOnlyCollection<IMod> Mods { get; }
 
         /// <summary>
-        /// Associates an <see cref="IMod"/> to the this <see cref="IModContainer"/> 
+        /// Associates an <see cref="IMod"/> to the this <see cref="IModContainer"/>
+        /// <remarks>
+        /// This operation is "in-memory" only, meaning the <paramref name="mod"/>'s <see cref="IModIdentity.Dependencies"/>
+        /// will NOT be updated.
+        /// </remarks>
         /// </summary>
         /// <param name="mod">The mod instance</param>
         /// <returns><see langword="true"/> if the mod was added; otherwise <see langword="false"/> if the mod already existed.</returns>

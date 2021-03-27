@@ -36,14 +36,17 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// </summary>
         IModinfo? ModInfo { get; }
 
-
         /// <summary>
         /// Searches for direct <see cref="IMod"/> dependencies. It does not resolve recursively.
         /// Updates <see cref="IModIdentity.Dependencies"/> property.
         /// <param name="resolver">Resolver service to use</param>
+        /// <param name="recursive">When set to <see langword="true"/> the mod dependency chain gets resolved recursively.</param>
+        /// <param name="addModContainer">When set to <see langword="true"/>
+        /// the <see cref="IModContainer.Mods"/> collection get updated.
+        /// Only first level dependencies shall get added with this option.</param>
         /// </summary>
         /// <returns><c>true</c> if all direct dependencies could be resolved; <c>false</c> otherwise</returns>
         /// <exception cref="ModException">Throws exception if a dependency cycle was found.</exception>
-        bool ResolveDependencies(IDependencyResolver resolver);
+        bool ResolveDependencies(IDependencyResolver resolver, bool recursive, bool addModContainer);
     }
 }

@@ -2,7 +2,7 @@
 {
     public record DependencyResolverOptions
     {
-        public ModDependencyResolveStrategy ResolveStrategy { get; init; }
+        public bool Recursive { get; init; }
 
         public bool Traverse { get; init; }
 
