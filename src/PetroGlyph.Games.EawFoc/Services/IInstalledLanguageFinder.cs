@@ -1,10 +1,18 @@
 ﻿using System.Collections.Generic;
-using EawModinfo.Model;
+using EawModinfo.Spec;
 
 namespace PetroGlyph.Games.EawFoc.Services
 {
     public interface IInstalledLanguageFinder
     {
-        ICollection<LanguageInfo> FindInstalledLanguages(IPlayableObject playableObject);
+        ICollection<ILanguageInfo> FindInstalledLanguages(IPlayableObject playableObject);
+    }
+
+    public class FileSystemLanguageFinder : IInstalledLanguageFinder
+    {
+        public ICollection<ILanguageInfo> FindInstalledLanguages(IPlayableObject playableObject)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

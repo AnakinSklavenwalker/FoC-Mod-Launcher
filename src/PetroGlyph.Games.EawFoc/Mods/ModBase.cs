@@ -110,7 +110,6 @@ namespace PetroGlyph.Games.EawFoc.Mods
             Game = game;
             Name = modinfo.Name;
             Type = type;
-
         }
 
         /// <inheritdoc/>

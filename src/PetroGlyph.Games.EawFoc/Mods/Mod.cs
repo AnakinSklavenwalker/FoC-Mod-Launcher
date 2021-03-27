@@ -1,40 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
-using PetroGlyph.Games.EawFoc.Games.Language;
+using PetroGlyph.Games.EawFoc.Services;
+using PetroGlyph.Games.EawFoc.Utilities;
+using Validation;
+using LanguageInfo = EawModinfo.Model.LanguageInfo;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
-    public class Mod : ModBase, IHasDirectory
+    public class Mod : ModBase, IPhysicalPlayableObject
     {
         internal string InternalPath { get; }
 
-        public DirectoryInfo Directory { get; }
-        
+        public IDirectoryInfo Directory { get; }
 
-        //public Mod(IGame game, bool workshop, ModInfoFile modInfoFile) :
-        //    base(game, workshop ? ModType.Workshops : ModType.Default, modInfoFile)
-        //{
-        //}
-
-        public Mod(IGame game, DirectoryInfo modDirectory, bool workshop) :
-            this(game, modDirectory, workshop, null)
-        {
-        }
-
-        public Mod(IGame game, DirectoryInfo modDirectory, bool workshop, IModinfo? modInfoData) :
-            base(game, workshop ? ModType.Workshops : ModType.Default, modInfoData)
-        {
-            if (modDirectory is null)
-                throw new ArgumentNullException(nameof(modDirectory));
-            if (!modDirectory.Exists)
-                throw new ModException($"The mod's directory '{modDirectory.FullName}' does not exists.");
-            Directory = modDirectory;
-            InternalPath = CreateInternalPath(modDirectory);
-        }
+        public IModinfoFile? ModinfoFile { get; }
 
         public override string Identifier
         {
@@ -44,7 +27,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
                 {
                     case ModType.Default:
                         return InternalPath;
-                    case ModType.Workshops: 
+                    case ModType.Workshops:
                         return Directory.Name;
                     case ModType.Virtual:
                         throw new ModException($"Instance of {typeof(Mod)} must not be virtual.");
@@ -53,99 +36,57 @@ namespace PetroGlyph.Games.EawFoc.Mods
                 }
             }
         }
+        
 
-        public override bool Equals(IMod other)
+        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, IModinfoFile modinfoFile) 
+            : base(game, workshop ? ModType.Workshops : ModType.Default, modinfoFile.GetModinfo())
         {
-            if (other is null)
-                return false;
-            if (!(other is IHasDirectory directoryMod))
-                return false;
-
-            string otherPath;
-            if (directoryMod is Mod mod)
-                otherPath = mod.InternalPath;
-            else
-                otherPath = CreateInternalPath(directoryMod.Directory);
-
-            return FileUtilities.Comparer.Equals(InternalPath, otherPath);
+            Requires.NotNull(modDirectory, nameof(modDirectory));
+            Requires.NotNull(modinfoFile, nameof(modinfoFile));
+            ModinfoFile = modinfoFile;
+            Directory = modDirectory;
+            InternalPath = CreateInternalPath(modDirectory);
         }
 
-        public override bool Equals(IModIdentity other)
+        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, string name) 
+            : base(game, workshop ? ModType.Workshops : ModType.Default, name)
         {
-            throw new NotImplementedException();
+            Requires.NotNull(modDirectory, nameof(modDirectory));
+            Requires.NotNullOrEmpty(name, nameof(name));
+            Directory = modDirectory;
+            InternalPath = CreateInternalPath(modDirectory);
         }
 
-        public override bool Equals(IModReference? modReference)
+        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, IModinfo modInfoData) :
+            base(game, workshop ? ModType.Workshops : ModType.Default, modInfoData)
         {
-            if (modReference is null)
-                return false;
-            if (modReference.Type != Type)
-                return false;
-            switch (Type)
-            {
-                case ModType.Default:
-                    var realLocation = FileUtilities.NormalizeForPathComparison(modReference.GetAbsolutePath(Game), true);
-                    return FileUtilities.Comparer.Equals(InternalPath, realLocation);
-                case ModType.Workshops:
-                    return Directory.Name.Equals(modReference.Identifier);
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            Requires.NotNull(modDirectory, nameof(modDirectory));
+            if (!modDirectory.Exists)
+                throw new ModException($"The mod's directory '{modDirectory.FullName}' does not exists.");
+            Directory = modDirectory;
+            InternalPath = CreateInternalPath(modDirectory);
         }
-
-        public override int GetHashCode()
-        {
-            var hash = FileUtilities.Comparer.GetHashCode(InternalPath);
-            return hash;
-        }
-
-        public override string ToArgs(bool includeDependencies)
-        {
-            if (includeDependencies)
-                throw new NotImplementedException();
-
-            var folderName = Directory.Name;
-            return WorkshopMod ? $"STEAMMOD={folderName}" : $"MODPATH=Mods/{folderName}"; 
-        }
-
-        protected override bool ResolveDependenciesCore()
-        {
-            throw new NotImplementedException();
-        }
-
-
-        protected override string InitializeName()
-        {
-            var name = base.InitializeName();
-            if (string.IsNullOrEmpty(name))
-                name = Directory.Name;
-            return name;
-        }
+        
 
         protected override ICollection<ILanguageInfo> ResolveInstalledLanguages()
         {
-            var languages =  base.ResolveInstalledLanguages();
-            if (!languages.Any())
-                languages =  new GenericModLanguageFinder(Directory).Find();
-            return languages;
+            // We don't "trust" the modinfo here as the default language (EN) also gets
+            // applied when nothing was specified by the mod developer.
+            // Only if we have more than the default language, we trust the modinfo.
+            if (ModInfo is not null && ModInfo.Languages.All(x => x.Equals(LanguageInfo.Default)))
+                return ModInfo.Languages.ToList();
+            return new FileSystemLanguageFinder().FindInstalledLanguages(this);
         }
 
         protected override string? InitializeIcon()
         {
             var iconFile = base.InitializeIcon();
-            if (!string.IsNullOrEmpty(iconFile))
-                iconFile = Path.Combine(Directory.FullName, iconFile!);
-            else
-            {
-                var icon = Directory.EnumerateFiles("*.ico");
-                iconFile = icon.FirstOrDefault()?.FullName;
-            }
-            return iconFile;
+            return string.IsNullOrEmpty(iconFile) ? iconFile : new DefaultIconFinder().FindIcon(this);
         }
 
-        internal static string CreateInternalPath(DirectoryInfo directory)
+        internal static string CreateInternalPath(IDirectoryInfo directory)
         {
-            return FileUtilities.NormalizeForPathComparison(directory.FullName, true);
+            return directory.FileSystem.Path.NormalizePath(directory.FullName);
         }
     }
 }

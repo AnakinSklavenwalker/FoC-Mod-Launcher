@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using EawModinfo.Spec;
+using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Games.Language
 {
