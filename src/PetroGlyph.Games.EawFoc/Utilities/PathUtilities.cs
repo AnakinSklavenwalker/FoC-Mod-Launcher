@@ -39,21 +39,6 @@ namespace PetroGlyph.Games.EawFoc.Utilities
             return Array.IndexOf(Slashes, c) >= 0;
         }
 
-
-        private static int PathHashCode(string? path)
-        {
-            var hc = 0;
-            if (path != null)
-            {
-                foreach (var ch in path)
-                {
-                    if (!IsDirectorySeparator(ch)) 
-                        hc = HashCode.Combine(char.ToUpperInvariant(ch), hc);
-                }
-            }
-            return hc;
-        }
-
         private static bool PathsEqual(string path1, string path2)
         {
             return PathsEqual(path1, path2, Math.Max(path1.Length, path2.Length));
