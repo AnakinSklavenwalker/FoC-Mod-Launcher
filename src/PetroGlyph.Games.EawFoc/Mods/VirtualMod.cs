@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
-using PetroGlyph.Games.EawFoc.Services.Dependencies;
 using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Mods

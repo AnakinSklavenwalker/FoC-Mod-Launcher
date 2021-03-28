@@ -3,7 +3,7 @@ using EawModinfo.Model;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Services
+namespace PetroGlyph.Games.EawFoc.Services.Mods
 {
     /// <summary>
     /// Factory to create one or more <see cref="IMod"/>

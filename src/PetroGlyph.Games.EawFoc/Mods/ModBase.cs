@@ -8,7 +8,6 @@ using EawModinfo.Spec;
 using EawModinfo.Utilities;
 using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
-using PetroGlyph.Games.EawFoc.Services.Dependencies;
 using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Mods
@@ -123,7 +122,10 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
             try
             {
-                var options = new DependencyResolverOptions {Recursive = recursive};
+                var options = new DependencyResolverOptions
+                {
+                    Recursive = recursive,
+                };
                 var dependencies = resolver.Resolve(this, options);
                 var oldList = DependenciesInternal.ToList();
                 DependenciesInternal.Clear();

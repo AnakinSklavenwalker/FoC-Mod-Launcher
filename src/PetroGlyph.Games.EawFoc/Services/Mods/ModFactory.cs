@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Services
+namespace PetroGlyph.Games.EawFoc.Services.Mods
 {
     public static class ModFactory
     {

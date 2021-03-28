@@ -9,7 +9,6 @@ using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
 using PetroGlyph.Games.EawFoc.Services;
-using PetroGlyph.Games.EawFoc.Services.Dependencies;
 using Xunit;
 
 namespace PetroGlyph.Games.EawFoc.Tests
