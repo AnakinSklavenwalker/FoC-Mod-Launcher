@@ -25,8 +25,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
                         $"Could not find dependency '{dependency.Identifier}-{dependency.Type}' in {game}");
                 DependenciesInternal.Add(mod);
             }
-            if (new ModDependencyTraverser(this).HasDependencyCycles())
-                throw new ModException("Dependency Cycle detected");
+
+            AssureVirtualModIsValid();
 
             Identifier = CalculateIdentifier();
         }
@@ -42,11 +42,11 @@ namespace PetroGlyph.Games.EawFoc.Mods
                 DependenciesInternal.Add(dependency);
             }
 
-            if (new ModDependencyTraverser(this).HasDependencyCycles())
-                throw new ModException("Dependency Cycle detected");
+            AssureVirtualModIsValid();
+
             Identifier = CalculateIdentifier();
         }
-
+        
         public override string ToString()
         {
             return Name + "-" + Identifier;
@@ -76,7 +76,16 @@ namespace PetroGlyph.Games.EawFoc.Mods
         {
             throw new InvalidOperationException("Virtual mods cannot lazy load modinfo data");
         }
-        
+
+        private void AssureVirtualModIsValid()
+        {
+            if (new ModDependencyTraverser(this).HasDependencyCycles())
+                throw new ModException("Dependency Cycle detected");
+
+            if (!Dependencies.Any(m => m is IPhysicalPlayableObject))
+                throw new ModException("Virtual mods need at least one physical dependency.");
+        }
+
         private string CalculateIdentifier()
         {
             var id = Dependencies.Aggregate(Name, (current, dependency) => current + dependency.GetHashCode());
