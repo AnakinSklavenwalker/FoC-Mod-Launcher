@@ -5,8 +5,6 @@ using System.Linq;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services;
-using PetroGlyph.Games.EawFoc.Services.Icon;
-using PetroGlyph.Games.EawFoc.Services.Language;
 using PetroGlyph.Games.EawFoc.Utilities;
 using Validation;
 using LanguageInfo = EawModinfo.Model.LanguageInfo;

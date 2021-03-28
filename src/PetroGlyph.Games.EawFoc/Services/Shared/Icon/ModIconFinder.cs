@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Services.Language
+namespace PetroGlyph.Games.EawFoc.Services.Shared.Icon
 {
-    public class ModLanguageFinder : IInstalledLanguageFinder
+    public class ModIconFinder : IIconFinder
     {
-        public ICollection<ILanguageInfo> FindInstalledLanguages(IPlayableObject playableObject)
+        public string? FindIcon(IPlayableObject playableObject)
         {
             if (playableObject is IGame)
                 throw new NotSupportedException("Games are not supported by this instance.");

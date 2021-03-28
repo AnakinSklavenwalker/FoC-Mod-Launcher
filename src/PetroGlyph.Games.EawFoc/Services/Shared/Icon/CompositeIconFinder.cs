@@ -2,7 +2,7 @@
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Services.Icon
+namespace PetroGlyph.Games.EawFoc.Services.Shared.Icon
 {
     public class CompositeIconFinder : IIconFinder
     {
