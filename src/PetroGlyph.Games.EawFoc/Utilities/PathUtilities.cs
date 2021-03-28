@@ -19,7 +19,7 @@ namespace PetroGlyph.Games.EawFoc.Utilities
             return trimTrailingSeparator ? TrimTrailingSeparators(slashNormalized) : slashNormalized;
         }
 
-        public static string TrimTrailingSeparators(string s)
+        internal static string TrimTrailingSeparators(string s)
         {
             var lastSeparator = s.Length;
             while (lastSeparator > 0 && IsDirectorySeparator(s[lastSeparator - 1])) 
@@ -37,41 +37,6 @@ namespace PetroGlyph.Games.EawFoc.Utilities
         private static bool IsDirectorySeparator(char c)
         {
             return Array.IndexOf(Slashes, c) >= 0;
-        }
-
-        private static bool PathsEqual(string path1, string path2)
-        {
-            return PathsEqual(path1, path2, Math.Max(path1.Length, path2.Length));
-        }
-
-        private static bool PathsEqual(string path1, string path2, int length)
-        {
-            if (path1.Length < length || path2.Length < length)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < length; i++)
-            {
-                if (!PathCharEqual(path1[i], path2[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private static bool PathCharEqual(char x, char y)
-        {
-            if (IsDirectorySeparator(x) && IsDirectorySeparator(y))
-            {
-                return true;
-            }
-
-            return IsUnixLikePlatform
-                ? x == y
-                : char.ToUpperInvariant(x) == char.ToUpperInvariant(y);
         }
     }
 }
