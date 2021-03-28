@@ -5,6 +5,8 @@ using System.Linq;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services;
+using PetroGlyph.Games.EawFoc.Services.Icon;
+using PetroGlyph.Games.EawFoc.Services.Language;
 using PetroGlyph.Games.EawFoc.Utilities;
 using Validation;
 using LanguageInfo = EawModinfo.Model.LanguageInfo;
@@ -75,13 +77,13 @@ namespace PetroGlyph.Games.EawFoc.Mods
             // Only if we have more than the default language, we trust the modinfo.
             if (ModInfo is not null && ModInfo.Languages.All(x => x.Equals(LanguageInfo.Default)))
                 return ModInfo.Languages.ToList();
-            return new FileSystemLanguageFinder().FindInstalledLanguages(this);
+            return new CompositeLanguageFinder().FindInstalledLanguages(this);
         }
 
         protected override string? InitializeIcon()
         {
             var iconFile = base.InitializeIcon();
-            return string.IsNullOrEmpty(iconFile) ? iconFile : new DefaultIconFinder().FindIcon(this);
+            return string.IsNullOrEmpty(iconFile) ? iconFile : new CompositeIconFinder().FindIcon(this);
         }
 
         internal static string CreateInternalPath(IDirectoryInfo directory)

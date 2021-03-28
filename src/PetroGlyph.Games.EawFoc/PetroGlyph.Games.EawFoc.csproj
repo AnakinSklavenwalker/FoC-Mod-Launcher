@@ -7,11 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Mods\ModBase.cs.old" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Mods\ModBase.cs.old" />
+    <None Remove="Mods\Resolvecode.txt" />
   </ItemGroup>
 
   <ItemGroup>
