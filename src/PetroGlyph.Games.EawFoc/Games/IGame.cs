@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using PetroGlyph.Games.EawFoc.Mods;
-using PetroGlyph.Games.EawFoc.Services;
 using PetroGlyph.Games.EawFoc.Services.Games;
 
 namespace PetroGlyph.Games.EawFoc.Games

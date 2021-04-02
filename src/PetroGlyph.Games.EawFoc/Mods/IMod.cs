@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Services.Mods.Dependencies;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {

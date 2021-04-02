@@ -8,6 +8,7 @@ using EawModinfo.Spec;
 using EawModinfo.Utilities;
 using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Services.Mods.Dependencies;
 using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Mods
