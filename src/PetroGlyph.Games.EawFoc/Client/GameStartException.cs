@@ -1,6 +1,7 @@
 ﻿using System;
+using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Client
 {
     public class GameStartException : PetroglyphGameException
     {

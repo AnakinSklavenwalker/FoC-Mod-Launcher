@@ -1,4 +1,4 @@
-﻿namespace PetroGlyph.Games.EawFoc.Games
+﻿namespace PetroGlyph.Games.EawFoc
 {
     public enum ModCollectionChangedAction
     {

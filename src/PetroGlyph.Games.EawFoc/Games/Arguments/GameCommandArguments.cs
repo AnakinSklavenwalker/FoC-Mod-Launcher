@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Games.Arguments
 {
     public sealed class GameCommandArguments
     {

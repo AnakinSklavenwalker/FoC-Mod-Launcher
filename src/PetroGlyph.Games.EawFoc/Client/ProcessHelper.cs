@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Client
 {
     public static class ProcessHelper
     {

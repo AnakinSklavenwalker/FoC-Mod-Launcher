@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using PetroGlyph.Games.EawFoc.Client;
+using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Games.Detection
+namespace PetroGlyph.Games.EawFoc.Services.Games.Detection
 {
     public class RegistryGameDetector : GameDetector
     {

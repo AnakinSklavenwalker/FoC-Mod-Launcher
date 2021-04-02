@@ -1,4 +1,6 @@
-﻿namespace PetroGlyph.Games.EawFoc.Games
+﻿using PetroGlyph.Games.EawFoc.Games;
+
+namespace PetroGlyph.Games.EawFoc.Client
 {
     internal sealed class EawSteamGameSlim
     {

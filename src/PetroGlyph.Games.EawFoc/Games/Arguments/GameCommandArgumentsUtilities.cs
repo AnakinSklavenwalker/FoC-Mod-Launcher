@@ -4,7 +4,7 @@ using System.Text;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Games.Arguments
 {
     internal static class GameCommandArgumentsUtilities
     {

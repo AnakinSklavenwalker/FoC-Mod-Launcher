@@ -4,7 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using EawModinfo.Spec;
-using PetroGlyph.Games.EawFoc.Games.Language;
+using PetroGlyph.Games.EawFoc.Client;
+using PetroGlyph.Games.EawFoc.Games.Arguments;
 using PetroGlyph.Games.EawFoc.Mods;
 
 namespace PetroGlyph.Games.EawFoc.Games

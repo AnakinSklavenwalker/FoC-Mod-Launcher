@@ -1,7 +1,7 @@
 ﻿using System;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc
 {
     public class ModCollectionChangedEventArgs : EventArgs
     {

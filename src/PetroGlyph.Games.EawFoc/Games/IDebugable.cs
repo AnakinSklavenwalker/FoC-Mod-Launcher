@@ -1,4 +1,7 @@
-﻿namespace PetroGlyph.Games.EawFoc.Games
+﻿using PetroGlyph.Games.EawFoc.Client;
+using PetroGlyph.Games.EawFoc.Games.Arguments;
+
+namespace PetroGlyph.Games.EawFoc.Games
 {
     public interface IDebugable
     {

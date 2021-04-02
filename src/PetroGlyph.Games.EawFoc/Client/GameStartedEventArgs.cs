@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Games.Arguments;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Client
 {
     public class GameStartedEventArgs : EventArgs
     {

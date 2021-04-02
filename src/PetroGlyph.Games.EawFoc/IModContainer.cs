@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using EawModinfo.Spec;
+using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc
 {
 
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System.IO;
+using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Games.Detection
+namespace PetroGlyph.Games.EawFoc.Services.Games.Detection
 {
     public class LocalGameDetector : GameDetector
     {

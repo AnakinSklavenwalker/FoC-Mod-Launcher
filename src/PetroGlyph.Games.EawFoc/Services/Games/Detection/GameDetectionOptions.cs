@@ -1,4 +1,4 @@
-﻿namespace PetroGlyph.Games.EawFoc.Games.Detection
+﻿namespace PetroGlyph.Games.EawFoc.Services.Games.Detection
 {
     public enum GameDetectionOptions
     {

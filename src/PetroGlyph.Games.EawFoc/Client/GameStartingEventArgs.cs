@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel;
+using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Games.Arguments;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Client
 {
     public class GameStartingEventArgs : CancelEventArgs
     {

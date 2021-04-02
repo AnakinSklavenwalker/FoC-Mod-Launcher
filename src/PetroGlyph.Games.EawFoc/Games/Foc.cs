@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using PetroGlyph.Games.EawFoc.Client;
 
 namespace PetroGlyph.Games.EawFoc.Games
 {

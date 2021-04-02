@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.IO.Abstractions;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc
 {
     public interface IPhysicalPlayableObject : IPlayableObject
     {
