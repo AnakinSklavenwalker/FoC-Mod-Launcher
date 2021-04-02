@@ -1,6 +1,6 @@
 ﻿namespace PetroGlyph.Games.EawFoc.Games
 {
-    public enum GameType
+    public enum GamePlatform
     {
         Undefined,
         Disk,

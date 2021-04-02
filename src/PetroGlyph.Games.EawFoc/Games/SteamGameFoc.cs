@@ -16,7 +16,7 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         protected override int DefaultXmlFileCount => 1;
 
-        public override GameType Type => GameType.SteamGold;
+        public override GamePlatform Platform => GamePlatform.SteamGold;
 
         public override string Name => "Forces of Corruption (Steam)";
 

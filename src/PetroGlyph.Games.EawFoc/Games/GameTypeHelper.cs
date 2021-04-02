@@ -9,14 +9,14 @@ namespace PetroGlyph.Games.EawFoc.Games
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         // TODO: Test all checks again 
-        internal static GameType GetGameType(GameDetection result)
+        internal static GamePlatform GetGameType(GameDetection result)
         {
             if (result.IsError)
-                return GameType.Undefined;
+                return GamePlatform.Undefined;
             if (CheckSteam(result.FocExe))
-                return GameType.SteamGold;
+                return GamePlatform.SteamGold;
             if (CheckGoG(result.FocExe))
-                return GameType.GoG;
+                return GamePlatform.GoG;
             Logger.Info("Checking CheckOrigin...");
             if (CheckOrigin(result, out var fixedFileInfo))
             {
@@ -27,25 +27,25 @@ namespace PetroGlyph.Games.EawFoc.Games
                     result.FocExe = fixedFileInfo;
                 }
 
-                return GameType.Origin;
+                return GamePlatform.Origin;
             }
             Logger.Info("End Checking CheckOrigin: Result FALSE");
 
             // TODO: Check DiskGold (just to have them all)
-            return GameType.Disk;
+            return GamePlatform.Disk;
         }
 
 
-        public static GameType GetGameType(FileInfo focExe)
+        public static GamePlatform GetGameType(FileInfo focExe)
         {
             if (CheckSteam(focExe))
-                return GameType.SteamGold;
+                return GamePlatform.SteamGold;
             if (CheckGoG(focExe))
-                return GameType.GoG;
+                return GamePlatform.GoG;
             if (CheckOrigin(focExe)) 
-                return GameType.Origin;
+                return GamePlatform.Origin;
             // TODO: Check DiskGold (just to have them all)
-            return GameType.Disk;
+            return GamePlatform.Disk;
         }
 
 

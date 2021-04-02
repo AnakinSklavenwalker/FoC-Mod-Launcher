@@ -24,7 +24,7 @@ namespace PetroGlyph.Games.EawFoc.Tests
 
         public ModDependencyTests()
         {
-            IGame game = new Foc(new DirectoryInfo(Path.Combine(TestScenariosPath, "FiveMods")), GameType.Disk);
+            IGame game = new Foc(new DirectoryInfo(Path.Combine(TestScenariosPath, "FiveMods")), GamePlatform.Disk);
             _modA = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModA"), false);
             _modB = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModB"), false);
             _modC = ModFactory.CreateMod(game, ModType.Default, Path.Combine(game.Directory.FullName, "Mods\\ModC"), false);

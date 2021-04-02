@@ -7,7 +7,7 @@ using PetroGlyph.Games.EawFoc.Services.Games;
 
 namespace PetroGlyph.Games.EawFoc.Games
 {
-    public interface IGame : IPlayableObject, IModContainer, IHasDirectory
+    public interface IGame : IModContainer, IPhysicalPlayableObject
     {
         event EventHandler<GameStartedEventArgs> GameStarted;
 
@@ -15,7 +15,7 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         event EventHandler GameClosed;
 
-        GameType Type { get; }
+        GamePlatform Platform { get; }
         
         /// <summary>
         /// Contains Data of the Process

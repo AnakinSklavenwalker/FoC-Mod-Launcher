@@ -83,7 +83,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// Creates a new <see cref="IMod"/> instances with a constant name
         /// </summary>
         /// <param name="game">The game of the mod</param>
-        /// <param name="type">The mod's type</param>
+        /// <param name="type">The mod's platform</param>
         /// <param name="name">The name of the mod.</param>
         protected ModBase(IGame game, ModType type, string name)
         {
@@ -98,7 +98,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// Creates a new <see cref="IMod"/> instances from a modinfo. The modinfo must not be <see langword="null"/>!
         /// </summary>
         /// <param name="game">The game of the mod</param>
-        /// <param name="type">The mod's type</param>
+        /// <param name="type">The mod's platform</param>
         /// <param name="modinfo">The modinfo data.</param>
         /// <exception cref="ModinfoException">when <paramref name="modinfo"/> is not valid.</exception>
         protected ModBase(IGame game, ModType type, IModinfo modinfo)

@@ -15,7 +15,7 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         protected override string GameConstantsMd5Hash => GameconstantsUpdateHash;
 
-        public override GameType Type => GameType.SteamGold;
+        public override GamePlatform Platform => GamePlatform.SteamGold;
 
         public SteamGameEaw(DirectoryInfo gameDirectory) : base(gameDirectory)
         {

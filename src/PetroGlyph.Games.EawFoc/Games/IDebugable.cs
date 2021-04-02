@@ -3,7 +3,7 @@ using PetroGlyph.Games.EawFoc.Games.Arguments;
 
 namespace PetroGlyph.Games.EawFoc.Games
 {
-    public interface IDebugable
+    public interface IDebugable : IGame
     {
         bool DebugBuildExists { get; }
 

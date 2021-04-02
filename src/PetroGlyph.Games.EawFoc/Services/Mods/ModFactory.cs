@@ -35,7 +35,7 @@ namespace PetroGlyph.Games.EawFoc.Services.Mods
             return CreateMod(game, type, new DirectoryInfo(modPath), searchModFileOnDisk);
         }
 
-        //public static IEnumerable<IMod> CreateModAndVariants(IGame game, ModType type, DirectoryInfo directory, bool onlyVariantsIfPresent)
+        //public static IEnumerable<IMod> CreateModAndVariants(IGame game, ModType platform, DirectoryInfo directory, bool onlyVariantsIfPresent)
         //{
         //    if (game is null)
         //        throw new ArgumentNullException(nameof(game));
@@ -43,16 +43,16 @@ namespace PetroGlyph.Games.EawFoc.Services.Mods
         //        throw new ArgumentNullException(nameof(directory));
 
         //    if (!ModInfoFileFinder.TryFind(directory, ModInfoFileFinder.FindOptions.FindAny, out var modInfoCollection) || !modInfoCollection!.Variants.Any())
-        //        yield return CreateModInstance(game, type, directory, modInfoCollection?.MainModInfo?.GetModInfo());
+        //        yield return CreateModInstance(game, platform, directory, modInfoCollection?.MainModInfo?.GetModInfo());
 
         //    if (modInfoCollection is null)
         //        yield break;
 
         //    if (!onlyVariantsIfPresent) 
-        //        yield return CreateModInstance(game, type, directory, modInfoCollection.MainModInfo?.GetModInfo());
+        //        yield return CreateModInstance(game, platform, directory, modInfoCollection.MainModInfo?.GetModInfo());
 
         //    foreach (var variant in modInfoCollection!.Variants)
-        //        yield return CreateModInstance(game, type, directory, variant.GetModInfo());
+        //        yield return CreateModInstance(game, platform, directory, variant.GetModInfo());
         //}
 
         public static IEnumerable<IMod> CreateModAndVariants(IGame game, ModType type, DirectoryInfo directory,

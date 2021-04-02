@@ -23,7 +23,7 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         public GameProcessWatcher GameProcessWatcher { get; } = new GameProcessWatcher();
 
-        public abstract GameType Type { get; }
+        public abstract GamePlatform Platform { get; }
 
         public abstract string Name { get; }
 

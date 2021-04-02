@@ -8,7 +8,7 @@ namespace PetroGlyph.Games.EawFoc.Games
     {
         public const string GameconstantsUpdateHashEaW = "1d44b0797c8becbe240adc0098c2302a";
         
-        public override GameType Type { get; }
+        public override GamePlatform Platform { get; }
 
         public override string Name => "Star Wars: Empire at War";
 
@@ -20,9 +20,9 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         protected override string GameConstantsMd5Hash => GameconstantsUpdateHashEaW;
 
-        public Eaw(DirectoryInfo gameDirectory, GameType gameType) : base(gameDirectory)
+        public Eaw(DirectoryInfo gameDirectory, GamePlatform gamePlatform) : base(gameDirectory)
         {
-            Type = gameType;
+            Platform = gamePlatform;
         }
 
         public override bool IsPatched()
@@ -44,12 +44,12 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         // TODO: Add Origin
         // TODO: Put into game detection
-        public static bool FindInstallationRelativeToFoc(FileInfo focExe, GameType type, out FileInfo? eawExe)
+        public static bool FindInstallationRelativeToFoc(FileInfo focExe, GamePlatform platform, out FileInfo? eawExe)
         {
             eawExe = null;
-            switch (type)
+            switch (platform)
             {
-                case GameType.Disk:
+                case GamePlatform.Disk:
                     var parent = focExe.Directory?.Parent;
                     var eawDir = parent?.GetDirectories().FirstOrDefault(x => x.Name.Equals("Star Wars Empire at War"));
                     if (eawDir is null)
@@ -60,8 +60,8 @@ namespace PetroGlyph.Games.EawFoc.Games
                         return false;
                     eawExe = new FileInfo(eawExePath);
                     return true;
-                case GameType.SteamGold:
-                case GameType.GoG:
+                case GamePlatform.SteamGold:
+                case GamePlatform.GoG:
                     var eawDir2 = focExe.Directory?.Parent;
                     if (eawDir2 is null)
                         return false;
@@ -70,8 +70,8 @@ namespace PetroGlyph.Games.EawFoc.Games
                         return false;
                     eawExe = new FileInfo(eawExePath2);
                     break;
-                case GameType.DiskGold:
-                case GameType.Undefined:
+                case GamePlatform.DiskGold:
+                case GamePlatform.Undefined:
                     return false;
             }
             return false;

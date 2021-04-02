@@ -5,39 +5,39 @@ namespace PetroGlyph.Games.EawFoc.Games
 {
     public class GameFactory
     {
-        public static IGame CreateFocGame(DirectoryInfo directory, GameType type)
+        public static IGame CreateFocGame(DirectoryInfo directory, GamePlatform platform)
         {
             if (directory is null)
                 throw new ArgumentNullException(nameof(directory));
-            switch (type)
+            switch (platform)
             {
-                case GameType.SteamGold:
+                case GamePlatform.SteamGold:
                     return new SteamGameFoc(directory);
-                case GameType.Disk:
-                case GameType.Origin:
-                case GameType.GoG:
-                case GameType.DiskGold:
-                    return new Foc(directory, type);
+                case GamePlatform.Disk:
+                case GamePlatform.Origin:
+                case GamePlatform.GoG:
+                case GamePlatform.DiskGold:
+                    return new Foc(directory, platform);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(type));
+                    throw new ArgumentOutOfRangeException(nameof(platform));
             }
         }
 
-        public static IGame CreateEawGame(DirectoryInfo directory, GameType type)
+        public static IGame CreateEawGame(DirectoryInfo directory, GamePlatform platform)
         {
             if (directory is null)
                 throw new ArgumentNullException(nameof(directory));
-            switch (type)
+            switch (platform)
             {
-                case GameType.SteamGold:
+                case GamePlatform.SteamGold:
                     return new SteamGameEaw(directory);
-                case GameType.Disk:
-                case GameType.Origin:
-                case GameType.GoG:
-                case GameType.DiskGold:
-                    return new Eaw(directory, type);
+                case GamePlatform.Disk:
+                case GamePlatform.Origin:
+                case GamePlatform.GoG:
+                case GamePlatform.DiskGold:
+                    return new Eaw(directory, platform);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(type));
+                    throw new ArgumentOutOfRangeException(nameof(platform));
             }
         }
     }

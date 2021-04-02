@@ -14,7 +14,7 @@ namespace PetroGlyph.Games.EawFoc.Tests
 
         public ModCreationTests()
         {
-            _game = new Foc(new DirectoryInfo(Path.Combine(TestScenariosPath, "TwoMods")), GameType.Disk);
+            _game = new Foc(new DirectoryInfo(Path.Combine(TestScenariosPath, "TwoMods")), GamePlatform.Disk);
         }
 
         [Fact]
