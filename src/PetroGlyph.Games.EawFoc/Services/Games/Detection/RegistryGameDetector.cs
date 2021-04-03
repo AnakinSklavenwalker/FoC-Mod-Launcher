@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using PetroGlyph.Games.EawFoc.Client;
 using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Games.Registry;
 
 namespace PetroGlyph.Games.EawFoc.Services.Games.Detection
 {

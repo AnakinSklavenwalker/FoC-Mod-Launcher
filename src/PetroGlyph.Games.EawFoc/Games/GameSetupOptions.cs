@@ -2,8 +2,7 @@
 {
     public enum GameSetupOptions
     {
-        NoSetup,
-        FindMods,
-        ResolveModDependencies
+        FindMods = 1,
+        ResolveModDependencies = 2
     }
 }

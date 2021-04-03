@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Games.Registry;
 
 namespace PetroGlyph.Games.EawFoc.Services.Games.Detection
 {
