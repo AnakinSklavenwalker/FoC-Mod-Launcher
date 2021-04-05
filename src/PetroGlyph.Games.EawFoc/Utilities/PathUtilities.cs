@@ -15,7 +15,7 @@ namespace PetroGlyph.Games.EawFoc.Utilities
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
             var fullPath = instance.GetFullPath(path);
-            var slashNormalized = NormalizeWithForwardSlash(fullPath);
+            var slashNormalized = NormalizeSlashes(fullPath);
             return trimTrailingSeparator ? TrimTrailingSeparators(slashNormalized) : slashNormalized;
         }
 
@@ -29,7 +29,7 @@ namespace PetroGlyph.Games.EawFoc.Utilities
             return s;
         }
 
-        public static string NormalizeWithForwardSlash(string p)
+        public static string NormalizeSlashes(string p)
         {
             return IsUnixLikePlatform ? p : p.Replace('\\', '/');
         }

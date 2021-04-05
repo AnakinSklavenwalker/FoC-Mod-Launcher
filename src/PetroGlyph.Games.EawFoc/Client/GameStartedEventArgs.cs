@@ -9,13 +9,13 @@ namespace PetroGlyph.Games.EawFoc.Client
     {
         public IGame Game { get; }
 
-        public GameCommandArguments GameArguments { get; }
+        public GameArguments GameArguments { get; }
 
         public GameBuildType BuildType { get; }
 
         public Process Process { get; }
 
-        public GameStartedEventArgs(IGame game, GameCommandArguments gameArguments, GameBuildType buildType, Process process)
+        public GameStartedEventArgs(IGame game, GameArguments gameArguments, GameBuildType buildType, Process process)
         {
             Game = game;
             GameArguments = gameArguments;

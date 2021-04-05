@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
+using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Services.Games
 {
     public class GameFactory
     {

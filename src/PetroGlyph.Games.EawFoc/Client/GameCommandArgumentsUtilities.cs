@@ -2,19 +2,21 @@
 using System.Linq;
 using System.Text;
 using EawModinfo.Spec;
+using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Games.Arguments;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Games.Arguments
+namespace PetroGlyph.Games.EawFoc.Client
 {
     internal static class GameCommandArgumentsUtilities
     {
-        internal static void Validate(this GameCommandArguments args)
+        internal static void Validate(this GameArguments args)
         {
             if (args.Mods != null && args.Mods.Any(x => x.Type == ModType.Virtual))
                 throw new GameArgumentException("The mod list must not contain any virtual mods");
         }
 
-        internal static string ToArgs(this GameCommandArguments args)
+        internal static string ToArgs(this GameArguments args)
         {
             var sb = new StringBuilder();
 

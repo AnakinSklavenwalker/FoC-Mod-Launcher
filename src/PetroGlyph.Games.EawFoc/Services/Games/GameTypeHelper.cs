@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Services.Games
 {
     public static class GameTypeHelper
     {

@@ -8,11 +8,11 @@ namespace PetroGlyph.Games.EawFoc.Client
     {
         public IGame Game { get; }
 
-        public GameCommandArguments GameArguments { get; }
+        public GameArguments GameArguments { get; }
 
         public GameBuildType BuildType { get; }
 
-        public GameStartingEventArgs(IGame game, GameCommandArguments arguments, GameBuildType buildType)
+        public GameStartingEventArgs(IGame game, GameArguments arguments, GameBuildType buildType)
         {
             Game = game;
             GameArguments = arguments;

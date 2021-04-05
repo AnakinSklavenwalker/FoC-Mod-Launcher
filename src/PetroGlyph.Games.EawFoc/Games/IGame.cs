@@ -6,6 +6,8 @@ namespace PetroGlyph.Games.EawFoc.Games
     {
         string Name { get; }
 
+        bool Exists();
+
         void Setup(GameSetupOptions setupMode);
     }
 }
