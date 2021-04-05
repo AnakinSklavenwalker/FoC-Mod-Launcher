@@ -3,7 +3,7 @@ using System.IO.Abstractions;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Games.Arguments
+namespace PetroGlyph.Games.EawFoc.Client.Arguments
 {
     public record GameArguments
     {

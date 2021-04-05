@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
+using PetroGlyph.Games.EawFoc.Client.Arguments;
 using PetroGlyph.Games.EawFoc.Games;
-using PetroGlyph.Games.EawFoc.Games.Arguments;
 
 namespace PetroGlyph.Games.EawFoc.Client
 {

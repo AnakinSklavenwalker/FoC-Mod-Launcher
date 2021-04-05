@@ -1,4 +1,4 @@
-﻿namespace PetroGlyph.Games.EawFoc.Games.Arguments
+﻿namespace PetroGlyph.Games.EawFoc.Client
 {
     public class GameArgumentException : PetroglyphException
     {

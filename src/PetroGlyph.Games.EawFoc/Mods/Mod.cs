@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
 using EawModinfo.Spec;
+using Microsoft.Extensions.DependencyInjection;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services.Shared.Icon;
 using PetroGlyph.Games.EawFoc.Services.Shared.Language;
@@ -19,6 +20,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
         public IDirectoryInfo Directory { get; }
 
         public IModinfoFile? ModinfoFile { get; }
+
+        protected IServiceProvider ServiceProvider { get; }
 
         public override string Identifier
         {
@@ -39,33 +42,39 @@ namespace PetroGlyph.Games.EawFoc.Mods
         }
         
 
-        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, IModinfoFile modinfoFile) 
+        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, IModinfoFile modinfoFile, IServiceProvider serviceProvider) 
             : base(game, workshop ? ModType.Workshops : ModType.Default, modinfoFile.GetModinfo())
         {
             Requires.NotNull(modDirectory, nameof(modDirectory));
             Requires.NotNull(modinfoFile, nameof(modinfoFile));
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
             ModinfoFile = modinfoFile;
             Directory = modDirectory;
             InternalPath = CreateInternalPath(modDirectory);
+            ServiceProvider = serviceProvider;
         }
 
-        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, string name) 
+        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, string name, IServiceProvider serviceProvider) 
             : base(game, workshop ? ModType.Workshops : ModType.Default, name)
         {
             Requires.NotNull(modDirectory, nameof(modDirectory));
             Requires.NotNullOrEmpty(name, nameof(name));
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
             Directory = modDirectory;
             InternalPath = CreateInternalPath(modDirectory);
+            ServiceProvider = serviceProvider;
         }
 
-        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, IModinfo modInfoData) :
+        public Mod(IGame game, IDirectoryInfo modDirectory, bool workshop, IModinfo modInfoData, IServiceProvider serviceProvider) :
             base(game, workshop ? ModType.Workshops : ModType.Default, modInfoData)
         {
             Requires.NotNull(modDirectory, nameof(modDirectory));
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
             if (!modDirectory.Exists)
                 throw new ModException($"The mod's directory '{modDirectory.FullName}' does not exists.");
             Directory = modDirectory;
             InternalPath = CreateInternalPath(modDirectory);
+            ServiceProvider = serviceProvider;
         }
         
 
@@ -76,7 +85,9 @@ namespace PetroGlyph.Games.EawFoc.Mods
             // Only if we have more than the default language, we trust the modinfo.
             if (ModInfo is not null && ModInfo.Languages.All(x => x.Equals(LanguageInfo.Default)))
                 return ModInfo.Languages.ToList();
-            return new CompositeLanguageFinder().FindInstalledLanguages(this);
+
+            return ServiceProvider.GetService<IInstalledLanguageFinder>()?
+                .FindInstalledLanguages(this) ?? new List<ILanguageInfo>();
         }
 
         protected override string? InitializeIcon()

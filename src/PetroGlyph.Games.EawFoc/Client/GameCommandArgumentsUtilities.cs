@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Text;
 using EawModinfo.Spec;
+using PetroGlyph.Games.EawFoc.Client.Arguments;
 using PetroGlyph.Games.EawFoc.Games;
-using PetroGlyph.Games.EawFoc.Games.Arguments;
 using PetroGlyph.Games.EawFoc.Mods;
 
 namespace PetroGlyph.Games.EawFoc.Client

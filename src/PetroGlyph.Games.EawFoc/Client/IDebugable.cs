@@ -1,7 +1,7 @@
-﻿using PetroGlyph.Games.EawFoc.Client;
-using PetroGlyph.Games.EawFoc.Games.Arguments;
+﻿using PetroGlyph.Games.EawFoc.Client.Arguments;
+using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Client
 {
     public interface IDebugable : IGame
     {

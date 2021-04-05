@@ -1,6 +1,6 @@
 ﻿using System.IO.Abstractions;
 
-namespace PetroGlyph.Games.EawFoc.Games.Arguments
+namespace PetroGlyph.Games.EawFoc.Client.Arguments
 {
     public record DebugGameArguments : GameArguments
     {

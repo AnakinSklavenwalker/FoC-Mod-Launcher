@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace PetroGlyph.Games.EawFoc.Games
+namespace PetroGlyph.Games.EawFoc.Games.Registry
 {
     public abstract class RegistryHelper
     {
