@@ -5,13 +5,13 @@ namespace PetroGlyph.Games.EawFoc.Games.Registry
 {
     public interface IGameRegistry : IDisposable
     {
-        event EventHandler<RegistryChangedEventArgs> RegistryValueChanged; 
+        //event EventHandler<RegistryChangedEventArgs> RegistryValueChanged; 
 
-        bool WatchChanges { get; set; }
+        //bool WatchChanges { get; set; }
 
         IGame? Game { get; }
         
-        string? Version { get; }
+        Version? Version { get; }
 
         string? CdKey { get; }
 
