@@ -5,6 +5,8 @@ using System.Linq;
 using EawModinfo.Spec;
 using Microsoft.Extensions.DependencyInjection;
 using PetroGlyph.Games.EawFoc.Games;
+using PetroGlyph.Games.EawFoc.Services.Mods.Icon;
+using PetroGlyph.Games.EawFoc.Services.Mods.Language;
 using PetroGlyph.Games.EawFoc.Services.Shared.Icon;
 using PetroGlyph.Games.EawFoc.Services.Shared.Language;
 using PetroGlyph.Games.EawFoc.Utilities;
@@ -13,7 +15,7 @@ using LanguageInfo = EawModinfo.Model.LanguageInfo;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
-    public class Mod : ModBase, IPhysicalPlayableObject
+    public class Mod : ModBase, IPhysicalMod
     {
         internal string InternalPath { get; }
 
@@ -86,14 +88,16 @@ namespace PetroGlyph.Games.EawFoc.Mods
             if (ModInfo is not null && ModInfo.Languages.All(x => x.Equals(LanguageInfo.Default)))
                 return ModInfo.Languages.ToList();
 
-            return ServiceProvider.GetService<IInstalledLanguageFinder>()?
+            return ServiceProvider.GetService<IModLanguageFinder>()?
                 .FindInstalledLanguages(this) ?? new List<ILanguageInfo>();
         }
 
         protected override string? InitializeIcon()
         {
             var iconFile = base.InitializeIcon();
-            return string.IsNullOrEmpty(iconFile) ? iconFile : new CompositeIconFinder().FindIcon(this);
+            return string.IsNullOrEmpty(iconFile)
+                ? null
+                : ServiceProvider.GetService<IModIconFinder>()?.FindIcon(this) ?? null;
         }
 
         internal static string CreateInternalPath(IDirectoryInfo directory)

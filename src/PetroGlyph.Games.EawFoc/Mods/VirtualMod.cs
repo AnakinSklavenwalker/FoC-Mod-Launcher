@@ -8,7 +8,7 @@ using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
-    public sealed class VirtualMod : ModBase
+    public sealed class VirtualMod : ModBase, IVirtualMod
     {
         public override string Identifier { get; }
 

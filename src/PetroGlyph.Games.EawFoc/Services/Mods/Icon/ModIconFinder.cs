@@ -1,9 +1,9 @@
 ﻿using System;
 using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Services.Shared.Icon
+namespace PetroGlyph.Games.EawFoc.Services.Mods.Icon
 {
-    public class ModIconFinder : IIconFinder
+    public class ModIconFinder : IModIconFinder
     {
         public string? FindIcon(IPlayableObject playableObject)
         {

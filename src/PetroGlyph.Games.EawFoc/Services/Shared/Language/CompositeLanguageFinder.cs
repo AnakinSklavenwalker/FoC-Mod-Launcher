@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services.Games.Language;
+using PetroGlyph.Games.EawFoc.Services.Mods.Language;
 
 namespace PetroGlyph.Games.EawFoc.Services.Shared.Language
 {
-    public class CompositeLanguageFinder : IInstalledLanguageFinder
+    public class CompositeLanguageFinder : IGameLanguageFinder, IModLanguageFinder
     {
         public static readonly IInstalledLanguageFinder GameLanguageFinder = new GameLanguageFinder();
         public static readonly IInstalledLanguageFinder ModLanguageFinder = new ModLanguageFinder();

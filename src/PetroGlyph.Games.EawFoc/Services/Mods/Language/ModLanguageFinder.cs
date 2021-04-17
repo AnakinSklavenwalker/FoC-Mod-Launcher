@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Services.Shared.Language
+namespace PetroGlyph.Games.EawFoc.Services.Mods.Language
 {
-    public class ModLanguageFinder : IInstalledLanguageFinder
+    public class ModLanguageFinder : IModLanguageFinder
     {
         public ICollection<ILanguageInfo> FindInstalledLanguages(IPlayableObject playableObject)
         {

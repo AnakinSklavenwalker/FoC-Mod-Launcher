@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services.Shared.Language;
 
-namespace PetroGlyph.Games.EawFoc.Services.Shared.Language
+namespace PetroGlyph.Games.EawFoc.Services.Games.Language
 {
     public class GameLanguageFinder : IInstalledLanguageFinder
     {

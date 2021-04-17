@@ -6,6 +6,8 @@ using System.Linq;
 using EawModinfo.Spec;
 using Microsoft.Extensions.DependencyInjection;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services.Games.Icon;
+using PetroGlyph.Games.EawFoc.Services.Games.Language;
 using PetroGlyph.Games.EawFoc.Services.Shared.Icon;
 using PetroGlyph.Games.EawFoc.Services.Shared.Language;
 using PetroGlyph.Games.EawFoc.Utilities;
@@ -52,8 +54,8 @@ namespace PetroGlyph.Games.EawFoc.Games
             Directory = gameDirectory;
             ServiceProvider = serviceProvider;
             _normalizedPath = Directory.FileSystem.Path.NormalizePath(Directory.FullName);
-            IconFile = serviceProvider.GetService<IIconFinder>()?.FindIcon(this);
-            InstalledLanguages = serviceProvider.GetService<IInstalledLanguageFinder>()?
+            IconFile = serviceProvider.GetService<IGameIconFinder>()?.FindIcon(this);
+            InstalledLanguages = serviceProvider.GetService<IGameLanguageFinder>()?
                                      .FindInstalledLanguages(this) ?? 
                                  new List<ILanguageInfo>();
         }
