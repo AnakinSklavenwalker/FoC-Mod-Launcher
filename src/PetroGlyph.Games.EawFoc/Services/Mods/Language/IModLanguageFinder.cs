@@ -1,6 +1,4 @@
-﻿using PetroGlyph.Games.EawFoc.Services.Shared.Language;
-
-namespace PetroGlyph.Games.EawFoc.Services.Mods.Language
+﻿namespace PetroGlyph.Games.EawFoc.Services.Language
 {
     public interface IModLanguageFinder : IInstalledLanguageFinder
     {

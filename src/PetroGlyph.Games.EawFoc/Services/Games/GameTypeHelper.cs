@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Services.Games
+namespace PetroGlyph.Games.EawFoc.Services
 {
     public static class GameTypeHelper
     {

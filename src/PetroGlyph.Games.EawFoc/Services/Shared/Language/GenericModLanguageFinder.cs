@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using EawModinfo.Spec;
 
-namespace PetroGlyph.Games.EawFoc.Services.Shared.Language
+namespace PetroGlyph.Games.EawFoc.Services.Language
 {
     public class GenericModLanguageFinder : LanguageFinderBase
     {

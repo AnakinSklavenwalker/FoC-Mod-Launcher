@@ -1,6 +1,4 @@
-﻿using PetroGlyph.Games.EawFoc.Services.Shared.Icon;
-
-namespace PetroGlyph.Games.EawFoc.Services.Games.Icon
+﻿namespace PetroGlyph.Games.EawFoc.Services.Icon
 {
     public interface IGameIconFinder : IIconFinder
     {

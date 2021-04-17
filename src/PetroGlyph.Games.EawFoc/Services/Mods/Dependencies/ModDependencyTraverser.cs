@@ -2,7 +2,7 @@
 using System.Linq;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Services.Mods.Dependencies
+namespace PetroGlyph.Games.EawFoc.Services.Dependencies
 {
     public class ModDependencyTraverser
     {

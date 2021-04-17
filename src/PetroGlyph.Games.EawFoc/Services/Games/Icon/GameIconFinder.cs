@@ -1,7 +1,7 @@
 ﻿using System;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Services.Games.Icon
+namespace PetroGlyph.Games.EawFoc.Services.Icon
 {
     public class GameIconFinder : IGameIconFinder
     {

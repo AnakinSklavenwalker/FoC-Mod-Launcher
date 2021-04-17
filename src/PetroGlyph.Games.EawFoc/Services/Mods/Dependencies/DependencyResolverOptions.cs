@@ -1,4 +1,4 @@
-﻿namespace PetroGlyph.Games.EawFoc.Services.Mods.Dependencies
+﻿namespace PetroGlyph.Games.EawFoc.Services.Dependencies
 {
     public record DependencyResolverOptions
     {

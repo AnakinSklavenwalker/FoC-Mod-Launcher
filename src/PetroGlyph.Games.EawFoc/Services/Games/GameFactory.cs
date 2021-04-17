@@ -2,7 +2,7 @@
 using System.IO;
 using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Services.Games
+namespace PetroGlyph.Games.EawFoc.Services
 {
     public class GameFactory
     {

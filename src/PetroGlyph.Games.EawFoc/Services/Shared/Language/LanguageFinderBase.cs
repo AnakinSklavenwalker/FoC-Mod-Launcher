@@ -5,7 +5,7 @@ using System.Linq;
 using EawModinfo.Spec;
 using Validation;
 
-namespace PetroGlyph.Games.EawFoc.Services.Shared.Language
+namespace PetroGlyph.Games.EawFoc.Services.Language
 {
     public abstract class LanguageFinderBase
     {

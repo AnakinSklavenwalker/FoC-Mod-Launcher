@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using EawModinfo.Spec;
 
-namespace PetroGlyph.Games.EawFoc.Services.Mods
+namespace PetroGlyph.Games.EawFoc.Services
 {
     public interface IModFinder
     {

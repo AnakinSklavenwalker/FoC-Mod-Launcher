@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using EawModinfo.Spec;
 
-namespace PetroGlyph.Games.EawFoc.Services.Shared.Language
+namespace PetroGlyph.Games.EawFoc.Services.Language
 {
     public interface IInstalledLanguageFinder
     {

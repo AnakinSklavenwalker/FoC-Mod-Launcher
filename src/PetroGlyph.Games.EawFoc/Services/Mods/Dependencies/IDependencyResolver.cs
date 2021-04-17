@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using PetroGlyph.Games.EawFoc.Mods;
 
-namespace PetroGlyph.Games.EawFoc.Services.Mods.Dependencies
+namespace PetroGlyph.Games.EawFoc.Services.Dependencies
 {
     /// <summary>
     /// Resolves mod dependencies.

@@ -1,4 +1,4 @@
-﻿namespace PetroGlyph.Games.EawFoc.Services.Mods
+﻿namespace PetroGlyph.Games.EawFoc.Services
 {
     internal class WorkshopNameResolver
     {

@@ -1,4 +1,4 @@
-﻿namespace PetroGlyph.Games.EawFoc.Services.Shared.Icon
+﻿namespace PetroGlyph.Games.EawFoc.Services.Icon
 {
     public interface IIconFinder
     {

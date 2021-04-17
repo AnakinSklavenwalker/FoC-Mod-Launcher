@@ -6,10 +6,8 @@ using System.Linq;
 using EawModinfo.Spec;
 using Microsoft.Extensions.DependencyInjection;
 using PetroGlyph.Games.EawFoc.Mods;
-using PetroGlyph.Games.EawFoc.Services.Games.Icon;
-using PetroGlyph.Games.EawFoc.Services.Games.Language;
-using PetroGlyph.Games.EawFoc.Services.Shared.Icon;
-using PetroGlyph.Games.EawFoc.Services.Shared.Language;
+using PetroGlyph.Games.EawFoc.Services.Icon;
+using PetroGlyph.Games.EawFoc.Services.Language;
 using PetroGlyph.Games.EawFoc.Utilities;
 using Validation;
 
