@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using PetroGlyph.Games.EawFoc.Games;
+using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Services.Detection
 {
