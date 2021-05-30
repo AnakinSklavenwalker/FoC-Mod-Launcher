@@ -1,13 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using PetroGlyph.Games.EawFoc.Games;
 
 namespace PetroGlyph.Games.EawFoc.Services
 {
     public static class GameTypeHelper
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger<> Logger = LogManager.GetCurrentClassLogger();
 
         // TODO: Test all checks again 
         internal static GamePlatform GetGameType(GameDetection result)

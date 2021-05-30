@@ -1,30 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Abstractions;
-using PetroGlyph.Games.EawFoc.Games;
-
-namespace PetroGlyph.Games.EawFoc.Services.Detection
+﻿namespace PetroGlyph.Games.EawFoc.Services.Detection
 {
+    /// <summary>
+    /// Service that detects installed PG Star Wars game installations on this machine.
+    /// </summary>
     public interface IGameDetector
     {
+
         GameDetectionResult Detect(GameDetectorOptions options);
 
         bool TryDetect(GameDetectorOptions options, out GameDetectionResult result);
-    }
-
-
-    public record GameDetectorOptions(GameType Type)
-    {
-        public SortedSet<GamePlatform> TargetPlatforms { get; set; }
-    }
-
-
-    public class GameDetectionResult
-    {
-        public IGameIdentity GameIdentity { get; }
-
-        public IDirectoryInfo? GameLocation { get; }
-
-        public Exception? Error { get; }
     }
 }
