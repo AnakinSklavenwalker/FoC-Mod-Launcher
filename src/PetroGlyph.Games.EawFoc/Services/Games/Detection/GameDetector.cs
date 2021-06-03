@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services.Detection.Platform;
+#if NET
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace PetroGlyph.Games.EawFoc.Services.Detection
 {
@@ -12,11 +14,13 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
     {
         protected readonly IServiceProvider ServiceProvider;
         protected ILogger? Logger;
+        protected IFileSystem FileSystem;
 
         protected GameDetector(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
             Logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(GetType());
+            FileSystem = serviceProvider.GetRequiredService<IFileSystem>();
         }
 
         public GameDetectionResult Detect(GameDetectorOptions options)
@@ -63,6 +67,17 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
         }
 
         protected abstract GameLocationData FindGameLocation(GameType type);
+
+        protected bool GameExeExists(IDirectoryInfo directory, GameType gameType)
+        {
+            var exeFile = gameType == GameType.EaW
+                ? PetroglyphStarWarsGameConstants.EmpireAtWarExeFileName
+                : PetroglyphStarWarsGameConstants.ForcesOfCorruptionExeFileName;
+
+            var exePath = FileSystem.Path.Combine(directory.FullName, exeFile);
+            return FileSystem.File.Exists(exePath);
+        }
+
 
         private static bool MatchesOptionsPlatform(GameDetectorOptions options, GamePlatform identifiedPlatform)
         {

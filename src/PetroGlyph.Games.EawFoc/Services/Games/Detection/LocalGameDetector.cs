@@ -1,40 +1,38 @@
-﻿using System.IO;
+﻿using System;
+using System.IO.Abstractions;
+using System.Threading;
+using PetroGlyph.Games.EawFoc.Games;
+using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Services.Detection
 {
-    public class LocalGameDetector : GameDetector
+    public class DirectoryGameDetector : GameDetector
     {
-        protected override GameDetection DetectGamesCore()
+        private readonly IDirectoryInfo _directory;
+
+        private static DirectoryGameDetector? _currentDirectoryDetector;
+
+        public DirectoryGameDetector(IDirectoryInfo directory, IServiceProvider serviceProvider) : base(serviceProvider)
         {
-            var localResult = FindGamesFromExecutingPath();
-            Logger.Trace("Local path game detection result:");
-            Logger.Trace("\t" + localResult);
-            return localResult;
+            Requires.NotNull(directory, nameof(directory));
+            _directory = directory;
         }
 
-        private static GameDetection FindGamesFromExecutingPath()
+        public static DirectoryGameDetector CurrentDirectoryGameDetector(IServiceProvider serviceProvider)
         {
-            var currentPath = Directory.GetCurrentDirectory();
-
-            var focExe = new FileInfo(Path.Combine(currentPath, "swfoc.exe"));
-            if (!focExe.Exists)
-                return GameDetection.NotInstalled;
-
-            var regPath = FocRegistryHelper.Instance.ExePath;
-            if (!string.IsNullOrEmpty(regPath) && Path.GetFullPath(currentPath) == Path.GetFullPath(regPath!))
+            return LazyInitializer.EnsureInitialized(ref _currentDirectoryDetector, () =>
             {
-                var eawRegPath = EaWRegistryHelper.Instance.ExePath;
-                return new GameDetection(new FileInfo(eawRegPath!), focExe);
-            }
+                var fs = new FileSystem();
+                var currentDir = fs.DirectoryInfo.FromDirectoryName(fs.Directory.GetCurrentDirectory());
+                return new DirectoryGameDetector(currentDir, serviceProvider);
+            })!;
+        }
 
-            var gameType = GameTypeHelper.GetGameType(focExe);
-            if (!Eaw.FindInstallationRelativeToFoc(focExe, gameType, out var eawPath))
-            {
-                var eawRegPath = EaWRegistryHelper.Instance.ExePath;
-                return new GameDetection(new FileInfo(eawRegPath!), focExe);
-            }
-
-            return new GameDetection(eawPath!, focExe);
+        protected override GameLocationData FindGameLocation(GameType type)
+        {
+            return GameExeExists(_directory, type)
+                ? new GameLocationData {Location = _directory}
+                : new GameLocationData();
         }
     }
 }
