@@ -1,103 +1,52 @@
 ﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using PetroGlyph.Games.EawFoc.Client;
+using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
+using PetroGlyph.Games.EawFoc.Games.Registry;
+using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Services.Detection
 {
-    public class RegistryGameDetector : GameDetector
+    public sealed class RegistryGameDetector : GameDetector, IDisposable
     {
-        private const string SetupMessage =
-            "Your games seem to be installed but are not settet up correctly. Please run vanilla Forces of Corruption at least once to finish the setup.\r\n\r\n" +
-            "The launcher can open the Steam-Version of the game for you now (and close it immediately after setup).\r\n" +
-            "Would you like to setup the games now?";
+        private readonly IGameRegistry _registry;
 
-        protected override GameDetection DetectGamesCore()
+        public RegistryGameDetector(IGameRegistry registry, bool tryHandleInitialization, IServiceProvider serviceProvider) 
+            : base(serviceProvider, tryHandleInitialization)
         {
-            var registryResult = FindGamesFromRegistry();
-            Logger.Trace("Registry game detection result:");
-            Logger.Trace("\t" + registryResult);
-            return registryResult;
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new NotSupportedException("This instance is only supported on windows systems");
+            Requires.NotNull(registry, nameof(registry));
+            _registry = registry;
         }
 
-        private GameDetection FindGamesFromRegistry()
+        private protected override GameLocationData FindGameLocation(GameDetectorOptions options)
         {
-            Logger.Trace("Atempting to fetch the game from the registry.");
-            var eawResult = CheckGameExists(EaWRegistryHelper.Instance);
-            var focResult = CheckGameExists(FocRegistryHelper.Instance);
-
-            if (eawResult == DetectionResult.NotInstalled || focResult == DetectionResult.NotInstalled)
+            Logger?.LogDebug("Attempting to fetch the game from the registry.");
+            if (!_registry.Exits)
             {
-                Logger.Trace("The games are not found in the registry");
-                return GameDetection.NotInstalled;
+                Logger?.LogDebug("The Game's Registry does not exist.");
+                return new GameLocationData();
             }
 
-            if (eawResult == DetectionResult.NotSettedUp || focResult == DetectionResult.NotSettedUp)
+            if (_registry.Version is null)
             {
-                // TODO: Move this out to a launcher component, because this will be outsourced into a new project
-                if (RunSteamInitialization())
-                {
-                    Logger.Trace("After initialization, the games are now setted up.");
-                    Task.Run(() => MessageBox.Show("Setting up the game was successful!", "FoC Launcher",
-                        MessageBoxButton.OK, MessageBoxImage.Information)).Forget();
-                    return new GameDetection(new FileInfo(EaWRegistryHelper.Instance.ExePath),
-                        new FileInfo(FocRegistryHelper.Instance.ExePath));
-                }
-                Logger.Trace("The games are (still) not setted up.");
-                return GameDetection.NotSettedUp;
+                Logger?.LogDebug("Registry-Key found, but games are not initialized.");
+                return new GameLocationData {InitializationRequired = true};
             }
 
-            if (eawResult == DetectionResult.Installed && focResult == DetectionResult.Installed)
-            {
-                Logger.Trace("The games have been found in the registry.");
-                return new GameDetection(new FileInfo(EaWRegistryHelper.Instance.ExePath),
-                    new FileInfo(FocRegistryHelper.Instance.ExePath));
-            }
-            return GameDetection.NotInstalled;
+            var installPath = _registry.InstallPath;
+            if (installPath is not null) 
+                return new GameLocationData {Location = installPath};
+
+
+            var e = new InvalidOperationException("Could not get instal location from registry path.");
+            Logger?.LogDebug(e, e.Message);
+            throw e;
         }
 
-        private static DetectionResult CheckGameExists(PetroglyphGameRegistry gameRegistry)
+        public void Dispose()
         {
-            if (!gameRegistry.Exists)
-                return DetectionResult.NotInstalled;
-            if (!gameRegistry.Installed)
-                return DetectionResult.NotSettedUp;
-            return DetectionResult.Installed;
-        }
-
-        private static bool RunSteamInitialization()
-        {
-            Logger.Trace("The games are not setted up. Trying to set them up by running the game once (Steam only)");
-            var steamClient = SteamClient.Instance;
-            if (!steamClient.Installed || !SteamClient.Instance.IsGameInstalled(SteamGameEaw.EmpireAtWarSteamId) &&
-                !SteamClient.Instance.IsGameInstalled(SteamGameFoc.ForcesOfCorruptionSteamId))
-                return false;
-            Logger.Trace("Steam and the games are installed. Asing the user whether to run setup now.");
-            if (!PromptGameSetupDialog())
-            {
-                Logger.Warn("User denied steam setup.");
-                return false;
-            }
-
-            ThreadHelper.JoinableTaskFactory.Run(async () =>
-            {
-                try
-                {
-                    await LauncherSteamHelper.SetupSteamGamesAsync();
-                }
-                catch (OperationCanceledException)
-                {
-                }
-            });
-
-            Logger.Trace("Re-try checking the game is setted up in the registry.");
-            return CheckGameExists(EaWRegistryHelper.Instance) == DetectionResult.Installed && CheckGameExists(FocRegistryHelper.Instance) == DetectionResult.Installed;
-        }
-        
-        internal static bool PromptGameSetupDialog()
-        {
-            var mbResult = MessageBox.Show(SetupMessage, "FoC Launcher", MessageBoxButton.YesNo, MessageBoxImage.Information, MessageBoxResult.Yes);
-            return mbResult == MessageBoxResult.Yes;
+            _registry.Dispose();
         }
     }
 }

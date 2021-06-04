@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Validation;
+#if NET
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace PetroGlyph.Games.EawFoc.Games.Registry
 {
@@ -25,7 +27,16 @@ namespace PetroGlyph.Games.EawFoc.Games.Registry
         private readonly IFileSystem _fileSystem;
 
         private bool _disposed;
-        
+
+
+        public bool Exits
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return _registry.GetKey(string.Empty) is not null;
+            }
+        }
 
         public IGame? Game { get; private set; }
 

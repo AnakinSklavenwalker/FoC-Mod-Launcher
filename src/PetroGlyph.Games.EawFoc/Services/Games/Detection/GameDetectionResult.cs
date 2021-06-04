@@ -20,12 +20,11 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
             GameIdentity = new GameIdentity(type, GamePlatform.Undefined);
         }
 
-        public GameDetectionResult(IGameIdentity gameIdentity, IDirectoryInfo location, bool initialized)
+        public GameDetectionResult(IGameIdentity gameIdentity, IDirectoryInfo location)
         {
             Requires.NotNull(location, nameof(location));
             GameIdentity = gameIdentity;
             GameLocation = location;
-            InitializationRequired = !initialized;
         }
         
         internal GameDetectionResult(GameType type, Exception error) : this(type)
@@ -33,9 +32,19 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
             Error = error;
         }
 
+        private GameDetectionResult(GameType type, bool initializationRequired) : this(type)
+        {
+            InitializationRequired = initializationRequired;
+        }
+
         public static GameDetectionResult NotInstalled(GameType type)
         {
             return new(type);
+        }
+
+        public static GameDetectionResult RequiresInitialization(GameType type)
+        {
+            return new(type, true);
         }
     }
 }

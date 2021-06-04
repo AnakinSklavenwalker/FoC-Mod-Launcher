@@ -9,6 +9,8 @@ namespace PetroGlyph.Games.EawFoc.Games.Registry
 
         //bool WatchChanges { get; set; }
 
+        bool Exits { get; }
+
         IGame? Game { get; }
         
         Version? Version { get; }
