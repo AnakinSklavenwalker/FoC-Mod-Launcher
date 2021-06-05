@@ -6,6 +6,8 @@ using System.Linq;
 using EawModinfo.Spec;
 using Microsoft.Extensions.DependencyInjection;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services.Detection;
+using PetroGlyph.Games.EawFoc.Services.Detection.Platform;
 using PetroGlyph.Games.EawFoc.Services.Icon;
 using PetroGlyph.Games.EawFoc.Services.Language;
 using PetroGlyph.Games.EawFoc.Utilities;
@@ -19,6 +21,10 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         private readonly string _normalizedPath;
 
+        private string? _iconFile;
+        private ICollection<ILanguageInfo>? _languages;
+
+
         protected IServiceProvider ServiceProvider;
 
         protected internal readonly HashSet<IMod> ModsInternal = new();
@@ -31,12 +37,19 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         public IDirectoryInfo Directory { get; }
 
-        public ICollection<ILanguageInfo> InstalledLanguages { get; }
-        public string? IconFile { get; }
+        public ICollection<ILanguageInfo> InstalledLanguages
+        {
+            get { return _languages ??= ResolveInstalledLanguages(); }
+        }
+
+        public string? IconFile
+        {
+            get { return _iconFile ??= ResolveIconFile(); }
+        }
 
         public IReadOnlyCollection<IMod> Mods => ModsInternal.ToList();
 
-        protected PetroglyphStarWarsGame(
+        public PetroglyphStarWarsGame(
             IGameIdentity gameIdentity, 
             IDirectoryInfo gameDirectory, 
             string name, 
@@ -52,19 +65,19 @@ namespace PetroGlyph.Games.EawFoc.Games
             Directory = gameDirectory;
             ServiceProvider = serviceProvider;
             _normalizedPath = Directory.FileSystem.Path.NormalizePath(Directory.FullName);
-            IconFile = serviceProvider.GetService<IGameIconFinder>()?.FindIcon(this);
-            InstalledLanguages = serviceProvider.GetService<IGameLanguageFinder>()?
-                                     .FindInstalledLanguages(this) ?? 
-                                 new List<ILanguageInfo>();
         }
 
         
         public virtual bool Exists()
         {
-            return false;
+            if (!GameDetector.GameExeExists(Directory, Type))
+                return false;
+            var directory = Directory;
+            var result = GamePlatformIdentifierFactory.Create(Platform, ServiceProvider).IsPlatform(Type, ref directory);
+            return result && directory == Directory;
         }
 
-        
+
         public virtual void Setup(GameSetupOptions setupMode)
         {
         }
@@ -141,7 +154,24 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         protected virtual ICollection<ILanguageInfo> ResolveInstalledLanguages()
         {
-            return new List<ILanguageInfo>();
+            return ServiceProvider.GetService<IGameLanguageFinder>()?
+                    .FindInstalledLanguages(this) ??
+                new List<ILanguageInfo>();
+        }
+
+        protected virtual string? ResolveIconFile()
+        {
+            return ServiceProvider.GetService<IGameIconFinder>()?.FindIcon(this) ?? string.Empty;
+        }
+
+        public void ResetLanguages()
+        {
+            _languages = null;
+        }
+
+        public void ResetIcon()
+        {
+            _iconFile = null;
         }
 
         protected virtual void OnModsCollectionModified(ModCollectionChangedEventArgs e)

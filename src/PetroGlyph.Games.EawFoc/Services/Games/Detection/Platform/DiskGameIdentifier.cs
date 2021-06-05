@@ -3,12 +3,12 @@ using System.IO.Abstractions;
 
 namespace PetroGlyph.Games.EawFoc.Services.Detection.Platform
 {
-    internal class OriginGameValidator : GamePlatformValidator
+    internal class DiskIdentifier : SpecificPlatformIdentifier
     {
-        public OriginGameValidator(IServiceProvider serviceProvider) : base(serviceProvider)
+        public DiskIdentifier(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
-
+        
         public override bool IsPlatformFoc(ref IDirectoryInfo location)
         {
             throw new NotImplementedException();

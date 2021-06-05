@@ -3,7 +3,7 @@ using PetroGlyph.Games.EawFoc.Games;
 
 namespace PetroGlyph.Games.EawFoc.Services.Detection.Platform
 {
-    internal interface IGamePlatformValidator
+    internal interface ISpecificPlatformIdentifier
     {
         bool IsPlatform(GameType type, ref IDirectoryInfo location);
     }

@@ -24,6 +24,18 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
             FileSystem = serviceProvider.GetRequiredService<IFileSystem>();
         }
 
+        public static bool GameExeExists(IDirectoryInfo directory, GameType gameType)
+        {
+            if (!directory.Exists)
+                return false;
+
+            var exeFile = gameType == GameType.EaW
+                ? PetroglyphStarWarsGameConstants.EmpireAtWarExeFileName
+                : PetroglyphStarWarsGameConstants.ForcesOfCorruptionExeFileName;
+
+            var exePath = directory.FileSystem.Path.Combine(directory.FullName, exeFile);
+            return directory.FileSystem.File.Exists(exePath);
+        }
 
         public GameDetectionResult Detect(GameDetectorOptions options)
         {
@@ -49,7 +61,8 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
 #endif
 
                 var location = locationData.Location!;
-                var platform = new GamePlatformIdentifier(ServiceProvider).GetGamePlatform(options.Type, ref location);
+                var platform = new GamePlatformIdentifier(options.TargetPlatforms, ServiceProvider)
+                    .GetGamePlatform(options.Type, ref location);
 
                 if (!GameExeExists(location, options.Type))
                 {
@@ -105,17 +118,7 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
         }
 
         private protected abstract GameLocationData FindGameLocation(GameDetectorOptions options);
-
-        protected bool GameExeExists(IDirectoryInfo directory, GameType gameType)
-        {
-            var exeFile = gameType == GameType.EaW
-                ? PetroglyphStarWarsGameConstants.EmpireAtWarExeFileName
-                : PetroglyphStarWarsGameConstants.ForcesOfCorruptionExeFileName;
-
-            var exePath = FileSystem.Path.Combine(directory.FullName, exeFile);
-            return FileSystem.File.Exists(exePath);
-        }
-
+        
 
         private static bool MatchesOptionsPlatform(GameDetectorOptions options, GamePlatform identifiedPlatform)
         {

@@ -34,9 +34,9 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
                 return new GameLocationData {InitializationRequired = true};
             }
 
-            var installPath = _registry.InstallPath;
-            if (installPath is not null) 
-                return new GameLocationData {Location = installPath};
+            var exeDirectory = _registry.ExePath?.Directory;
+            if (exeDirectory is not null) 
+                return new GameLocationData {Location = exeDirectory};
 
 
             var e = new InvalidOperationException("Could not get instal location from registry path.");
