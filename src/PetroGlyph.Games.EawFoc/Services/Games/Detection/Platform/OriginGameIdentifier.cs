@@ -7,6 +7,11 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection.Platform
 {
     internal class OriginIdentifier : SpecificPlatformIdentifier
     {
+        private static readonly string[] KnownOriginDirs = {
+            "Manuals",
+            "__Installer"
+        };
+
         public OriginIdentifier(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
@@ -24,7 +29,10 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection.Platform
                 }
             }
 
-            return false;
+            if (!DirectoryContainsFiles(location, new[] {"EALaunchHelper.exe"}))
+                return false;
+            
+            return ParentContainsOriginDirectories(location);
         }
 
         public override bool IsPlatformEaw(ref IDirectoryInfo location)
@@ -36,7 +44,10 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection.Platform
                 return false;
             }
 
-            return false;
+            // TODO: Do we have EALaunchHelper.exe here too?
+
+            return location.Name.Equals("GameData", StringComparison.InvariantCultureIgnoreCase) &&
+                   ParentContainsOriginDirectories(location);
         }
 
         private void TryFixBrokenFocLocation(ref IDirectoryInfo location)
@@ -61,6 +72,12 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection.Platform
                 return;
             }
             location = location.FileSystem.DirectoryInfo.FromDirectoryName(correctedPath);
+        }
+
+        private static bool ParentContainsOriginDirectories(IDirectoryInfo gameLocation)
+        {
+            var parentDir = gameLocation.Parent;
+            return parentDir is not null && DirectoryContainsFolders(parentDir, KnownOriginDirs);
         }
     }
 }

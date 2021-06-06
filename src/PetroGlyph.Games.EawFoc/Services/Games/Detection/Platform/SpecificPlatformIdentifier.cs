@@ -28,12 +28,22 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection.Platform
 
         protected static bool DirectoryContainsFiles(IDirectoryInfo directory, ICollection<string> expectedFiles)
         {
-            var parentDirFiles = directory.GetFiles();
-            if (parentDirFiles.Length < expectedFiles.Count)
+            var files = directory.GetFiles();
+            if (files.Length < expectedFiles.Count)
                 return false;
 
             return expectedFiles.All(steamFile =>
-                parentDirFiles.Any(x => x.Name.Equals(steamFile, StringComparison.InvariantCultureIgnoreCase)));
+                files.Any(x => x.Name.Equals(steamFile, StringComparison.InvariantCultureIgnoreCase)));
+        }
+
+        protected static bool DirectoryContainsFolders(IDirectoryInfo directory, ICollection<string> expectedFolders)
+        {
+            var folders  = directory.GetDirectories();
+            if (folders.Length < expectedFolders.Count)
+                return false;
+
+            return expectedFolders.All(steamFile =>
+                folders.Any(x => x.Name.Equals(steamFile, StringComparison.InvariantCultureIgnoreCase)));
         }
     }
 }
