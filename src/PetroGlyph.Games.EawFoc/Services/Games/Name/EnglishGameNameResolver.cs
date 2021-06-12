@@ -2,7 +2,7 @@
 using System.Globalization;
 using PetroGlyph.Games.EawFoc.Games;
 
-namespace PetroGlyph.Games.EawFoc.Services
+namespace PetroGlyph.Games.EawFoc.Services.Name
 {
     public class EnglishGameNameResolver : IGameNameResolver
     {

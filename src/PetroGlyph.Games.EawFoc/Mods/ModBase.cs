@@ -161,19 +161,19 @@ namespace PetroGlyph.Games.EawFoc.Mods
         }
 
         /// <inheritdoc/>
-        public virtual bool Equals(IMod other)
+        public virtual bool Equals(IMod? other)
         {
             return ModEqualityComparer.Default.Equals(this, other);
         }
 
         /// <inheritdoc/>
-        public virtual bool Equals(IModIdentity other)
+        public virtual bool Equals(IModIdentity? other)
         {
             return ModEqualityComparer.Default.Equals(this, other);
         }
 
         /// <inheritdoc/>
-        public virtual bool Equals(IModReference other)
+        public virtual bool Equals(IModReference? other)
         {
             return ModEqualityComparer.Default.Equals(this, other);
         }

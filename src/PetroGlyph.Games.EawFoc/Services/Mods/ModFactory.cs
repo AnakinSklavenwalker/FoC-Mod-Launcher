@@ -1,162 +1,134 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.IO.Abstractions;
 using EawModinfo.File;
 using EawModinfo.Model;
 using EawModinfo.Spec;
-using Microsoft.Extensions.Logging;
+using EawModinfo.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services.Name;
+using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Services
 {
-    public static class ModFactory
+    public class ModFactory : IModFactory
     {
-        private static readonly ILogger? Logger;
+        private readonly IServiceProvider _serviceProvider;
 
-        public static IMod CreateMod(IGame game, ModType type, DirectoryInfo directory, ModinfoData modinfo)
+        public ModFactory(IServiceProvider serviceProvider)
         {
-            return CreateMod(game, type, directory, modinfo, false);
-        }
-        
-        public static IMod CreateMod(IGame game, ModType type, DirectoryInfo directory, bool searchModFileOnDisk)
-        {
-            return CreateMod(game, type, directory, null, searchModFileOnDisk);
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceProvider = serviceProvider;
         }
 
-        public static IMod CreateMod(IGame game, ModType type, string modPath, ModinfoData modInfo)
+        public IEnumerable<IPhysicalMod> FromReference(IGame game, IModReference modReference)
         {
-            return CreateMod(game, type, new DirectoryInfo(modPath), modInfo);
+            var modReferenceLocation = new ModReferenceLocationResolver().ResolveLocation(modReference, game);
+            var modinfoFinder = new ModinfoFileFinder(modReferenceLocation);
+            var searchResult = modinfoFinder.Find(FindOptions.FindAny);
+
+            return !searchResult.HasVariantModinfoFiles
+                ? new[] {CreateModFromDirectory(game, modReference, modReferenceLocation, searchResult.MainModinfo)}
+                : CreateVariants(game, modReference, modReferenceLocation, searchResult.Variants);
         }
 
-        public static IMod CreateMod(IGame game, ModType type, string modPath, bool searchModFileOnDisk)
+        public IPhysicalMod FromReference(IGame game, IModReference modReference, ModinfoData? modinfo)
         {
-            return CreateMod(game, type, new DirectoryInfo(modPath), searchModFileOnDisk);
+            var modReferenceLocation = new ModReferenceLocationResolver().ResolveLocation(modReference, game);
+            return CreateModFromDirectory(game, modReference, modReferenceLocation, modinfo);
         }
 
-        //public static IEnumerable<IMod> CreateModAndVariants(IGame game, ModType platform, DirectoryInfo directory, bool onlyVariantsIfPresent)
-        //{
-        //    if (game is null)
-        //        throw new ArgumentNullException(nameof(game));
-        //    if (directory is null)
-        //        throw new ArgumentNullException(nameof(directory));
-
-        //    if (!ModInfoFileFinder.TryFind(directory, ModInfoFileFinder.FindOptions.FindAny, out var modInfoCollection) || !modInfoCollection!.Variants.Any())
-        //        yield return CreateModInstance(game, platform, directory, modInfoCollection?.MainModInfo?.GetModInfo());
-
-        //    if (modInfoCollection is null)
-        //        yield break;
-
-        //    if (!onlyVariantsIfPresent) 
-        //        yield return CreateModInstance(game, platform, directory, modInfoCollection.MainModInfo?.GetModInfo());
-
-        //    foreach (var variant in modInfoCollection!.Variants)
-        //        yield return CreateModInstance(game, platform, directory, variant.GetModInfo());
-        //}
-
-        public static IEnumerable<IMod> CreateModAndVariants(IGame game, ModType type, DirectoryInfo directory,
-            bool onlyVariantsIfPresent)
+        public IPhysicalMod FromReference(IGame game, IModReference modReference, bool searchModinfoFile)
         {
-            if (game is null)
-                throw new ArgumentNullException(nameof(game));
-            if (directory is null)
-                throw new ArgumentNullException(nameof(directory));
+            var modReferenceLocation = new ModReferenceLocationResolver().ResolveLocation(modReference, game);
 
-            ModinfoFinderCollection? modInfoCollection = default;
-            try
+            IModinfoFile? mainModinfoFile = null;
+            if (searchModinfoFile)
             {
-                var finder = new ModinfoFileFinder(directory);
-                modInfoCollection = finder.Find(FindOptions.FindAny);
+                var modinfoFinder = new ModinfoFileFinder(modReferenceLocation);
+                mainModinfoFile = modinfoFinder.Find(FindOptions.FindMain).MainModinfo;
+            }
+            return CreateModFromDirectory(game, modReference, modReferenceLocation, mainModinfoFile);
+        }
 
-                if (!modInfoCollection.HasMainModinfoFile && !modInfoCollection.HasVariantModinfoFiles)
+        public IEnumerable<IPhysicalMod> VariantsFromReference(IGame game, IList<IModReference> modReferences)
+        {
+            var mods = new HashSet<IPhysicalMod>();
+            foreach (var modReference in modReferences)
+            {
+                var modReferenceLocation = new ModReferenceLocationResolver().ResolveLocation(modReference, game); 
+                var variants = new ModinfoFileFinder(modReferenceLocation).Find(FindOptions.FindVariants);
+                var variantMods = CreateVariants(game, modReference, modReferenceLocation, variants);
+                foreach (var mod in variantMods)
                 {
-                    var mod = CreateModInstanceOrNull(game, type, directory, null);
-                    if (mod != null)
-                        return new[] { mod };
+                    if (!mods.Add(mod))
+                        throw new ModException(
+                            $"Unable to create mod {mod.Name} " +
+                            $"from '{modReferenceLocation.FullName}' because it already was created within this operation.");
                 }
             }
-            catch (Exception e)
-            {
-                Logger?.LogError(e, e.Message);
-            }
-
-            if (modInfoCollection is null)
-                return Enumerable.Empty<IMod>();
-
-            if (!modInfoCollection.Variants.Any())
-            {
-                var mod = CreateModInstanceOrNull(game, type, directory, modInfoCollection.MainModinfo?.TryGetModinfo());
-                if (mod != null)
-                    return new[] { mod };
-            } 
-
-
-
-            var result = new List<IMod>();
-
-            if (!onlyVariantsIfPresent && TryCreateModInstance(game, type, directory, modInfoCollection.MainModinfo?.TryGetModinfo(), out var baseMod))
-                result.Add(baseMod!);
-
-            foreach (var variant in modInfoCollection!.Variants)
-            {
-                if (TryCreateModInstance(game, type, directory, variant.TryGetModinfo(), out var variantMod))
-                    result.Add(variantMod!);
-            }
-
-            return result;
+            return mods;
         }
 
-        private static IMod CreateMod(IGame game, ModType type, DirectoryInfo directory, IModinfo? modInfo, bool searchModFileOnDisk) 
+        private IEnumerable<IPhysicalMod> CreateVariants(IGame game, IModReference modReference, IDirectoryInfo modReferenceLocation, IEnumerable<IModinfoFile> variantModInfoFiles)
         {
-            if (game is null)
-                throw new ArgumentNullException(nameof(game));
-            if (directory is null)
-                throw new ArgumentNullException(nameof(directory));
-
-            if (searchModFileOnDisk && modInfo is null)
+            var variants = new HashSet<IPhysicalMod>();
+            var names = new HashSet<string>();
+            foreach (var variant in variantModInfoFiles)
             {
-                var mainModinfoFile = ModinfoFileFinder.FindMain(directory);
-                if (mainModinfoFile != null)
-                    modInfo = mainModinfoFile!.GetModinfo();
+                if (variant.FileKind == ModinfoFileKind.MainFile)
+                    throw new ModException("Cannot create a variant mod from a main modinfo file.");
+
+                var mod = CreateModFromDirectory(game, modReference, modReferenceLocation, variant);
+                if (!variants.Add(mod) || !names.Add(mod.Name))
+                    throw new ModException($"Unable to create variant mod of name {mod.Name}, because it already exists");
             }
-
-
-            return CreateModInstance(game, type, directory, modInfo);
+            return variants;
         }
 
-        private static bool TryCreateModInstance(IGame game, ModType type, DirectoryInfo directory, IModinfo? modInfo, out IMod? mod)
+        public IEnumerable<IVirtualMod> CreateVirtualVariants(IGame game, ISet<IModinfo> virtualModInfos)
         {
-            mod = default;
-            try
-            {
-                mod = CreateModInstance(game, type, directory, modInfo);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            var mods = new HashSet<IVirtualMod>();
+            foreach (var modinfo in virtualModInfos)
+                mods.Add(new VirtualMod(game, modinfo));
+            return mods;
         }
 
-        private static IMod? CreateModInstanceOrNull(IGame game, ModType type, DirectoryInfo directory, IModinfo? modInfo)
+        public IEnumerable<IVirtualMod> CreateVirtualVariants(IGame game, Dictionary<string, IList<IMod>> virtualModInfos)
         {
-            TryCreateModInstance(game, type, directory, modInfo, out var mod);
-            return mod;
+            var mods = new HashSet<IVirtualMod>();
+            foreach (var (name, dependencies) in virtualModInfos)
+                mods.Add(new VirtualMod(name, game, dependencies));
+            return mods;
         }
 
-        private static IMod CreateModInstance(IGame game, ModType type, DirectoryInfo directory, IModinfo? modInfo = null)
+        private IPhysicalMod CreateModFromDirectory(IGame game, IModReference modReference, IDirectoryInfo directory,
+            IModinfoFile? modinfoFile)
         {
-            switch (type)
+            return CreateModFromDirectory(game, modReference, directory, modinfoFile?.GetModinfo());
+        }
+
+        private IPhysicalMod CreateModFromDirectory(IGame game, IModReference modReference, IDirectoryInfo directory, IModinfo? modinfo)
+        {
+            if (modReference.Type == ModType.Virtual)
+                throw new InvalidOperationException("modType cannot be a virtual mod.");
+            if (!directory.Exists)
+                throw new DirectoryNotFoundException($"Unable to find mod location '{directory.FullName}'");
+
+            if (modinfo == null)
             {
-                case ModType.Default:
-                case ModType.Workshops:
-                    return new Mod(game, directory, type == ModType.Workshops, modInfo);
-                case ModType.Virtual:
-                    return new VirtualMod(game, modInfo);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                var nameResolver = _serviceProvider.GetService<IModNameResolver>() ?? new DefaultModNameResolver(_serviceProvider);
+                var name = nameResolver.ResolveName(modReference);
+                if (string.IsNullOrEmpty(name))
+                    throw new ModException("Unable to create a mod with an empty name.");
+                return new Mod(game, directory, modReference.Type == ModType.Workshops, name, _serviceProvider);
             }
+
+            modinfo.Validate();
+            return new Mod(game, directory, modReference.Type == ModType.Workshops, modinfo, _serviceProvider);
         }
     }
 }

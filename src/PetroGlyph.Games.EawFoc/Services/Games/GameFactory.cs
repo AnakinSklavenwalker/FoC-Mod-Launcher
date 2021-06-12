@@ -2,6 +2,7 @@
 using System.IO.Abstractions;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services.Detection;
+using PetroGlyph.Games.EawFoc.Services.Name;
 using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Services
