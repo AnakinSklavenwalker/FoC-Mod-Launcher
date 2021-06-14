@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using EawModinfo;
-using EawModinfo.Model;
 using EawModinfo.Spec;
 using EawModinfo.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services.Dependencies;
+using PetroGlyph.Games.EawFoc.Services.Language;
 using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Mods
@@ -30,7 +31,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
         private string? _iconFile;
         private SemanticVersion? _modVersion;
         private IModinfo? _modInfo;
-        private ICollection<ILanguageInfo>? _installedLanguages;
+        protected readonly IServiceProvider ServiceProvider;
+        private ISet<ILanguageInfo>? _installedLanguages;
         
         protected readonly List<IMod> DependenciesInternal = new();
 
@@ -56,6 +58,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
             {
                 if (_modInfo != null)
                     return _modInfo;
+                // TODO: Flag if already tried to resolve
                 _modInfo = ResolveModInfo();
                 return _modInfo;
             }
@@ -68,7 +71,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
         public SemanticVersion? Version => _modVersion ??= InitializeVersion();
 
         /// <inheritdoc/>
-        public ICollection<ILanguageInfo> InstalledLanguages => _installedLanguages ??= ResolveInstalledLanguages();
+        public ISet<ILanguageInfo> InstalledLanguages => _installedLanguages ??= ResolveInstalledLanguages();
 
 
         IList<IModReference> IModIdentity.Dependencies => Dependencies.OfType<IModReference>().ToList();
@@ -78,17 +81,20 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
         /// <inheritdoc/>
         public IReadOnlyCollection<IMod> Mods => ModsInternal.ToList();
-        
+
         /// <summary>
         /// Creates a new <see cref="IMod"/> instances with a constant name
         /// </summary>
         /// <param name="game">The game of the mod</param>
         /// <param name="type">The mod's platform</param>
         /// <param name="name">The name of the mod.</param>
-        protected ModBase(IGame game, ModType type, string name)
+        /// <param name="serviceProvider">The service provider.</param>
+        protected ModBase(IGame game, ModType type, string name, IServiceProvider serviceProvider)
         {
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
             Requires.NotNull(game, nameof(game));
             Requires.NotNullOrEmpty(name, nameof(name));
+            ServiceProvider = serviceProvider;
             Name = name;
             Game = game;
             Type = type;
@@ -100,13 +106,16 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// <param name="game">The game of the mod</param>
         /// <param name="type">The mod's platform</param>
         /// <param name="modinfo">The modinfo data.</param>
+        /// <param name="serviceProvider">The service provider.</param>
         /// <exception cref="ModinfoException">when <paramref name="modinfo"/> is not valid.</exception>
-        protected ModBase(IGame game, ModType type, IModinfo modinfo)
+        protected ModBase(IGame game, ModType type, IModinfo modinfo, IServiceProvider serviceProvider)
         {
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
             Requires.NotNull(modinfo, nameof(modinfo));
             Requires.NotNull(game, nameof(game));
             modinfo.Validate();
             _modInfo = modinfo;
+            ServiceProvider = serviceProvider;
             Game = game;
             Name = modinfo.Name;
             Type = type;
@@ -204,9 +213,11 @@ namespace PetroGlyph.Games.EawFoc.Mods
             return ModInfo?.Icon;
         }
 
-        protected virtual ICollection<ILanguageInfo> ResolveInstalledLanguages()
+        protected virtual ISet<ILanguageInfo> ResolveInstalledLanguages()
         {
-            return ModInfo?.Languages.ToList() ?? new List<ILanguageInfo>{LanguageInfo.Default};
+            var factory = ServiceProvider.GetService<IModLanguageFinderFactory>() ?? new ModLanguageFinderFactory();
+            var finder = factory.CreateLanguageFinder(this, ServiceProvider);
+            return finder.FindInstalledLanguages(this);
         }
 
         private IModinfo? ResolveModInfo()

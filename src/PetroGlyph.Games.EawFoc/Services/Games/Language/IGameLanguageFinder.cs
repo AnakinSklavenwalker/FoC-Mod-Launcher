@@ -1,6 +1,11 @@
-﻿namespace PetroGlyph.Games.EawFoc.Services.Language
+﻿using System.Collections.Generic;
+using EawModinfo.Spec;
+using PetroGlyph.Games.EawFoc.Games;
+
+namespace PetroGlyph.Games.EawFoc.Services.Language
 {
-    public interface IGameLanguageFinder : IInstalledLanguageFinder
+    public interface IGameLanguageFinder
     {
+        ISet<ILanguageInfo> FindInstalledLanguages(IGame game);
     }
 }

@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Services\Shared\Language\GameLanguageFinder.cs.old" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="eaw.modinfo" Version="3.0.0-beta" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.34" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />

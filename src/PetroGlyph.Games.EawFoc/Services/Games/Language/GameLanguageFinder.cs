@@ -1,17 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using EawModinfo.Spec;
-using PetroGlyph.Games.EawFoc.Mods;
+using Microsoft.Extensions.DependencyInjection;
+using PetroGlyph.Games.EawFoc.Games;
+using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Services.Language
 {
-    public class GameLanguageFinder : IInstalledLanguageFinder
+    public class GameLanguageFinder : IGameLanguageFinder
     {
-        public ICollection<ILanguageInfo> FindInstalledLanguages(IPlayableObject playableObject)
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILanguageFinderHelper _helper;
+
+        public GameLanguageFinder(IServiceProvider serviceProvider)
         {
-            if (playableObject is IMod)
-                throw new NotSupportedException("Mods are not supported by this instance.");
-            throw new NotImplementedException();
+            Requires.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceProvider = serviceProvider;
+            _helper = serviceProvider.GetService<ILanguageFinderHelper>() ?? new LanguageFinderHelper(serviceProvider);
+        }
+
+        public ISet<ILanguageInfo> FindInstalledLanguages(IGame game)
+        {
+            var text = _helper.GetTextLocalizations(game);
+            var speech = _helper.GetSpeechLocalizationsFromMegs(game);
+            var sfx = _helper.GetSfxMegLocalizations(game);
+            return _helper.Merge(text, speech, sfx);
         }
     }
 }

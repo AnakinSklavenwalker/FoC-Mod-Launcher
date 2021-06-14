@@ -12,7 +12,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
     {
         public override string Identifier { get; }
 
-        public VirtualMod(IGame game, IModinfo modInfoData) : base(game, ModType.Virtual, modInfoData)
+        public VirtualMod(IGame game, IModinfo modInfoData, IServiceProvider serviceProvider) 
+            : base(game, ModType.Virtual, modInfoData, serviceProvider)
         {
             if (modInfoData.Dependencies is null || !modInfoData.Dependencies.Any())
                 throw new ModException("Virtual mods must be initialized with pre-defined dependencies");
@@ -31,7 +32,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
             Identifier = CalculateIdentifier();
         }
 
-        public VirtualMod(string name, IGame game, IList<IMod> dependencies) : base(game, ModType.Virtual, name)
+        public VirtualMod(string name, IGame game, IList<IMod> dependencies, IServiceProvider serviceProvider) 
+            : base(game, ModType.Virtual, name, serviceProvider)
         {
             Requires.NotNullOrEmpty(dependencies, nameof(dependencies));
 
@@ -52,17 +54,17 @@ namespace PetroGlyph.Games.EawFoc.Mods
             return Name + "-" + Identifier;
         }
 
-        public override bool Equals(IMod other)
+        public override bool Equals(IMod? other)
         {
             return other is VirtualMod && base.Equals(other);
         }
 
-        public override bool Equals(IModIdentity other)
+        public override bool Equals(IModIdentity? other)
         {
             return other is VirtualMod && base.Equals(other);
         }
 
-        public override bool Equals(IModReference other)
+        public override bool Equals(IModReference? other)
         {
             return other is VirtualMod && base.Equals(other);
         }
@@ -84,8 +86,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
             if (!Dependencies.Any(m => m is IPhysicalPlayableObject))
                 throw new ModException("Virtual mods need at least one physical dependency.");
-        }
-
+        } 
+        
         private string CalculateIdentifier()
         {
             var id = Dependencies.Aggregate(Name, (current, dependency) => current + dependency.GetHashCode());

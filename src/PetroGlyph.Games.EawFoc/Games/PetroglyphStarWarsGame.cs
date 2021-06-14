@@ -22,7 +22,7 @@ namespace PetroGlyph.Games.EawFoc.Games
         private readonly string _normalizedPath;
 
         private string? _iconFile;
-        private ICollection<ILanguageInfo>? _languages;
+        private ISet<ILanguageInfo>? _languages;
 
 
         protected IServiceProvider ServiceProvider;
@@ -37,14 +37,22 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         public IDirectoryInfo Directory { get; }
 
-        public ICollection<ILanguageInfo> InstalledLanguages
+        public ISet<ILanguageInfo> InstalledLanguages
         {
-            get { return _languages ??= ResolveInstalledLanguages(); }
+            get
+            {
+                // TODO: Flag if already tried
+                return _languages ??= ResolveInstalledLanguages();
+            }
         }
 
         public string? IconFile
         {
-            get { return _iconFile ??= ResolveIconFile(); }
+            get
+            {
+                // TODO: Flag if already tried
+                return _iconFile ??= ResolveIconFile();
+            }
         }
 
         public IReadOnlyCollection<IMod> Mods => ModsInternal.ToList();
@@ -80,6 +88,7 @@ namespace PetroGlyph.Games.EawFoc.Games
 
         public virtual void Setup(GameSetupOptions setupMode)
         {
+            // TODO
         }
 
         public virtual bool AddMod(IMod mod)
@@ -152,11 +161,11 @@ namespace PetroGlyph.Games.EawFoc.Games
         }
 
 
-        protected virtual ICollection<ILanguageInfo> ResolveInstalledLanguages()
+        protected virtual ISet<ILanguageInfo> ResolveInstalledLanguages()
         {
             return ServiceProvider.GetService<IGameLanguageFinder>()?
                     .FindInstalledLanguages(this) ??
-                new List<ILanguageInfo>();
+                new HashSet<ILanguageInfo>();
         }
 
         protected virtual string? ResolveIconFile()
