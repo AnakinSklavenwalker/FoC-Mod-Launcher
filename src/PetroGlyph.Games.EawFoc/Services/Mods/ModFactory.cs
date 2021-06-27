@@ -9,6 +9,7 @@ using EawModinfo.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
+using PetroGlyph.Games.EawFoc.Services.Detection;
 using PetroGlyph.Games.EawFoc.Services.Name;
 using Validation;
 

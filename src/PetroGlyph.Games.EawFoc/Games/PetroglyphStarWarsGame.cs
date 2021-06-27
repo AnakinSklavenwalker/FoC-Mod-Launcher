@@ -70,12 +70,6 @@ namespace PetroGlyph.Games.EawFoc.Games
         }
 
         /// <inheritdoc/>
-        public virtual void Setup(GameSetupOptions setupMode)
-        {
-            // TODO
-        }
-
-        /// <inheritdoc/>
         public virtual bool AddMod(IMod mod)
         {
             // To avoid programming errors due to copies of the same game instance, we only check for reference equality.

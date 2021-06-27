@@ -9,16 +9,10 @@ namespace PetroGlyph.Games.EawFoc.Services
         public bool TryCreateGame(GameDetectionResult gameDetection, out IGame? game);
         public IGame CreateGame(GameDetectionResult gameDetection);
 
-
-        public bool TryCreateGame(GameDetectionResult gameDetection, GameSetupOptions setup, out IGame? game);
-        public IGame CreateGame(GameDetectionResult gameDetection, GameSetupOptions setup);
-
-        
         public bool TryCreateGame(IGameIdentity identity, IDirectoryInfo location, bool checkGameExists, out IGame? game);
         public IGame CreateGame(IGameIdentity identity, IDirectoryInfo location, bool checkGameExists);
 
-
-        public bool TryCreateGame(IGameIdentity identity, IDirectoryInfo location, GameSetupOptions setup, out IGame? game);
-        public IGame CreateGame(IGameIdentity identity, IDirectoryInfo location, GameSetupOptions setup);
+        public bool TryCreateGame(IGameIdentity identity, IDirectoryInfo location, out IGame? game);
+        public IGame CreateGame(IGameIdentity identity, IDirectoryInfo location);
     }
 }

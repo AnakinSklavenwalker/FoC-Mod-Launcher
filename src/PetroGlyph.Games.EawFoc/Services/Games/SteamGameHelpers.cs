@@ -8,7 +8,19 @@ using PetroGlyph.Games.EawFoc.Utilities;
 
 namespace PetroGlyph.Games.EawFoc.Services
 {
-    public class SteamGameHelpers
+    public static class GameHelpers
+    {
+        private const string ModsFolderName = "Mods";
+
+        public static IDirectoryInfo GetModsLocation(this IGame game)
+        {
+            var fs = game.Directory.FileSystem;
+            var modsPath = fs.Path.Combine(game.Directory.FullName, ModsFolderName);
+            return fs.DirectoryInfo.FromDirectoryName(modsPath);
+        }
+    }
+
+    public static class SteamGameHelpers
     {
         private const string SteamWorkshopsBaseUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 

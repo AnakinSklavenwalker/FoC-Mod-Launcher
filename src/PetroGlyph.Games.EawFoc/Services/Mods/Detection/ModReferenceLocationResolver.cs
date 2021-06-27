@@ -8,7 +8,7 @@ using PetroGlyph.Games.EawFoc.Mods;
 using PetroGlyph.Games.EawFoc.Utilities;
 using Validation;
 
-namespace PetroGlyph.Games.EawFoc.Services
+namespace PetroGlyph.Games.EawFoc.Services.Detection
 {
     public class ModReferenceLocationResolver
     {

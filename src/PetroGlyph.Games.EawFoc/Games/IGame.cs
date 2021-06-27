@@ -9,7 +9,5 @@ namespace PetroGlyph.Games.EawFoc.Games
         /// </summary>
         /// <returns><see langword="true"/> when the game exists; <see langword="false"/> otherwise.</returns>
         bool Exists();
-
-        void Setup(GameSetupOptions setupMode);
     }
 }

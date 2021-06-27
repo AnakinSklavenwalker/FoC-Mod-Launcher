@@ -25,13 +25,6 @@ namespace PetroGlyph.Games.EawFoc.Services
             return CreateGame(gameDetection.GameIdentity, gameDetection.GameLocation, false);
         }
 
-        public IGame CreateGame(GameDetectionResult gameDetection, GameSetupOptions setup)
-        {
-            Requires.NotNull(gameDetection, nameof(gameDetection));
-            if (gameDetection.GameLocation is null)
-                throw new ArgumentException("Location must not be null");
-            return CreateGame(gameDetection.GameIdentity, gameDetection.GameLocation, setup);
-        }
 
         public IGame CreateGame(IGameIdentity identity, IDirectoryInfo location, bool checkGameExists)
         {
@@ -47,10 +40,9 @@ namespace PetroGlyph.Games.EawFoc.Services
             return game;
         }
         
-        public IGame CreateGame(IGameIdentity identity, IDirectoryInfo location, GameSetupOptions setup)
+        public IGame CreateGame(IGameIdentity identity, IDirectoryInfo location)
         {
             var game = CreateGame(identity, location, true);
-            game.Setup(setup);
             return game;
         }
 
@@ -60,20 +52,6 @@ namespace PetroGlyph.Games.EawFoc.Services
             try
             {
                 game = CreateGame(gameDetection);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public bool TryCreateGame(GameDetectionResult gameDetection, GameSetupOptions setup, out IGame? game)
-        {
-            game = null;
-            try
-            {
-                game = CreateGame(gameDetection, setup);
                 return true;
             }
             catch
@@ -96,12 +74,12 @@ namespace PetroGlyph.Games.EawFoc.Services
             }
         }
 
-        public bool TryCreateGame(IGameIdentity identity, IDirectoryInfo location, GameSetupOptions setup, out IGame? game)
+        public bool TryCreateGame(IGameIdentity identity, IDirectoryInfo location, out IGame? game)
         {
             game = null;
             try
             {
-                game = CreateGame(identity, location, setup);
+                game = CreateGame(identity, location);
                 return true;
             }
             catch
