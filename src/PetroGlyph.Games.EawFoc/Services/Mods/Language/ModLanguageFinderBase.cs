@@ -20,7 +20,7 @@ namespace PetroGlyph.Games.EawFoc.Services.Language
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
             ServiceProvider = serviceProvider;
-            Helper = serviceProvider.GetService<ILanguageFinderHelper>() ?? new LanguageFinderHelper(serviceProvider);
+            Helper = serviceProvider.GetService<ILanguageFinderHelper>() ?? new LanguageFinderHelper();
         }
 
         public virtual ISet<ILanguageInfo> FindInstalledLanguages(IMod mod)
@@ -30,7 +30,7 @@ namespace PetroGlyph.Games.EawFoc.Services.Language
             // Only if we have more than the default language, we trust the modinfo.
             var modinfo = mod.ModInfo;
             if (modinfo is not null && !IsEmptyOrDefault(modinfo.Languages))
-                return modinfo.Languages.ToHashSet();
+                return new HashSet<ILanguageInfo>(modinfo.Languages);
 
 
             var foundLanguages = FindInstalledLanguagesCore(mod);

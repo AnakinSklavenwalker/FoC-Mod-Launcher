@@ -9,14 +9,12 @@ namespace PetroGlyph.Games.EawFoc.Services.Language
 {
     public class GameLanguageFinder : IGameLanguageFinder
     {
-        private readonly IServiceProvider _serviceProvider;
         private readonly ILanguageFinderHelper _helper;
 
         public GameLanguageFinder(IServiceProvider serviceProvider)
         {
             Requires.NotNull(serviceProvider, nameof(serviceProvider));
-            _serviceProvider = serviceProvider;
-            _helper = serviceProvider.GetService<ILanguageFinderHelper>() ?? new LanguageFinderHelper(serviceProvider);
+            _helper = serviceProvider.GetService<ILanguageFinderHelper>() ?? new LanguageFinderHelper();
         }
 
         public ISet<ILanguageInfo> FindInstalledLanguages(IGame game)

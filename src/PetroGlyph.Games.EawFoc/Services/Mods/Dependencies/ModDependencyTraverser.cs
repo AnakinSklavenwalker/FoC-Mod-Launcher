@@ -59,7 +59,7 @@ namespace PetroGlyph.Games.EawFoc.Services.Dependencies
             if (!seenNodes.Add(current))
                 throw new ModException();
 
-            foreach (var before in current.Dependencies.OfType<IMod>()) 
+            foreach (var before in current.Dependencies) 
                 CheckForCycles(before, seenNodes);
             seenNodes.Remove(current);
         }
@@ -76,7 +76,7 @@ namespace PetroGlyph.Games.EawFoc.Services.Dependencies
                     continue;
                 yield return current;
 
-                var neighbors = current.Dependencies.Where(n => !visited.Contains(n)).OfType<IMod>();
+                var neighbors = current.Dependencies.Where(n => !visited.Contains(n));
 
                 foreach (var child in neighbors)
                     stack.Enqueue(child);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
@@ -26,6 +27,9 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// </summary>
         event EventHandler<ModDependenciesChangedEventArgs> DependenciesChanged;
 
+        /// <inheritdoc cref="IModIdentity.Name" />
+        new string Name { get; }
+
         /// <summary>
         /// The <see cref="IGame"/> this mod is associated with.
         /// </summary>
@@ -37,16 +41,25 @@ namespace PetroGlyph.Games.EawFoc.Mods
         IModinfo? ModInfo { get; }
 
         /// <summary>
-        /// Searches for direct <see cref="IMod"/> dependencies. It does not resolve recursively.
-        /// Updates <see cref="IModIdentity.Dependencies"/> property.
-        /// <param name="resolver">Resolver service to use</param>
-        /// <param name="recursive">When set to <see langword="true"/> the mod dependency chain gets resolved recursively.</param>
-        /// <param name="addModContainer">When set to <see langword="true"/>
-        /// the <see cref="IModContainer.Mods"/> collection get updated.
-        /// Only first level dependencies shall get added with this option.</param>
+        /// Ordered List of <see cref="IMod"/>s this instance depends on. Initially this list will be empty. To fill it 
         /// </summary>
-        /// <returns><c>true</c> if all direct dependencies could be resolved; <c>false</c> otherwise</returns>
+        new IReadOnlyList<IMod> Dependencies { get; }
+
+
+        /// <summary>
+        /// DependencyResolveStatus flag if and at which result dependencies have been resolved for this instance.
+        /// </summary>
+        DependencyResolveStatus DependencyResolveStatus { get; }
+
+        /// <summary>
+        /// Searches for direct <see cref="IMod"/> dependencies.
+        /// Updates <see cref="IModIdentity.Dependencies"/> property.
+        /// This operation ignores whether dependencies have already been resolved or not.
+        /// <param name="resolver">Resolver service to use</param>
+        /// <param name="options"></param>
+        /// </summary>
+        /// <returns><c>true</c> if all direct dependencies could be resolved (even if this instance has no dependencies); <c>false</c> otherwise</returns>
         /// <exception cref="ModException">Throws exception if a dependency cycle was found.</exception>
-        bool ResolveDependencies(IDependencyResolver resolver, bool recursive, bool addModContainer);
+        bool ResolveDependencies(IDependencyResolver resolver, DependencyResolverOptions options);
     }
 }

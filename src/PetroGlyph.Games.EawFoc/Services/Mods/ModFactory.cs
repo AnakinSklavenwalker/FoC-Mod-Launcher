@@ -93,15 +93,15 @@ namespace PetroGlyph.Games.EawFoc.Services
         {
             var mods = new HashSet<IVirtualMod>();
             foreach (var modinfo in virtualModInfos)
-                mods.Add(new VirtualMod(game, modinfo));
+                mods.Add(new VirtualMod(game, modinfo, _serviceProvider));
             return mods;
         }
 
         public IEnumerable<IVirtualMod> CreateVirtualVariants(IGame game, Dictionary<string, IList<IMod>> virtualModInfos)
         {
             var mods = new HashSet<IVirtualMod>();
-            foreach (var (name, dependencies) in virtualModInfos)
-                mods.Add(new VirtualMod(name, game, dependencies));
+            foreach (var virtualModData in virtualModInfos)
+                mods.Add(new VirtualMod(virtualModData.Key, game, virtualModData.Value, _serviceProvider));
             return mods;
         }
 

@@ -12,12 +12,17 @@ namespace PetroGlyph.Games.EawFoc
     public interface IPlayableObject
     {
         /// <summary>
+        /// The name of this playable object.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
         /// Set of available languages for this instance.
         /// </summary>
         ISet<ILanguageInfo> InstalledLanguages { get; }
 
         /// <summary>
-        /// Path to an icon which shall get used as a taskbar item when this instance is started.
+        /// Absolute or relative path to an icon of this instance.
         /// </summary>
         string? IconFile { get; }
     }

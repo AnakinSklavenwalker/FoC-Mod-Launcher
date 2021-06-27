@@ -15,46 +15,30 @@ using Validation;
 
 namespace PetroGlyph.Games.EawFoc.Games
 {
-    public class PetroglyphStarWarsGame : IGame
+    public class PetroglyphStarWarsGame : PlayableObject, IGame
     {
         public event EventHandler<ModCollectionChangedEventArgs>? ModsCollectionModified;
 
         private readonly string _normalizedPath;
 
-        private string? _iconFile;
-        private ISet<ILanguageInfo>? _languages;
-
 
         protected IServiceProvider ServiceProvider;
 
         protected internal readonly HashSet<IMod> ModsInternal = new();
-        
 
-        public string Name { get; }
+        /// <inheritdoc/>
+        public override string Name { get; }
 
+        /// <inheritdoc/>
         public GameType Type { get; }
+
+        /// <inheritdoc/>
         public GamePlatform Platform { get; }
 
+        /// <inheritdoc/>
         public IDirectoryInfo Directory { get; }
 
-        public ISet<ILanguageInfo> InstalledLanguages
-        {
-            get
-            {
-                // TODO: Flag if already tried
-                return _languages ??= ResolveInstalledLanguages();
-            }
-        }
-
-        public string? IconFile
-        {
-            get
-            {
-                // TODO: Flag if already tried
-                return _iconFile ??= ResolveIconFile();
-            }
-        }
-
+        /// <inheritdoc/>
         public IReadOnlyCollection<IMod> Mods => ModsInternal.ToList();
 
         public PetroglyphStarWarsGame(
@@ -75,7 +59,7 @@ namespace PetroGlyph.Games.EawFoc.Games
             _normalizedPath = Directory.FileSystem.Path.NormalizePath(Directory.FullName);
         }
 
-        
+        /// <inheritdoc/>
         public virtual bool Exists()
         {
             if (!GameDetector.GameExeExists(Directory, Type))
@@ -85,15 +69,17 @@ namespace PetroGlyph.Games.EawFoc.Games
             return result && directory == Directory;
         }
 
-
+        /// <inheritdoc/>
         public virtual void Setup(GameSetupOptions setupMode)
         {
             // TODO
         }
 
+        /// <inheritdoc/>
         public virtual bool AddMod(IMod mod)
         {
-            if (this != mod.Game)
+            // To avoid programming errors due to copies of the same game instance, we only check for reference equality.
+            if (!ReferenceEquals(this, mod.Game))
                 throw new InvalidOperationException("Mod does not match to this game instance.");
 
             var result = ModsInternal.Add(mod);
@@ -102,6 +88,7 @@ namespace PetroGlyph.Games.EawFoc.Games
             return result;
         }
 
+        /// <inheritdoc/>
         public virtual bool RemoveMod(IMod mod)
         {
             var result = ModsInternal.Remove(mod);
@@ -110,16 +97,19 @@ namespace PetroGlyph.Games.EawFoc.Games
             return result;
         }
 
+        /// <inheritdoc/>
         public IEnumerator<IMod> GetEnumerator()
         {
             return Mods.GetEnumerator();
         }
 
+        /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        /// <inheritdoc/>
         public bool Equals(IGame? other)
         {
             if (other is null)
@@ -135,6 +125,7 @@ namespace PetroGlyph.Games.EawFoc.Games
             return _normalizedPath.Equals(normalizedDirectory, StringComparison.Ordinal);
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object? obj)
         {
             if (this == obj)
@@ -143,7 +134,8 @@ namespace PetroGlyph.Games.EawFoc.Games
                 return false;
             return obj is IGame otherGame && Equals(otherGame);
         }
-        
+
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             unchecked
@@ -154,33 +146,24 @@ namespace PetroGlyph.Games.EawFoc.Games
                 return hashCode;
             }
         }
-        
+
+        /// <inheritdoc/>
         public override string ToString()
         {
             return $"{Type}:{Platform} @{Directory}";
         }
 
 
-        protected virtual ISet<ILanguageInfo> ResolveInstalledLanguages()
+        protected override ISet<ILanguageInfo> ResolveInstalledLanguages()
         {
             return ServiceProvider.GetService<IGameLanguageFinder>()?
                     .FindInstalledLanguages(this) ??
                 new HashSet<ILanguageInfo>();
         }
 
-        protected virtual string? ResolveIconFile()
+        protected override string? ResolveIconFile()
         {
             return ServiceProvider.GetService<IGameIconFinder>()?.FindIcon(this) ?? string.Empty;
-        }
-
-        public void ResetLanguages()
-        {
-            _languages = null;
-        }
-
-        public void ResetIcon()
-        {
-            _iconFile = null;
         }
 
         protected virtual void OnModsCollectionModified(ModCollectionChangedEventArgs e)

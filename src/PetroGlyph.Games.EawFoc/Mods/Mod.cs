@@ -25,7 +25,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
                 {
                     ModType.Default => InternalPath,
                     ModType.Workshops => Directory.Name,
-                    ModType.Virtual => throw new ModException($"Instance of {typeof(Mod)} must not be virtual."),
+                    ModType.Virtual => throw new ModException($"Instance of {GetType()} must not be virtual."),
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
@@ -63,9 +63,9 @@ namespace PetroGlyph.Games.EawFoc.Mods
             InternalPath = CreateInternalPath(modDirectory);
         }
 
-        protected override string? InitializeIcon()
+        protected override string? ResolveIconFile()
         {
-            var iconFile = base.InitializeIcon();
+            var iconFile = base.ResolveIconFile();
             return string.IsNullOrEmpty(iconFile)
                 ? null
                 : ServiceProvider.GetService<IModIconFinder>()?.FindIcon(this) ?? null;

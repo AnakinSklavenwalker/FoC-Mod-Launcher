@@ -9,6 +9,7 @@ using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Mods;
 using PetroGlyph.Games.EawFoc.Services;
+using PetroGlyph.Games.EawFoc.Services.Dependencies;
 using Xunit;
 
 namespace PetroGlyph.Games.EawFoc.Tests
@@ -290,6 +291,67 @@ namespace PetroGlyph.Games.EawFoc.Tests
             public MyModinfo()
             {
                 Dependencies = new List<IModReference>();
+            }
+        }
+
+        private class ModMock : IMod
+        {
+            public bool Equals(IModIdentity? other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public event EventHandler<ResolvingModinfoEventArgs> ResolvingModinfo;
+            public event EventHandler<ModinfoResolvedEventArgs> ModinfoResolved;
+            public event EventHandler<ModDependenciesChangedEventArgs> DependenciesChanged;
+            public string Name { get; }
+            public IGame Game { get; }
+            public IModinfo? ModInfo { get; }
+            public bool ResolveDependencies(IDependencyResolver resolver, bool recursive, bool addModContainer)
+            {
+                throw new NotImplementedException();
+            }
+
+            string IMod.Name => Name;
+
+            public ISet<ILanguageInfo> InstalledLanguages { get; }
+            public string? IconFile { get; }
+            public SemanticVersion? Version { get; }
+            public IList<IModReference> Dependencies { get; }
+            public bool Equals(IModReference? other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string Identifier { get; }
+            public ModType Type { get; }
+            string IPlayableObject.Name => Name;
+
+            public IEnumerator<IMod> GetEnumerator()
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public event EventHandler<ModCollectionChangedEventArgs> ModsCollectionModified;
+            public IReadOnlyCollection<IMod> Mods { get; }
+            public bool AddMod(IMod mod)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool RemoveMod(IMod mod)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool Equals(IMod? other)
+            {
+                throw new NotImplementedException();
             }
         }
     }

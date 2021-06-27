@@ -66,7 +66,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
         public bool Equals(IModIdentity? x, IModIdentity? y)
         {
-            return _includeDependencies
+            return !_includeDependencies
                 ? new ModIdentityEqualityComparer(true, false, StringComparison.Ordinal).Equals(x, y)
                 : ModIdentityEqualityComparer.Default.Equals(x, y);
         }

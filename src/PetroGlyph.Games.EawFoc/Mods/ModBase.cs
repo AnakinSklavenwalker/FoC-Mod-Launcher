@@ -17,7 +17,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
     /// <summary>
     /// Base implementation for Mods
     /// </summary>
-    public abstract class ModBase : IMod
+    public abstract class ModBase : PlayableObject, IMod
     {
         /// <inheritdoc/>
         public event EventHandler<ModCollectionChangedEventArgs>? ModsCollectionModified;
@@ -28,11 +28,11 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// <inheritdoc/>
         public event EventHandler<ModDependenciesChangedEventArgs>? DependenciesChanged;
 
-        private string? _iconFile;
         private SemanticVersion? _modVersion;
         private IModinfo? _modInfo;
         protected readonly IServiceProvider ServiceProvider;
-        private ISet<ILanguageInfo>? _installedLanguages;
+
+        private bool _modinfoSearched;
         
         protected readonly List<IMod> DependenciesInternal = new();
 
@@ -48,30 +48,29 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// <inheritdoc/>
         public ModType Type { get; }
 
+        /// <inheritdoc cref="IModIdentity" />
+        public override string Name { get; }
+
         /// <inheritdoc/>
-        public string Name { get; }
+        string IModIdentity.Name => Name;
 
         /// <inheritdoc/>
         public IModinfo? ModInfo
         {
             get
             {
+                if (_modinfoSearched)
+                    return _modInfo;
                 if (_modInfo != null)
                     return _modInfo;
-                // TODO: Flag if already tried to resolve
                 _modInfo = ResolveModInfo();
+                _modinfoSearched = true;
                 return _modInfo;
             }
         }
         
         /// <inheritdoc/>
-        public string? IconFile => _iconFile ??= InitializeIcon();
-
-        /// <inheritdoc/>
         public SemanticVersion? Version => _modVersion ??= InitializeVersion();
-
-        /// <inheritdoc/>
-        public ISet<ILanguageInfo> InstalledLanguages => _installedLanguages ??= ResolveInstalledLanguages();
 
 
         IList<IModReference> IModIdentity.Dependencies => Dependencies.OfType<IModReference>().ToList();
@@ -121,30 +120,31 @@ namespace PetroGlyph.Games.EawFoc.Mods
             Type = type;
         }
 
-        /// <inheritdoc/>
-        public bool ResolveDependencies(IDependencyResolver resolver, bool recursive, bool addModContainer)
-        {
-            var modinfo = ModInfo;
-            if (modinfo is null)
-                return false;
-            if (!Equals(modinfo))
-                throw new ModException("Unable to resolve mod dependencies. Modinfo is not matching the current mod.");
 
+
+        public DependencyResolveStatus DependencyResolveStatus { get; protected set; }
+        
+
+        /// <inheritdoc/>
+        public virtual bool ResolveDependencies(IDependencyResolver resolver, DependencyResolverOptions options)
+        {
+            if (DependencyResolveStatus == DependencyResolveStatus.Resolving)
+                throw new InvalidOperationException("Already resolving mod dependencies."); 
+            
             try
             {
-                var options = new DependencyResolverOptions
-                {
-                    Recursive = recursive,
-                };
+                DependencyResolveStatus = DependencyResolveStatus.Resolving;
                 var dependencies = resolver.Resolve(this, options);
                 var oldList = DependenciesInternal.ToList();
                 DependenciesInternal.Clear();
                 DependenciesInternal.AddRange(dependencies);
                 OnDependenciesChanged(new ModDependenciesChangedEventArgs(this, oldList, dependencies));
+                DependencyResolveStatus = DependencyResolveStatus.Resolved;
                 return true;
             }
-            catch (Exception)
+            catch
             {
+                DependencyResolveStatus = DependencyResolveStatus.Faulted;
                 return false;
             }
         }
@@ -193,6 +193,14 @@ namespace PetroGlyph.Games.EawFoc.Mods
             return Mods.GetEnumerator();
         }
 
+        public IModinfo? ResetModinfo()
+        {
+            var old = _modInfo;
+            _modinfoSearched = false;
+            _modInfo = null;
+            return old;
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -200,6 +208,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
         protected virtual IModinfo? ResolveModInfoCore()
         {
+            // Intentionally return null in base implementation,
+            // since we cannot know which modinfo, if multiple found shall get used.
             return null;
         }
 
@@ -208,12 +218,12 @@ namespace PetroGlyph.Games.EawFoc.Mods
             return ModInfo?.Version;
         }
 
-        protected virtual string? InitializeIcon()
+        protected override string? ResolveIconFile()
         {
             return ModInfo?.Icon;
         }
 
-        protected virtual ISet<ILanguageInfo> ResolveInstalledLanguages()
+        protected override ISet<ILanguageInfo> ResolveInstalledLanguages()
         {
             var factory = ServiceProvider.GetService<IModLanguageFinderFactory>() ?? new ModLanguageFinderFactory();
             var finder = factory.CreateLanguageFinder(this, ServiceProvider);

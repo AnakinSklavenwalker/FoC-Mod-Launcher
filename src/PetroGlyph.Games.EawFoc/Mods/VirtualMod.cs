@@ -69,6 +69,11 @@ namespace PetroGlyph.Games.EawFoc.Mods
             return other is VirtualMod && base.Equals(other);
         }
 
+        public override bool ResolveDependencies(IDependencyResolver resolver, DependencyResolverOptions options)
+        {
+            throw new InvalidOperationException("Virtual mods cannot resolve their dependencies after initialization");
+        }
+
         protected override void OnResolvingModinfo(ResolvingModinfoEventArgs e)
         {
             throw new InvalidOperationException("Virtual mods cannot lazy load modinfo data");
@@ -86,6 +91,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
             if (!Dependencies.Any(m => m is IPhysicalPlayableObject))
                 throw new ModException("Virtual mods need at least one physical dependency.");
+
+            DependencyResolveStatus = DependencyResolveStatus.Resolved;
         } 
         
         private string CalculateIdentifier()
