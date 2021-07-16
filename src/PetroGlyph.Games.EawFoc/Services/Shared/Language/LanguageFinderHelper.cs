@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO.Abstractions;
 using System.Linq;
+using EawModinfo.Model;
 using EawModinfo.Spec;
 
 namespace PetroGlyph.Games.EawFoc.Services.Language

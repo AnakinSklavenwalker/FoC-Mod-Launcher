@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
+using EawModinfo.Model;
 using EawModinfo.Spec;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Utilities;
@@ -44,36 +45,6 @@ namespace PetroGlyph.Games.EawFoc.Services.Detection
             {
                 var normalizedPath = lookupDirectory.FileSystem.Path.NormalizePath(modDirectory.FullName);
                 yield return new ModReference(normalizedPath, type);
-            }
-        }
-
-        private readonly struct ModReference : IModReference
-        {
-            public string Identifier { get; }
-            public ModType Type { get; }
-
-            public ModReference(string id, ModType type)
-            {
-                Identifier = id;
-                Type = type;
-            }
-
-            public bool Equals(IModReference? other)
-            {
-                return Identifier == other?.Identifier && Type == other.Type;
-            }
-
-            public override bool Equals(object? obj)
-            {
-                return obj is ModReference other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (Identifier.GetHashCode() * 397) ^ (int)Type;
-                }
             }
         }
     }

@@ -13,13 +13,13 @@ namespace PetroGlyph.Games.EawFoc.Services.Dependencies
 
         private readonly HashSet<IMod> _visitedMods = new(ModEqualityComparer.ExcludeDependencies);
 
-        public IList<IMod> Resolve(IMod mod, DependencyResolverOptions options)
+        public ResolveResult Resolve(IMod mod, DependencyResolverOptions options)
         {
             Requires.NotNull(mod, nameof(mod));
             Requires.NotNull(options, nameof(options));
 
             
-            var dependencies = ResolveNextNeighborsDependencies(mod);
+            var dependencies = ResolveNextNeighborsDependencies(mod, out var resolveLayout);
             var workingQueue = new Queue<IList<IMod>>();
             
             workingQueue.Enqueue(dependencies);
@@ -50,12 +50,13 @@ namespace PetroGlyph.Games.EawFoc.Services.Dependencies
                 if (traverser.HasDependencyCycles())
                     throw new ModException($"The mod {mod} has a dependency cycle");
             }
-            
-            return dependencies;
+
+            return new ResolveResult(dependencies, resolveLayout);
         }
         
-        private IList<IMod> ResolveNextNeighborsDependencies(IMod rootMod)
+        private IList<IMod> ResolveNextNeighborsDependencies(IMod rootMod, out DependencyResolveLayout layout)
         {
+            layout = DependencyResolveLayout.ResolveRecursive;
             _visitedMods.Add(rootMod);
 
             if (rootMod.DependencyResolveStatus == DependencyResolveStatus.Resolved)
@@ -64,6 +65,8 @@ namespace PetroGlyph.Games.EawFoc.Services.Dependencies
             if (rootMod.ModInfo is null)
                 return EmptyDependencyList;
 
+            layout = rootMod.ModInfo.Dependencies.ResolveLayout;
+
             var dependencies = rootMod.ModInfo.Dependencies
                 .Select(modReference => FindMod(rootMod.Game, modReference))
                 .ToList();
@@ -71,7 +74,6 @@ namespace PetroGlyph.Games.EawFoc.Services.Dependencies
             // This is the only cycle we can find, without traversing the whole Chain down.
             if (dependencies.Contains(rootMod))
                 throw new ModException("Dependency Cycle: A Mod must not refer to itself.");
-
 
             return dependencies;
         }

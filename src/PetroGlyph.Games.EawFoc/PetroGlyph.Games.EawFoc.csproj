@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="eaw.modinfo" Version="3.0.0-beta" />
+    <PackageReference Include="eaw.modinfo" Version="3.0.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.34" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
@@ -21,7 +21,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.IO.Abstractions" Version="13.2.38" />
+    <PackageReference Include="SemanticVersioning" Version="2.0.0" />
+    <PackageReference Include="System.IO.Abstractions" Version="13.2.41" />
   </ItemGroup>
 
 </Project>

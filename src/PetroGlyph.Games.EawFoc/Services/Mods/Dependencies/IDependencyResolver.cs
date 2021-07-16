@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using PetroGlyph.Games.EawFoc.Mods;
+﻿using PetroGlyph.Games.EawFoc.Mods;
 
 namespace PetroGlyph.Games.EawFoc.Services.Dependencies
 {
@@ -14,6 +13,6 @@ namespace PetroGlyph.Games.EawFoc.Services.Dependencies
         /// <param name="mod">The target mod</param>
         /// <param name="options">Options how the resolver behaves.</param>
         /// <returns>A sorted list of dependencies. Result depends of the <see cref="options"/>.</returns>
-        IList<IMod> Resolve(IMod mod, DependencyResolverOptions options);
+        ResolveResult Resolve(IMod mod, DependencyResolverOptions options);
     }
 }

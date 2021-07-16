@@ -3,14 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using EawModinfo;
+using EawModinfo.Model;
 using EawModinfo.Spec;
 using EawModinfo.Utilities;
 using Microsoft.Extensions.DependencyInjection;
-using NuGet.Versioning;
 using PetroGlyph.Games.EawFoc.Games;
 using PetroGlyph.Games.EawFoc.Services.Dependencies;
 using PetroGlyph.Games.EawFoc.Services.Language;
 using Validation;
+using Range = SemanticVersioning.Range;
+using Version = SemanticVersioning.Version;
 
 namespace PetroGlyph.Games.EawFoc.Mods
 {
@@ -28,13 +30,14 @@ namespace PetroGlyph.Games.EawFoc.Mods
         /// <inheritdoc/>
         public event EventHandler<ModDependenciesChangedEventArgs>? DependenciesChanged;
 
-        private SemanticVersion? _modVersion;
+        private Version? _modVersion;
         private IModinfo? _modInfo;
         protected readonly IServiceProvider ServiceProvider;
 
         private bool _modinfoSearched;
         
         protected readonly List<IMod> DependenciesInternal = new();
+        protected DependencyResolveLayout ResolveLayout;
 
         protected readonly HashSet<IMod> ModsInternal = new();
 
@@ -47,6 +50,9 @@ namespace PetroGlyph.Games.EawFoc.Mods
 
         /// <inheritdoc/>
         public ModType Type { get; }
+
+        /// <inheritdoc/>
+        public Range? VersionRange => null;
 
         /// <inheritdoc cref="IModIdentity" />
         public override string Name { get; }
@@ -70,12 +76,12 @@ namespace PetroGlyph.Games.EawFoc.Mods
         }
         
         /// <inheritdoc/>
-        public SemanticVersion? Version => _modVersion ??= InitializeVersion();
+        public Version? Version => _modVersion ??= InitializeVersion();
 
+        IModDependencyList IModIdentity.Dependencies =>
+            new DependencyList(Dependencies.OfType<IModReference>().ToList(), ResolveLayout);
 
-        IList<IModReference> IModIdentity.Dependencies => Dependencies.OfType<IModReference>().ToList();
-
-        /// <inheritdoc cref="IModIdentity.Dependencies"/>
+        /// <inheritdoc cref="IMod.Dependencies"/>
         public IReadOnlyList<IMod> Dependencies => DependenciesInternal.ToList();
 
         /// <inheritdoc/>
@@ -134,11 +140,12 @@ namespace PetroGlyph.Games.EawFoc.Mods
             try
             {
                 DependencyResolveStatus = DependencyResolveStatus.Resolving;
-                var dependencies = resolver.Resolve(this, options);
                 var oldList = DependenciesInternal.ToList();
                 DependenciesInternal.Clear();
-                DependenciesInternal.AddRange(dependencies);
-                OnDependenciesChanged(new ModDependenciesChangedEventArgs(this, oldList, dependencies));
+                var result = resolver.Resolve(this, options);
+                ResolveLayout = result.ResolveLayout;
+                DependenciesInternal.AddRange(result.Dependencies);
+                OnDependenciesChanged(new ModDependenciesChangedEventArgs(this, oldList, result.Dependencies));
                 DependencyResolveStatus = DependencyResolveStatus.Resolved;
                 return true;
             }
@@ -213,7 +220,7 @@ namespace PetroGlyph.Games.EawFoc.Mods
             return null;
         }
 
-        protected virtual SemanticVersion? InitializeVersion()
+        protected virtual Version? InitializeVersion()
         {
             return ModInfo?.Version;
         }

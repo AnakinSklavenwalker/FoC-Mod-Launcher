@@ -41,7 +41,8 @@ namespace PetroGlyph.Games.EawFoc.Mods
         IModinfo? ModInfo { get; }
 
         /// <summary>
-        /// Ordered List of <see cref="IMod"/>s this instance depends on. Initially this list will be empty. To fill it 
+        /// Ordered List of <see cref="IMod"/>s this instance depends on. Initially this list will be empty. To fill it,
+        /// once resolve the dependencies by calling <see cref="ResolveDependencies"/>.
         /// </summary>
         new IReadOnlyList<IMod> Dependencies { get; }
 
